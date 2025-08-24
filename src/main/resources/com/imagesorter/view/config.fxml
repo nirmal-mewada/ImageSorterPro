@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.imagesorter.controller.ConfigController">
+
+    <!-- Header -->
+    <top>
+        <VBox spacing="10.0">
+            <padding>
+                <Insets bottom="10.0" left="20.0" right="20.0" top="20.0" />
+            </padding>
+
+            <Label text="Configure Destination Folders" styleClass="dialog-title" />
+            <Label text="Set up folders for hotkeys 1-9. Press the corresponding number key to move images to these folders."
+                   styleClass="dialog-description" wrapText="true" />
+            <Separator />
+        </VBox>
+    </top>
+
+    <!-- Main Content -->
+    <center>
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER">
+            <VBox spacing="15.0">
+                <padding>
+                    <Insets bottom="20.0" left="20.0" right="20.0" top="10.0" />
+                </padding>
+
+                <!-- Folder Configuration Rows -->
+                <GridPane hgap="10.0" vgap="15.0">
+                    <columnConstraints>
+                        <ColumnConstraints minWidth="80.0" prefWidth="80.0" />
+                        <ColumnConstraints hgrow="ALWAYS" minWidth="300.0" />
+                        <ColumnConstraints minWidth="80.0" prefWidth="80.0" />
+                    </columnConstraints>
+
+                    <!-- Row 1 -->
+                    <Label text="Hotkey 1:" GridPane.columnIndex="0" GridPane.rowIndex="0"
+                           styleClass="hotkey-label" />
+                    <TextField fx:id="folder1TextField" GridPane.columnIndex="1" GridPane.rowIndex="0"
+                               promptText="Select folder for hotkey 1..." />
+                    <Button fx:id="browse1Button" text="Browse..." GridPane.columnIndex="2" GridPane.rowIndex="0"
+                            styleClass="browse-button" />
+
+                    <!-- Row 2 -->
+                    <Label text="Hotkey 2:" GridPane.columnIndex="0" GridPane.rowIndex="1"
+                           styleClass="hotkey-label" />
+                    <TextField fx:id="folder2TextField" GridPane.columnIndex="1" GridPane.rowIndex="1"
+                               promptText="Select folder for hotkey 2..." />
+                    <Button fx:id="browse2Button" text="Browse..." GridPane.columnIndex="2" GridPane.rowIndex="1"
+                            styleClass="browse-button" />
+
+                    <!-- Row 3 -->
+                    <Label text="Hotkey 3:" GridPane.columnIndex="0" GridPane.rowIndex="2"
+                           styleClass="hotkey-label" />
+                    <TextField fx:id="folder3TextField" GridPane.columnIndex="1" GridPane.rowIndex="2"
+                               promptText="Select folder for hotkey 3..." />
+                    <Button fx:id="browse3Button" text="Browse..." GridPane.columnIndex="2" GridPane.rowIndex="2"
+                            styleClass="browse-button" />
+
+                    <!-- Row 4 -->
+                    <Label text="Hotkey 4:" GridPane.columnIndex="0" GridPane.rowIndex="3"
+                           styleClass="hotkey-label" />
+                    <TextField fx:id="folder4TextField" GridPane.columnIndex="1" GridPane.rowIndex="3"
+                               promptText="Select folder for hotkey 4..." />
+                    <Button fx:id="browse4Button" text="Browse..." GridPane.columnIndex="2" GridPane.rowIndex="3"
+                            styleClass="browse-button" />
+
+                    <!-- Row 5 -->
+                    <Label text="Hotkey 5:" GridPane.columnIndex="0" GridPane.rowIndex="4"
+                           styleClass="hotkey-label" />
+                    <TextField fx:id="folder5TextField" GridPane.columnIndex="1" GridPane.rowIndex="4"
+                               promptText="Select folder for hotkey 5..." />
+                    <Button fx:id="browse5Button" text="Browse..." GridPane.columnIndex="2" GridPane.rowIndex="4"
+                            styleClass="browse-button" />
+
+                    <!-- Row 6 -->
+                    <Label text="Hotkey 6:" GridPane.columnIndex="0" GridPane.rowIndex="5"
+                           styleClass="hotkey-label" />
+                    <TextField fx:id="folder6TextField" GridPane.columnIndex="1" GridPane.rowIndex="5"
+                               promptText="Select folder for hotkey 6..." />
+                    <Button fx:id="browse6Button" text="Browse..." GridPane.columnIndex="2" GridPane.rowIndex="5"
+                            styleClass="browse-button" />
+
+                    <!-- Row 7 -->
+                    <Label text="Hotkey 7:" GridPane.columnIndex="0" GridPane.rowIndex="6"
+                           styleClass="hotkey-label" />
+                    <TextField fx:id="folder7TextField" GridPane.columnIndex="1" GridPane.rowIndex="6"
+                               promptText="Select folder for hotkey 7..." />
+                    <Button fx:id="browse7Button" text="Browse..." GridPane.columnIndex="2" GridPane.rowIndex="6"
+                            styleClass="browse-button" />
+
+                    <!-- Row 8 -->
+                    <Label text="Hotkey 8:" GridPane.columnIndex="0" GridPane.rowIndex="7"
+                           styleClass="hotkey-label" />
+                    <TextField fx:id="folder8TextField" GridPane.columnIndex="1" GridPane.rowIndex="7"
+                               promptText="Select folder for hotkey 8..." />
+                    <Button fx:id="browse8Button" text="Browse..." GridPane.columnIndex="2" GridPane.rowIndex="7"
+                            styleClass="browse-button" />
+
+                    <!-- Row 9 -->
+                    <Label text="Hotkey 9:" GridPane.columnIndex="0" GridPane.rowIndex="8"
+                           styleClass="hotkey-label" />
+                    <TextField fx:id="folder9TextField" GridPane.columnIndex="1" GridPane.rowIndex="8"
+                               promptText="Select folder for hotkey 9..." />
+                    <Button fx:id="browse9Button" text="Browse..." GridPane.columnIndex="2" GridPane.rowIndex="8"
+                            styleClass="browse-button" />
+                </GridPane>
+
+                <Separator />
+
+                <!-- Additional Information -->
+                <VBox spacing="5.0">
+                    <Label text="Notes:" styleClass="notes-title" />
+                    <Label text="• Folders will be created automatically if they don't exist"
+                           styleClass="notes-text" />
+                    <Label text="• You can leave fields empty for unused hotkeys"
+                           styleClass="notes-text" />
+                    <Label text="• Use hotkey 0 to move images to an 'Archive' folder in the source directory"
+                           styleClass="notes-text" />
+                </VBox>
+            </VBox>
+        </ScrollPane>
+    </center>
+
+    <!-- Action Buttons -->
+    <bottom>
+        <HBox spacing="10.0" alignment="CENTER_RIGHT">
+            <padding>
+                <Insets bottom="20.0" left="20.0" right="20.0" top="15.0" />
+            </padding>
+
+            <Button fx:id="clearAllButton" text="Clear All" styleClass="secondary-button" />
+            <Region HBox.hgrow="ALWAYS" />
+            <Button fx:id="cancelButton" text="Cancel" styleClass="secondary-button" />
+            <Button fx:id="saveButton" text="Save" styleClass="primary-button" defaultButton="true" />
+        </HBox>
+    </bottom>
+
+</BorderPane>
