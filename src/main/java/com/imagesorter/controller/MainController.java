@@ -1,6 +1,6 @@
 package com.imagesorter.controller;
 
-import com.imagesorter.utils.ImageUtils;
+import com.imagesorter.MemUtils;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -9,6 +9,9 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
@@ -21,6 +24,7 @@ import com.imagesorter.model.ImageFile;
 import com.imagesorter.service.ConfigService;
 import com.imagesorter.service.ImageService;
 
+import java.awt.*;
 import java.io.File;
 import java.net.URL;
 import java.util.List;
@@ -47,6 +51,8 @@ public class MainController implements Initializable {
     @FXML private Label progressLabel;
     @FXML private Label remainingLabel;
     @FXML private Label currentFolderLabel;
+    @FXML private Label memoryUsage;
+    @FXML private Label lastAction;
 
     @FXML private ProgressBar progressBar;
 
@@ -422,6 +428,8 @@ public class MainController implements Initializable {
         // Move file
         if (sourceFile.renameTo(destinationFile)) {
             // Remove from current list
+
+            lastAction.setText("Last Action: [Moved] " + sourceFile.getName() +" ->" + destinationFolder.getPath());
             currentImages.remove(currentImageIndex);
 
             // Increment processed count
@@ -456,12 +464,15 @@ public class MainController implements Initializable {
         alert.setHeaderText("Delete Current Image");
         alert.setContentText("Are you sure you want to delete this image? This action cannot be undone.");
 
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.isPresent() && result.get() == ButtonType.OK) {
+        Optional<ButtonType> result = Optional.empty();
+        if(configService.getConfig().isConfirmDelete()){
+            result = alert.showAndWait();
+        }
+        if (!configService.getConfig().isConfirmDelete() || (result.isPresent() && result.get() == ButtonType.OK)) {
             ImageFile currentImageFile = currentImages.get(currentImageIndex);
-            File fileToDelete = currentImageFile.getFile();
 
-            if (fileToDelete.delete()) {
+            if (deleteFile(currentImageFile)) {
+                lastAction.setText("Last Action: [Deleted] " + currentImageFile.getName());
                 // Remove from list
                 currentImages.remove(currentImageIndex);
 
@@ -481,6 +492,19 @@ public class MainController implements Initializable {
                 showAlert("Error", "Failed to delete the image file.");
             }
         }
+    }
+
+    private boolean deleteFile(ImageFile currentImageFile) {
+        if (!Desktop.isDesktopSupported()) {
+            throw new UnsupportedOperationException("Desktop API not supported!");
+        }
+
+        Desktop desktop = Desktop.getDesktop();
+        if (desktop.isSupported(Desktop.Action.MOVE_TO_TRASH)) {
+            return desktop.moveToTrash(currentImageFile.getFile());
+
+        }
+        return false;
     }
 
     private void openConfigDialog() {
@@ -536,6 +560,7 @@ public class MainController implements Initializable {
                 double progress = (double) imageService.getProcessedCount() / totalOriginal;
                 progressBar.setProgress(progress);
             }
+            memoryUsage.setText("Mem:"+ MemUtils.printHeapUsage());
         }
     }
 

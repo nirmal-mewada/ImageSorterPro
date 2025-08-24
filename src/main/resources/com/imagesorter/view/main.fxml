@@ -18,7 +18,7 @@
                 <MenuItem fx:id="configureFoldersMenuItem" mnemonicParsing="false" text="Configure Folders..." accelerator="Ctrl+P" />
                 <SeparatorMenuItem />
                 <MenuItem fx:id="exitMenuItem" mnemonicParsing="false" text="Exit" accelerator="Alt+F4" />
-<!--                <MenuItem fx:id="resetFocus" mnemonicParsing="false" text="Reset Focus"  />-->
+                <!--                <MenuItem fx:id="resetFocus" mnemonicParsing="false" text="Reset Focus"  />-->
 
             </Menu>
             <Menu mnemonicParsing="false" text="View">
@@ -76,9 +76,17 @@
     <bottom>
         <VBox spacing="5.0">
             <Separator />
+            <HBox spacing="2.0" alignment="CENTER_LEFT">
+                <padding>
+                    <Insets left="10.0" right="10.0" top="5.0" />
+                </padding>
+
+                <Label fx:id="lastAction" text="Last Action: No Action"
+                       styleClass="status-label" />
+            </HBox>
             <HBox spacing="10.0" alignment="CENTER_LEFT">
                 <padding>
-                    <Insets bottom="5.0" left="10.0" right="10.0" top="5.0" />
+                    <Insets bottom="5.0" left="10.0" right="10.0" />
                 </padding>
 
                 <Label fx:id="currentFileLabel" text="No images loaded"
@@ -93,7 +101,6 @@
 
                 <Label fx:id="remainingLabel" text="Remaining: 0"
                        styleClass="status-label" />
-
                 <Region HBox.hgrow="ALWAYS" />
 
                 <ProgressBar fx:id="progressBar" progress="0.0"
@@ -102,8 +109,11 @@
 
                 <Label fx:id="currentFolderLabel" text="N/A"
                        styleClass="status-label" />
+                <Label fx:id="memoryUsage" text="Mem: Used: ?% /? MB"
+                       styleClass="status-label" />
 
             </HBox>
+
         </VBox>
     </bottom>
 
