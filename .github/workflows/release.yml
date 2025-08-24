@@ -1,0 +1,35 @@
+
+name: Java CI with Maven and Release
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build_and_release:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up JDK 11
+      uses: actions/setup-java@v3
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+        cache: maven
+    - name: Build with Maven
+      run: mvn -B clean package --file pom.xml
+
+    - name: Create Release and Upload Artifact
+      uses: softprops/action-gh-release@v1
+      with:
+        files: target/ImageSorterPro-*.jar
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Commit and Push changes
+      run: |
+        git config --global user.name ''actions-user''
+        git config --global user.email ''actions-user@users.noreply.github.com''
+        git add .
+        git commit -m "ci: new build and release"
+        git push
