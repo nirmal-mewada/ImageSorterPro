@@ -29,7 +29,7 @@ public class ImageCache {
     
     public ImageCache(int maxSize) {
         this.maxSize = Math.max(1, maxSize);
-        this.cache = new LinkedHashMap<String, CacheEntry>(maxSize + 1, 0.75f, true) {
+        this.cache =  new LinkedHashMap<String, CacheEntry>(maxSize + 1, 0.75f, true) {
             @Override
             protected boolean removeEldestEntry(Map.Entry<String, CacheEntry> eldest) {
                 return size() > ImageCache.this.maxSize;
@@ -119,7 +119,7 @@ public class ImageCache {
         
         @Override
         public String toString() {
-            return String.format("CacheStats{size: %d/%d, memory: %d bytes}", 
+            return String.format("CacheStats{size: %d/%d, memory: %d bytes}",
                 currentSize, maxSize, totalMemoryUsage);
         }
     }

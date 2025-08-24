@@ -13,6 +13,8 @@ public class ImageFile {
     private long size;
     private LocalDateTime lastModified;
     private String extension;
+
+    private Integer exifRotate = null;
     
     public ImageFile(File file) {
         this.file = file;
@@ -45,7 +47,15 @@ public class ImageFile {
     public boolean isValidImageFile() {
         return extension.matches("jpg|jpeg|png|gif|bmp|tiff|tif");
     }
-    
+
+    public Integer getExifRotate() {
+        return exifRotate;
+    }
+
+    public void setExifRotate(Integer exifRotate) {
+        this.exifRotate = exifRotate;
+    }
+
     @Override
     public String toString() {
         return name;

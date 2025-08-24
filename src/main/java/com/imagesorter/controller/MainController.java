@@ -1,5 +1,6 @@
 package com.imagesorter.controller;
 
+import com.imagesorter.utils.ImageUtils;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -168,7 +169,7 @@ public class MainController implements Initializable {
 
     @FXML
     private void handleKeyPressed(KeyEvent event) {
-        System.out.println(event);
+//        System.out.println(event);
         if (currentImages == null || currentImages.isEmpty()) {
             return;
         }
@@ -296,7 +297,7 @@ public class MainController implements Initializable {
         new Thread(loadTask).start();
     }
 
-    private void displayCurrentImage() {
+    private synchronized void displayCurrentImage() {
         if (currentImages == null || currentImageIndex < 0 || currentImageIndex >= currentImages.size()) {
             imageView.setImage(null);
             return;
@@ -305,8 +306,15 @@ public class MainController implements Initializable {
         ImageFile currentImageFile = currentImages.get(currentImageIndex);
         Image image = imageService.getCachedImage(currentImageFile);
 
+
         if (image != null) {
+            if(image.isError()){
+                System.out.println("Error.........................."+image.getException());
+                image.getException().printStackTrace();
+
+            }
             imageView.setImage(image);
+            imageView.setRotate(currentImageFile.getExifRotate());
         } else {
             // Load image asynchronously
             Task<Image> imageTask = new Task<Image>() {
@@ -319,6 +327,8 @@ public class MainController implements Initializable {
                 protected void succeeded() {
                     Platform.runLater(() -> {
                         imageView.setImage(getValue());
+                        imageView.setRotate(currentImageFile.getExifRotate());
+
                     });
                 }
 
