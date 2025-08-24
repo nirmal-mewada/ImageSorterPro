@@ -1,6 +1,6 @@
-// ConfigService.java
 package com.imagesorter.service;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.imagesorter.model.ConfigSettings;
@@ -14,38 +14,40 @@ import java.nio.file.Paths;
  * Handles loading and saving configuration settings to JSON file
  */
 public class ConfigService {
-    
-    private static final String CONFIG_DIR = System.getProperty("user.home") + 
-        File.separator + ".imagesorter";
+
+    private static final String CONFIG_DIR = System.getProperty("user.home") +
+            File.separator + ".imagesorter";
     private static final String CONFIG_FILE = "config.json";
     private static final String CONFIG_PATH = CONFIG_DIR + File.separator + CONFIG_FILE;
-    
+
     private static ConfigService instance;
     private ConfigSettings config;
     private ObjectMapper objectMapper;
-    
+
     private ConfigService() {
         this.objectMapper = new ObjectMapper();
         this.objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+        this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
         this.config = new ConfigSettings();
-        
+
         // Ensure config directory exists
         createConfigDirectory();
     }
-    
+
     public static synchronized ConfigService getInstance() {
         if (instance == null) {
             instance = new ConfigService();
         }
         return instance;
     }
-    
+
     /**
      * Loads configuration from file
      */
     public void loadConfig() {
         File configFile = new File(CONFIG_PATH);
-        
+
         if (configFile.exists()) {
             try {
                 config = objectMapper.readValue(configFile, ConfigSettings.class);
@@ -60,7 +62,7 @@ public class ConfigService {
             config = new ConfigSettings();
         }
     }
-    
+
     /**
      * Saves configuration to file
      */
@@ -73,21 +75,21 @@ public class ConfigService {
             System.err.println("Failed to save configuration: " + e.getMessage());
         }
     }
-    
+
     /**
      * Gets the current configuration
      */
     public ConfigSettings getConfig() {
         return config;
     }
-    
+
     /**
      * Sets a new configuration (typically used for testing)
      */
     public void setConfig(ConfigSettings config) {
         this.config = config != null ? config : new ConfigSettings();
     }
-    
+
     /**
      * Resets configuration to defaults
      */
@@ -95,21 +97,21 @@ public class ConfigService {
         config = new ConfigSettings();
         saveConfig();
     }
-    
+
     /**
      * Gets the configuration file path
      */
     public String getConfigPath() {
         return CONFIG_PATH;
     }
-    
+
     /**
      * Checks if configuration file exists
      */
     public boolean configFileExists() {
         return new File(CONFIG_PATH).exists();
     }
-    
+
     /**
      * Creates the configuration directory if it doesn't exist
      */
@@ -123,7 +125,7 @@ public class ConfigService {
             }
         }
     }
-    
+
     /**
      * Backs up current configuration file
      */
@@ -132,10 +134,10 @@ public class ConfigService {
         if (!configFile.exists()) {
             return false;
         }
-        
+
         String backupPath = CONFIG_PATH + ".backup." + System.currentTimeMillis();
         File backupFile = new File(backupPath);
-        
+
         try {
             java.nio.file.Files.copy(configFile.toPath(), backupFile.toPath());
             System.out.println("Configuration backed up to: " + backupPath);
@@ -145,7 +147,7 @@ public class ConfigService {
             return false;
         }
     }
-    
+
     /**
      * Validates the current configuration
      */
@@ -153,7 +155,7 @@ public class ConfigService {
         if (config == null) {
             return false;
         }
-        
+
         // Check if at least one folder is configured
         for (int i = 1; i <= 9; i++) {
             String folderPath = config.getFolderPath(i);
@@ -165,7 +167,7 @@ public class ConfigService {
                 }
             }
         }
-        
+
         return true;
     }
 }

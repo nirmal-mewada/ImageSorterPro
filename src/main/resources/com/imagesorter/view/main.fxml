@@ -18,6 +18,8 @@
                 <MenuItem fx:id="configureFoldersMenuItem" mnemonicParsing="false" text="Configure Folders..." accelerator="Ctrl+P" />
                 <SeparatorMenuItem />
                 <MenuItem fx:id="exitMenuItem" mnemonicParsing="false" text="Exit" accelerator="Alt+F4" />
+<!--                <MenuItem fx:id="resetFocus" mnemonicParsing="false" text="Reset Focus"  />-->
+
             </Menu>
             <Menu mnemonicParsing="false" text="View">
                 <MenuItem mnemonicParsing="false" text="Zoom In" accelerator="Ctrl+Plus" disable="true" />
@@ -46,7 +48,7 @@
                 <Separator />
 
                 <ListView fx:id="hotkeyListView" VBox.vgrow="ALWAYS"
-                          styleClass="hotkey-list" minHeight="200.0">
+                          styleClass="hotkey-list1" minHeight="200.0">
                 </ListView>
 
                 <Separator />
@@ -96,6 +98,11 @@
 
                 <ProgressBar fx:id="progressBar" progress="0.0"
                              prefWidth="150.0" visible="false" />
+                <Separator orientation="VERTICAL" />
+
+                <Label fx:id="currentFolderLabel" text="N/A"
+                       styleClass="status-label" />
+
             </HBox>
         </VBox>
     </bottom>

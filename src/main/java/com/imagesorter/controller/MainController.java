@@ -36,6 +36,7 @@ public class MainController implements Initializable {
     @FXML private MenuItem openFolderMenuItem;
     @FXML private MenuItem configureFoldersMenuItem;
     @FXML private MenuItem exitMenuItem;
+//    @FXML private MenuItem resetFocus;
 
     @FXML private ListView<String> hotkeyListView;
     @FXML private ImageView imageView;
@@ -44,6 +45,7 @@ public class MainController implements Initializable {
     @FXML private Label currentFileLabel;
     @FXML private Label progressLabel;
     @FXML private Label remainingLabel;
+    @FXML private Label currentFolderLabel;
 
     @FXML private ProgressBar progressBar;
 
@@ -66,13 +68,19 @@ public class MainController implements Initializable {
         setupImageView();
         setupHotkeyList();
         setupMenuItems();
-        setupKeyboardFocus();
 
         // Update UI with current config
         updateHotkeyList();
 
         // Set initial status
         updateStatusBar();
+
+        String lastOpenedPath = configService.getConfig().getLastOpenedFolder();
+        if(lastOpenedPath != null && new File(lastOpenedPath).exists()){
+            System.out.println("Loading: "+configService.getConfig().getLastOpenedFolder());
+            loadImagesFromFolder(new File(lastOpenedPath));
+        }
+        setupKeyboardFocus();
     }
 
     private void setupKeyboardFocus() {
@@ -121,6 +129,7 @@ public class MainController implements Initializable {
                 }
                 event.consume();
             }
+            setupKeyboardFocus();
         });
     }
 
@@ -132,9 +141,19 @@ public class MainController implements Initializable {
                 if (empty || item == null) {
                     setText(null);
                     setStyle("");
+                    setTooltip(null);
                 } else {
                     setText(item);
-                    setStyle("-fx-font-family: 'Courier New', monospace; -fx-font-size: 12px;");
+                    setStyle("-fx-font-family: 'Consolas', 'Monaco', 'Courier New', monospace; " +
+                            "-fx-font-size: 11px; " +
+                            "-fx-text-fill: #2c3e50; " +
+                            "-fx-padding: 5 8 5 8;");
+
+                    // Extract the folder path for tooltip
+                    if (item.contains("] ") && !item.contains("<Not Configured>")) {
+                        String path = item.substring(item.indexOf("] ") + 2);
+                        setTooltip(new Tooltip("Click or press hotkey to move image to:\n" + path));
+                    }
                 }
             }
         });
@@ -144,10 +163,12 @@ public class MainController implements Initializable {
         openFolderMenuItem.setOnAction(e -> openFolder());
         configureFoldersMenuItem.setOnAction(e -> openConfigDialog());
         exitMenuItem.setOnAction(e -> Platform.exit());
+//        resetFocus.setOnAction(e -> setupKeyboardFocus());
     }
 
     @FXML
     private void handleKeyPressed(KeyEvent event) {
+        System.out.println(event);
         if (currentImages == null || currentImages.isEmpty()) {
             return;
         }
@@ -175,6 +196,15 @@ public class MainController implements Initializable {
             case DIGIT7: case NUMPAD7: moveToFolder(7); break;
             case DIGIT8: case NUMPAD8: moveToFolder(8); break;
             case DIGIT9: case NUMPAD9: moveToFolder(9); break;
+            case O:
+                if(event.isControlDown())
+                    openFolder();
+                break;
+            case P:
+                if(event.isControlDown())
+                    openConfigDialog();;
+                break;
+
         }
 
         event.consume();
@@ -200,6 +230,8 @@ public class MainController implements Initializable {
             }
         }
         event.consume();
+        setupKeyboardFocus();
+
     }
 
     private void openFolder() {
@@ -240,13 +272,15 @@ public class MainController implements Initializable {
                     if (!currentImages.isEmpty()) {
                         displayCurrentImage();
                         // Pre-cache next 10 images
-                        imageService.preCacheImages(currentImages, currentImageIndex, 10);
+                        imageService.preCacheImages(currentImages, currentImageIndex, configService.getConfig().getPrevCache(),configService.getConfig().getNextCache());
                     } else {
                         showAlert("No Images", "No supported image files found in the selected folder.");
                     }
 
                     progressBar.setVisible(false);
                     updateStatusBar();
+                    configService.getConfig().setLastOpenedFolder(folder.getAbsolutePath());
+                    currentFolderLabel.setText(folder.getAbsolutePath());
                 });
             }
 
@@ -302,7 +336,7 @@ public class MainController implements Initializable {
         updateStatusBar();
 
         // Pre-cache surrounding images
-        imageService.preCacheImages(currentImages, currentImageIndex, 10);
+        imageService.preCacheImages(currentImages, currentImageIndex, configService.getConfig().getPrevCache(),configService.getConfig().getNextCache());
     }
 
     private void navigateNext() {
@@ -379,6 +413,9 @@ public class MainController implements Initializable {
         if (sourceFile.renameTo(destinationFile)) {
             // Remove from current list
             currentImages.remove(currentImageIndex);
+
+            // Increment processed count
+            imageService.incrementProcessedCount();
 
             // Adjust index if necessary
             if (currentImageIndex >= currentImages.size() && !currentImages.isEmpty()) {
@@ -499,4 +536,7 @@ public class MainController implements Initializable {
         alert.setContentText(message);
         alert.showAndWait();
     }
+
+
+
 }

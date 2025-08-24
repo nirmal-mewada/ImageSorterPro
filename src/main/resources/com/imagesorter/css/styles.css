@@ -49,15 +49,30 @@
     -fx-background-color: transparent;
     -fx-border-width: 0 0 1 0;
     -fx-border-color: #f8f9fa;
+    -fx-text-fill: #2c3e50;
+    -fx-font-family: "Consolas", "Monaco", "Courier New", monospace;
+    -fx-font-size: 11px;
 }
 
 .hotkey-list .list-cell:hover {
     -fx-background-color: #f8f9fa;
+    -fx-text-fill: #1976d2;
 }
 
 .hotkey-list .list-cell:selected {
     -fx-background-color: #e3f2fd;
     -fx-text-fill: #1976d2;
+    -fx-font-weight: bold;
+}
+
+.hotkey-list .list-cell:empty {
+    -fx-background-color: transparent;
+    -fx-text-fill: transparent;
+}
+
+/* Ensure text is always visible */
+.list-cell .text {
+    -fx-fill: inherit;
 }
 
 /* Image Scroll Pane */
@@ -285,7 +300,7 @@
         -fx-text-fill: #f8f9fa;
     }
 
-    .menu-bar {
+    .menu-bar1 {
         -fx-background-color: #343a40;
         -fx-border-color: #495057;
     }

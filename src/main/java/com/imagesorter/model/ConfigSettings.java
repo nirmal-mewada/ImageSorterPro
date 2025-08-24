@@ -1,7 +1,9 @@
 // ConfigSettings.java
 package com.imagesorter.model;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 /**
@@ -9,22 +11,31 @@ import java.util.Map;
  * Stores folder mappings for hotkeys 1-9
  */
 public class ConfigSettings {
-    private Map<Integer, String> folderPaths;
+    private Map<Integer, String> allFolderPaths;
     private String lastOpenedFolder;
     private boolean confirmDelete;
     private int cacheSize;
+    private int prevCache;
+    private int nextCache;
+    private int threadPoolSize;
+    private HashSet<String> supportedExtensions = new HashSet<>(Arrays.asList(
+            "jpg", "jpeg", "png", "gif", "bmp", "tiff", "tif"
+            ));
     
     public ConfigSettings() {
-        this.folderPaths = new HashMap<>();
+        this.allFolderPaths = new HashMap<>();
         this.confirmDelete = true;
-        this.cacheSize = 20; // Default cache size for images
+        this.cacheSize = 20;
+        this.prevCache = 5;
+        this.nextCache= 8;
+        this.threadPoolSize = 4;
     }
     
     public String getFolderPath(int hotkeyNumber) {
         if (hotkeyNumber < 1 || hotkeyNumber > 9) {
             throw new IllegalArgumentException("Hotkey number must be between 1 and 9");
         }
-        return folderPaths.get(hotkeyNumber);
+        return allFolderPaths.get(hotkeyNumber);
     }
     
     public void setFolderPath(int hotkeyNumber, String path) {
@@ -32,26 +43,30 @@ public class ConfigSettings {
             throw new IllegalArgumentException("Hotkey number must be between 1 and 9");
         }
         if (path == null || path.trim().isEmpty()) {
-            folderPaths.remove(hotkeyNumber);
+            allFolderPaths.remove(hotkeyNumber);
         } else {
-            folderPaths.put(hotkeyNumber, path.trim());
+            allFolderPaths.put(hotkeyNumber, path.trim());
         }
     }
     
     public Map<Integer, String> getAllFolderPaths() {
-        return new HashMap<>(folderPaths);
+        return new HashMap<>(allFolderPaths);
     }
-    
+
+    public void setAllFolderPaths(Map<Integer, String> folderPaths) {
+        this.allFolderPaths = folderPaths;
+    }
+
     public void clearAllFolderPaths() {
-        folderPaths.clear();
+        allFolderPaths.clear();
     }
     
     public boolean hasConfiguredFolders() {
-        return !folderPaths.isEmpty();
+        return !allFolderPaths.isEmpty();
     }
     
     public int getConfiguredFolderCount() {
-        return folderPaths.size();
+        return allFolderPaths.size();
     }
     
     // Other getters and setters
@@ -65,14 +80,50 @@ public class ConfigSettings {
     public void setCacheSize(int cacheSize) { 
         this.cacheSize = Math.max(5, Math.min(100, cacheSize)); // Limit cache size
     }
-    
+
+    public int getPrevCache() {
+        return prevCache;
+    }
+
+    public void setPrevCache(int prevCache) {
+        this.prevCache = prevCache;
+    }
+
+    public int getNextCache() {
+        return nextCache;
+    }
+
+    public void setNextCache(int nextCache) {
+        this.nextCache = nextCache;
+    }
+
+    public int getThreadPoolSize() {
+        return threadPoolSize;
+    }
+
+    public void setThreadPoolSize(int threadPoolSize) {
+        this.threadPoolSize = threadPoolSize;
+    }
+
     @Override
     public String toString() {
         return "ConfigSettings{" +
-                "folderPaths=" + folderPaths +
+                "folderPaths=" + allFolderPaths +
                 ", lastOpenedFolder='" + lastOpenedFolder + '\'' +
                 ", confirmDelete=" + confirmDelete +
                 ", cacheSize=" + cacheSize +
+                ", prevCache=" + prevCache +
+                ", nextCache=" + nextCache +
+                ", threadPoolSize=" + threadPoolSize +
+                ", supportedExtensions=" + supportedExtensions +
                 '}';
+    }
+
+    public HashSet<String> getSupportedExtensions() {
+        return supportedExtensions;
+    }
+
+    public void setSupportedExtensions(HashSet<String> supportedExtensions) {
+        this.supportedExtensions = supportedExtensions;
     }
 }
