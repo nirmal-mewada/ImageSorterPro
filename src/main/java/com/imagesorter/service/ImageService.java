@@ -1,22 +1,18 @@
 package com.imagesorter.service;
 
 import com.imagesorter.MemUtils;
+import com.imagesorter.model.ImageCache;
+import com.imagesorter.model.ImageFile;
 import com.imagesorter.utils.ImageUtils;
 import javafx.concurrent.Task;
 import javafx.scene.image.Image;
-import com.imagesorter.model.ImageCache;
-import com.imagesorter.model.ImageFile;
 
-import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
-import javax.imageio.stream.ImageInputStream;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.Iterator;
 
 /**
  * Service for handling image operations including loading, caching, EXIF rotation, and file management

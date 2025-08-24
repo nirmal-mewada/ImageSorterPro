@@ -64,9 +64,12 @@
 
                 <ScrollPane fx:id="imageScrollPane" VBox.vgrow="ALWAYS"
                             fitToWidth="true" fitToHeight="true"
-                            pannable="true" styleClass="image-scroll-pane">
-                    <ImageView fx:id="imageView" preserveRatio="true" smooth="true"
-                               pickOnBounds="true" styleClass="main-image" />
+                            pannable="true" styleClass="image-scroll-pane"
+                            hbarPolicy="NEVER" vbarPolicy="NEVER">
+                    <StackPane>
+                        <ImageView fx:id="imageView" preserveRatio="true" smooth="true"
+                                   pickOnBounds="true" styleClass="main-image" />
+                    </StackPane>
                 </ScrollPane>
             </VBox>
         </HBox>
