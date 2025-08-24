@@ -8,6 +8,8 @@ import com.imagesorter.model.ConfigSettings;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Service for managing application configuration
@@ -156,9 +158,17 @@ public class ConfigService {
             return false;
         }
 
-        // Check if at least one folder is configured
+        List<String> hotkeys = new ArrayList<>();
         for (int i = 1; i <= 9; i++) {
-            String folderPath = config.getFolderPath(i);
+            hotkeys.add(String.valueOf(i));
+        }
+        for (char c = 'a'; c <= 'z'; c++) {
+            hotkeys.add(String.valueOf(c));
+        }
+
+        // Check if at least one folder is configured
+        for (String hotkey : hotkeys) {
+            String folderPath = config.getFolderPath(hotkey);
             if (folderPath != null && !folderPath.trim().isEmpty()) {
                 File folder = new File(folderPath);
                 if (!folder.exists() || !folder.isDirectory()) {

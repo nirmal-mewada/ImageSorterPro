@@ -14,6 +14,7 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.DirectoryChooser;
@@ -175,43 +176,41 @@ public class MainController implements Initializable {
 
     @FXML
     private void handleKeyPressed(KeyEvent event) {
-//        System.out.println(event);
+        System.out.println(event);
         if (currentImages == null || currentImages.isEmpty()) {
             return;
         }
 
-        switch (event.getCode()) {
-            case RIGHT:
-                navigateNext();
-                break;
-            case LEFT:
-                navigatePrevious();
-                break;
-            case DELETE:
-                deleteCurrentImage();
-                break;
-            case DIGIT0:
-            case NUMPAD0:
-                moveToArchive();
-                break;
-            case DIGIT1: case NUMPAD1: moveToFolder(1); break;
-            case DIGIT2: case NUMPAD2: moveToFolder(2); break;
-            case DIGIT3: case NUMPAD3: moveToFolder(3); break;
-            case DIGIT4: case NUMPAD4: moveToFolder(4); break;
-            case DIGIT5: case NUMPAD5: moveToFolder(5); break;
-            case DIGIT6: case NUMPAD6: moveToFolder(6); break;
-            case DIGIT7: case NUMPAD7: moveToFolder(7); break;
-            case DIGIT8: case NUMPAD8: moveToFolder(8); break;
-            case DIGIT9: case NUMPAD9: moveToFolder(9); break;
-            case O:
-                if(event.isControlDown())
-                    openFolder();
-                break;
-            case P:
-                if(event.isControlDown())
-                    openConfigDialog();;
-                break;
+        KeyCode code = event.getCode();
+        String keyText = code.getName().toLowerCase();
 
+        if(keyText.matches("[1-9a-z]") && !event.isControlDown()){
+            moveToFolder(keyText);
+        } else {
+            switch (code) {
+                case RIGHT:
+                    navigateNext();
+                    break;
+                case LEFT:
+                    navigatePrevious();
+                    break;
+                case DELETE:
+                    deleteCurrentImage();
+                    break;
+                case NUMPAD0:
+                case DIGIT0:
+                    moveToArchive();
+                    break;
+                case O:
+                    if(event.isControlDown())
+                        openFolder();
+                    break;
+                case P:
+                    if(event.isControlDown())
+                        openConfigDialog();
+                    break;
+
+            }
         }
 
         event.consume();
@@ -369,13 +368,13 @@ public class MainController implements Initializable {
         }
     }
 
-    private void moveToFolder(int folderNumber) {
+    private void moveToFolder(String hotkey) {
         ConfigSettings config = configService.getConfig();
-        String folderPath = config.getFolderPath(folderNumber);
+        String folderPath = config.getFolderPath(hotkey);
 
         if (folderPath == null || folderPath.trim().isEmpty()) {
-            showAlert("Configuration Error",
-                    "Folder " + folderNumber + " is not configured. Please configure folders first.");
+             showAlert("Configuration Error",
+                     "Folder for hotkey '" + hotkey + "' is not configured. Please configure folders first.");
             return;
         }
 
@@ -514,7 +513,7 @@ public class MainController implements Initializable {
 
             Stage configStage = new Stage();
             configStage.setTitle("Configure Folders");
-            configStage.setScene(new Scene(root, 600, 500));
+            configStage.setScene(new Scene(root, 600, 800)); // Increased height
             configStage.initModality(Modality.APPLICATION_MODAL);
             configStage.initOwner(imageView.getScene().getWindow());
 
@@ -525,6 +524,7 @@ public class MainController implements Initializable {
 
         } catch (Exception e) {
             showAlert("Error", "Failed to open configuration dialog: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -532,11 +532,24 @@ public class MainController implements Initializable {
         hotkeyListView.getItems().clear();
         ConfigSettings config = configService.getConfig();
 
+        // Add numbers 1-9
         for (int i = 1; i <= 9; i++) {
-            String path = config.getFolderPath(i);
-            String displayText = String.format("[%d] %s", i,
+            String hotkey = String.valueOf(i);
+            String path = config.getFolderPath(hotkey);
+            String displayText = String.format("[%s] %s", hotkey,
                     path != null && !path.trim().isEmpty() ? path : "<Not Configured>");
             hotkeyListView.getItems().add(displayText);
+        }
+
+        // Add letters a-z
+        for (char c = 'a'; c <= 'z'; c++) {
+            String hotkey = String.valueOf(c);
+            String path = config.getFolderPath(hotkey);
+            if (path != null && !path.trim().isEmpty()) {
+                String displayText = String.format("[%s] %s", hotkey,
+                        path != null && !path.trim().isEmpty() ? path : "<Not Configured>");
+                hotkeyListView.getItems().add(displayText);
+            }
         }
     }
 
@@ -544,7 +557,7 @@ public class MainController implements Initializable {
         if (currentImages == null || currentImages.isEmpty()) {
             currentFileLabel.setText("No images loaded");
             progressLabel.setText("Image 0 / 0");
-            remainingLabel.setText("Remaining: 0");
+//            remainingLabel.setText("Remaining: 0");
             progressBar.setProgress(0);
         } else {
             ImageFile currentImageFile = currentImages.get(currentImageIndex);
@@ -553,8 +566,8 @@ public class MainController implements Initializable {
             int totalOriginal = currentImages.size() +
                     (currentSourceFolder != null ? imageService.getProcessedCount() : 0);
             progressLabel.setText(String.format("Image %d / %d",
-                    currentImageIndex + 1, totalOriginal));
-            remainingLabel.setText("Remaining: " + currentImages.size());
+                    currentImageIndex + 1, currentImages.size()));
+//            remainingLabel.setText("Remaining: " + currentImages.size());
 
             if (totalOriginal > 0) {
                 double progress = (double) imageService.getProcessedCount() / totalOriginal;

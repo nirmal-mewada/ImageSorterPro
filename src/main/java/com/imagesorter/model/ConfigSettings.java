@@ -8,10 +8,10 @@ import java.util.Map;
 
 /**
  * Configuration settings for the application
- * Stores folder mappings for hotkeys 1-9
+ * Stores folder mappings for hotkeys 1-9 and a-z
  */
 public class ConfigSettings {
-    private Map<Integer, String> allFolderPaths;
+    private Map<String, String> allFolderPaths;
     private String lastOpenedFolder;
     private boolean confirmDelete;
     private int cacheSize;
@@ -31,29 +31,23 @@ public class ConfigSettings {
         this.threadPoolSize = 4;
     }
     
-    public String getFolderPath(int hotkeyNumber) {
-        if (hotkeyNumber < 1 || hotkeyNumber > 9) {
-            throw new IllegalArgumentException("Hotkey number must be between 1 and 9");
-        }
-        return allFolderPaths.get(hotkeyNumber);
+    public String getFolderPath(String hotkey) {
+        return allFolderPaths.get(hotkey);
     }
     
-    public void setFolderPath(int hotkeyNumber, String path) {
-        if (hotkeyNumber < 1 || hotkeyNumber > 9) {
-            throw new IllegalArgumentException("Hotkey number must be between 1 and 9");
-        }
+    public void setFolderPath(String hotkey, String path) {
         if (path == null || path.trim().isEmpty()) {
-            allFolderPaths.remove(hotkeyNumber);
+            allFolderPaths.remove(hotkey);
         } else {
-            allFolderPaths.put(hotkeyNumber, path.trim());
+            allFolderPaths.put(hotkey, path.trim());
         }
     }
     
-    public Map<Integer, String> getAllFolderPaths() {
+    public Map<String, String> getAllFolderPaths() {
         return new HashMap<>(allFolderPaths);
     }
 
-    public void setAllFolderPaths(Map<Integer, String> folderPaths) {
+    public void setAllFolderPaths(Map<String, String> folderPaths) {
         this.allFolderPaths = folderPaths;
     }
 
@@ -107,15 +101,15 @@ public class ConfigSettings {
 
     @Override
     public String toString() {
-        return "ConfigSettings{" +
-                "folderPaths=" + allFolderPaths +
-                ", lastOpenedFolder='" + lastOpenedFolder + '\'' +
-                ", confirmDelete=" + confirmDelete +
-                ", cacheSize=" + cacheSize +
-                ", prevCache=" + prevCache +
-                ", nextCache=" + nextCache +
-                ", threadPoolSize=" + threadPoolSize +
-                ", supportedExtensions=" + supportedExtensions +
+        return "ConfigSettings{"
+                + "folderPaths=" + allFolderPaths + 
+                ", lastOpenedFolder='" + lastOpenedFolder + "'"
+                + ", confirmDelete=" + confirmDelete + 
+                ", cacheSize=" + cacheSize + 
+                ", prevCache=" + prevCache + 
+                ", nextCache=" + nextCache + 
+                ", threadPoolSize=" + threadPoolSize + 
+                ", supportedExtensions=" + supportedExtensions + 
                 '}';
     }
 
