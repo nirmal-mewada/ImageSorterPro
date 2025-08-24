@@ -176,7 +176,7 @@ public class MainController implements Initializable {
 
     @FXML
     private void handleKeyPressed(KeyEvent event) {
-        System.out.println(event);
+//        System.out.println(event);
         if (currentImages == null || currentImages.isEmpty()) {
             return;
         }
@@ -536,9 +536,12 @@ public class MainController implements Initializable {
         for (int i = 1; i <= 9; i++) {
             String hotkey = String.valueOf(i);
             String path = config.getFolderPath(hotkey);
-            String displayText = String.format("[%s] %s", hotkey,
-                    path != null && !path.trim().isEmpty() ? path : "<Not Configured>");
-            hotkeyListView.getItems().add(displayText);
+            if(path != null && !path.trim().isEmpty()){
+                String displayText = String.format("[%s] %s", hotkey,
+                        path != null && !path.trim().isEmpty() ? path : "<Not Configured>");
+                hotkeyListView.getItems().add(displayText);
+            }
+
         }
 
         // Add letters a-z

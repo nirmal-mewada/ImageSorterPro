@@ -2,7 +2,7 @@ name: Java CI with Maven and Release
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "none" ]
 
 jobs:
   build_and_release:
