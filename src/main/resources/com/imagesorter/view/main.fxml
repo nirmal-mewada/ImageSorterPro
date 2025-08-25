@@ -35,17 +35,10 @@
 
     <!-- Main Content Area -->
     <center>
-        <HBox spacing="10.0">
-            <padding>
-                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-            </padding>
-
+        <SplitPane dividerPositions="0.3" HBox.hgrow="ALWAYS">
             <!-- Left Panel - Hotkey Folder List -->
-            <VBox spacing="5.0" minWidth="300.0" maxWidth="400.0">
+            <VBox spacing="5.0" minWidth="100.0" maxWidth="600.0">
                 <Label text="Destination Folders" styleClass="section-title" />
-                <Label text="Press number keys 1-9 to move current image" styleClass="help-text" />
-                <Label text="Press 0 to move to Archive folder" styleClass="help-text" />
-                <Separator />
                 <CheckBox text="Enable click to move" fx:id="clickToMoveCheckBox"
                           selected="true" styleClass="help-text" />
                 <Separator />
@@ -54,15 +47,20 @@
                 </ListView>
 
                 <Separator />
-                <Label text="Navigation:" styleClass="help-text" />
-                <Label text="← → Arrow Keys: Previous/Next" styleClass="help-text" />
-                <Label text="Delete Key: Delete current image" styleClass="help-text" />
-                <Label text="Mouse Click: Left=Previous, Right=Next" styleClass="help-text" />
+
+                <Label text="Press (Shift+ to Archive) any keys  1-9 or a-z to move current image" styleClass="help-text" />
+                <Label text="Press 0 to move to global Archive folder" styleClass="help-text" />
                 <Label text="CTRL + SHIFT + {X} : Config update" styleClass="help-text" />
+                <Label text="   Delete Key: Delete current image" styleClass="help-text" />
+                <Separator />
+                <Label text="Navigation:" styleClass="help-text" />
+                <Label text="   ← → Arrow Keys: Previous/Next" styleClass="help-text" />
+                <Label text="   Mouse Click: Left=Previous, Right=Next" styleClass="help-text" />
+
             </VBox>
 
             <!-- Center Panel - Image Viewer -->
-            <VBox spacing="5.0" HBox.hgrow="ALWAYS">
+            <VBox spacing="5.0">
                 <Label text="Image Preview" styleClass="section-title" />
 
                 <ScrollPane fx:id="imageScrollPane" VBox.vgrow="ALWAYS"
@@ -75,7 +73,7 @@
                     </StackPane>
                 </ScrollPane>
             </VBox>
-        </HBox>
+        </SplitPane>
     </center>
 
     <!-- Bottom Panel - Status Bar -->

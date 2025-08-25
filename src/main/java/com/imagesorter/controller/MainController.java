@@ -184,7 +184,7 @@ public class MainController implements Initializable {
                         //extract char from squire brackets at start and send ot to move files method
                         String key = value.charAt(1)+"";
                         if(key.matches("[1-9a-z]")){
-                            moveToFolder(key);
+                            moveToFolder(key,mouseEvent.isShiftDown());
                         }
                     }
                 }
@@ -211,7 +211,7 @@ public class MainController implements Initializable {
         } else  if (currentImages == null || currentImages.isEmpty()) {
             return;
         } else if(keyText.matches("[1-9a-z]") && !event.isControlDown()){
-            moveToFolder(keyText);
+            moveToFolder(keyText, event.isShiftDown());
         } else {
             switch (code) {
                 case RIGHT:
@@ -225,7 +225,7 @@ public class MainController implements Initializable {
                     break;
                 case NUMPAD0:
                 case DIGIT0:
-                    moveToArchive();
+                    moveToArchive(currentSourceFolder);
                     break;
                 case O:
                     if(event.isControlDown())
@@ -410,7 +410,7 @@ public class MainController implements Initializable {
         }
     }
 
-    private void moveToFolder(String hotkey) {
+    private void moveToFolder(String hotkey, boolean archive) {
         ConfigSettings config = configService.getConfig();
         String folderPath = config.getFolderPath(hotkey);
 
@@ -427,16 +427,18 @@ public class MainController implements Initializable {
                 return;
             }
         }
-
-        moveCurrentImageTo(destinationFolder);
+        if(archive)
+            moveToArchive(destinationFolder);
+        else
+             moveCurrentImageTo(destinationFolder);
     }
 
-    private void moveToArchive() {
-        if (currentSourceFolder == null) {
+    private void moveToArchive(File parent) {
+        if (parent == null) {
             return;
         }
 
-        File archiveFolder = new File(currentSourceFolder, "Archive");
+        File archiveFolder = new File(parent, "Archive");
         if (!archiveFolder.exists()) {
             if (!archiveFolder.mkdirs()) {
                 showAlert("Error", "Failed to create Archive folder.");
@@ -469,7 +471,7 @@ public class MainController implements Initializable {
         // Move file
         if (sourceFile.renameTo(destinationFile)) {
             // Remove from current list
-
+            System.out.println("Moved: " + sourceFile.getAbsolutePath() + " -> " + destinationFile.getAbsolutePath());
             lastAction.setText("Last Action: [Moved] " + sourceFile.getName() +" ->" + destinationFolder.getPath());
             currentImages.remove(currentImageIndex);
 
