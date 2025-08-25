@@ -309,10 +309,6 @@ public class MainController implements Initializable {
     }
 
     private void loadImagesFromFolder(File folder) {
-        if(currentImages!=null) {
-            currentImages.clear();
-            currentImageIndex = -1;
-        }
         currentSourceFolder = folder;
 
         // Show loading indicator
@@ -330,7 +326,8 @@ public class MainController implements Initializable {
             protected void succeeded() {
                 Platform.runLater(() -> {
                     currentImages = getValue();
-                    currentImageIndex = 0;
+                    if(currentImageIndex < 1 ) // keep current index in case of reload
+                        currentImageIndex = 0;
 
                     if (!currentImages.isEmpty()) {
                         displayCurrentImage();
@@ -370,10 +367,6 @@ public class MainController implements Initializable {
 
 
         if (image != null) {
-            if(image.isError()){
-                System.out.println("Error.........................."+image.getException());
-                image.getException().printStackTrace();
-            }
             imageView.setImage(image);
             if(currentImageFile.getExifRotate() == null){
                 currentImageFile.setExifRotate(ImageUtils.displayImageWithExifCorrection(currentImageFile.getFile()));
@@ -447,7 +440,7 @@ public class MainController implements Initializable {
         if(archive)
             moveToArchive(destinationFolder);
         else
-             moveCurrentImageTo(destinationFolder);
+            moveCurrentImageTo(destinationFolder);
     }
 
     private void moveToArchive(File parent) {
