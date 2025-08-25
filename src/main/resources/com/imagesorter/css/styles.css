@@ -112,12 +112,15 @@
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 0);
 }
 
+
 .thumbnail-selected {
-    -fx-background-color: #e3f2fd;
-    -fx-border-color: #0078D7;
-    -fx-border-width: 2px;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,120,215,0.5), 10, 0, 0, 0);
+    -fx-background-color: #0000FF;
+    -fx-border-color: #0000FF;
+    -fx-border-width: 6px;
+    -fx-effect: dropshadow(three-pass-box, rgba(16, 11, 36,0.7), 24, 0.5, 1, 0);
+    -fx-padding: 12px;
 }
+
 
 /* Status Bar */
 .status-label {

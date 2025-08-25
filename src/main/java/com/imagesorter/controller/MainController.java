@@ -32,6 +32,7 @@ import javafx.stage.Stage;
 
 import java.awt.*;
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.Deque;
 import java.util.LinkedList;
@@ -97,6 +98,7 @@ public class MainController implements Initializable {
 
         openLastOpenedFolder();
         setupKeyboardFocus();
+        updateThumbnails();
     }
 
     private void openLastOpenedFolder() {
@@ -412,20 +414,44 @@ public class MainController implements Initializable {
 
     private void updateThumbnails() {
         thumbnailBox.getChildren().clear();
-        List<Image> recentImages = imageService.getRecentImages(9);
 
+        if (currentImages == null || currentImages.isEmpty()) {
+            return;
+        }
 
+        int halfThumbnails = 5;
+        int startIndex = Math.max(0, currentImageIndex - halfThumbnails);
+        int endIndex = Math.min(currentImages.size() - 1, currentImageIndex + halfThumbnails);
 
-        for (Image image : recentImages) {
+        for (int i = startIndex; i <= endIndex; i++) {
+            ImageFile imageFile = currentImages.get(i);
+            Image image = null;
+            try {
+                image = imageService.loadImage(imageFile);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            if (image == null) {
+                // If the image is not in the cache, we can show a placeholder or load it.
+                // For now, let's just skip it.
+                continue;
+            }
+
             ImageView thumbnail = new ImageView(image);
-            //thumbnail.fitHeightProperty().bind(thumbnailBox.heightProperty().subtract(10));
-             thumbnail.setFitHeight(100);                                                                                                                                                                 
-             thumbnail.setFitWidth(100);
             thumbnail.setPreserveRatio(true);
             thumbnail.getStyleClass().add("thumbnail-image");
-
-            if (image.equals(imageView.getImage())) {
+//            thumbnail.fitHeightProperty().bind(thumbnailBox.heightProperty().subtract(5));
+//            System.out.println( thumbnailBox.heightProperty());
+            double thumbBoxheight = thumbnailBox.getHeight();
+            if (i == currentImageIndex) {
+                thumbnail.setFitHeight(thumbBoxheight);
+                thumbnail.setFitWidth(thumbBoxheight);
                 thumbnail.getStyleClass().add("thumbnail-selected");
+            } else {
+                thumbBoxheight = thumbBoxheight * 0.7;
+                thumbnail.setFitHeight(thumbBoxheight);
+                thumbnail.setFitWidth(thumbBoxheight);
             }
 
             thumbnailBox.getChildren().add(thumbnail);
