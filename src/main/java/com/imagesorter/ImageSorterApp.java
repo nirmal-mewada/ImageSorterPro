@@ -4,8 +4,11 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import com.imagesorter.service.ConfigService;
+
+import java.util.Objects;
 
 /**
  * Main Application class for Image Sorter Pro
@@ -13,7 +16,7 @@ import com.imagesorter.service.ConfigService;
  */
 public class ImageSorterApp extends Application {
     
-    private static final String APP_TITLE = "Image Sorter Pro";
+    private static final String APP_TITLE = "Image Sorter by Nirmal";
     private static final String MAIN_FXML = "/com/imagesorter/view/main.fxml";
     private static final String STYLES_CSS = "/com/imagesorter/css/styles.css";
     
@@ -40,7 +43,9 @@ public class ImageSorterApp extends Application {
             primaryStage.setScene(scene);
             primaryStage.setMinWidth(800);
             primaryStage.setMinHeight(600);
-            
+            primaryStage.getIcons().add(new Image(Objects.requireNonNull(ImageSorterApp.class.getResourceAsStream("/com/imagesorter/images/img_2.png"))));
+
+
             // Handle application close
             primaryStage.setOnCloseRequest(event -> {
                 // Save configuration before closing
