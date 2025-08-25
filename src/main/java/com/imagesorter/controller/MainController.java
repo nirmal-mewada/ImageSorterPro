@@ -22,6 +22,7 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
@@ -55,6 +56,7 @@ public class MainController implements Initializable {
 
     @FXML private ListView<String> hotkeyListView;
     @FXML private ImageView imageView;
+    @FXML private HBox thumbnailBox;
     @FXML private ScrollPane imageScrollPane;
 
     @FXML private Label currentFileLabel;
@@ -331,6 +333,7 @@ public class MainController implements Initializable {
 
                     if (!currentImages.isEmpty()) {
                         displayCurrentImage();
+                        updateThumbnails();
                         // Pre-cache next 10 images
                         imageService.preCacheImages(currentImages, currentImageIndex, configService.getConfig().getPrevCache(),configService.getConfig().getNextCache());
                     } else {
@@ -401,9 +404,32 @@ public class MainController implements Initializable {
         }
 
         updateStatusBar();
+        updateThumbnails();
 
         // Pre-cache surrounding images
         imageService.preCacheImages(currentImages, currentImageIndex, configService.getConfig().getPrevCache(),configService.getConfig().getNextCache());
+    }
+
+    private void updateThumbnails() {
+        thumbnailBox.getChildren().clear();
+        List<Image> recentImages = imageService.getRecentImages(9);
+
+
+
+        for (Image image : recentImages) {
+            ImageView thumbnail = new ImageView(image);
+            //thumbnail.fitHeightProperty().bind(thumbnailBox.heightProperty().subtract(10));
+             thumbnail.setFitHeight(100);                                                                                                                                                                 
+             thumbnail.setFitWidth(100);
+            thumbnail.setPreserveRatio(true);
+            thumbnail.getStyleClass().add("thumbnail-image");
+
+            if (image.equals(imageView.getImage())) {
+                thumbnail.getStyleClass().add("thumbnail-selected");
+            }
+
+            thumbnailBox.getChildren().add(thumbnail);
+        }
     }
 
     private void navigateNext() {

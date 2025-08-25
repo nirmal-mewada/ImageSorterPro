@@ -108,6 +108,10 @@ public class ImageService {
         return imageCache.get(imageFile.getPath());
     }
 
+    public List<Image> getRecentImages(int count) {
+        return imageCache.getRecentImages(count);
+    }
+
     /**
      * Pre-caches images around the current index for fast navigation
      */

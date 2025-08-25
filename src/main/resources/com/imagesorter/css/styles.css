@@ -97,6 +97,28 @@
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 15, 0.5, 0, 3);
 }
 
+/* Thumbnail Bar */
+.thumbnail-bar {
+    -fx-padding: 5px;
+    -fx-background-color: #f1f1f1;
+    -fx-border-color: #ccc;
+    -fx-border-width: 1 0 1 0;
+}
+
+.thumbnail-image {
+    -fx-border-color: #ccc;
+    -fx-border-width: 1px;
+    -fx-border-radius: 3px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 0);
+}
+
+.thumbnail-selected {
+    -fx-background-color: #e3f2fd;
+    -fx-border-color: #0078D7;
+    -fx-border-width: 2px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,120,215,0.5), 10, 0, 0, 0);
+}
+
 /* Status Bar */
 .status-label {
     -fx-font-size: 12px;

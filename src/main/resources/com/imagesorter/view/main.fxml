@@ -64,15 +64,23 @@
             <VBox spacing="5.0">
                 <Label text="Image Preview" styleClass="section-title" />
 
-                <ScrollPane fx:id="imageScrollPane" VBox.vgrow="ALWAYS"
-                            fitToWidth="true" fitToHeight="true"
-                            pannable="true" styleClass="image-scroll-pane"
-                            hbarPolicy="NEVER" vbarPolicy="NEVER">
-                    <StackPane>
-                        <ImageView fx:id="imageView" preserveRatio="true" smooth="true"
-                                   pickOnBounds="true" styleClass="main-image" />
-                    </StackPane>
-                </ScrollPane>
+                <SplitPane dividerPositions="0.2" orientation="VERTICAL" VBox.vgrow="ALWAYS">
+                    <items>
+                        <HBox fx:id="thumbnailBox" alignment="CENTER" spacing="5" styleClass="thumbnail-bar">
+                            <!-- Thumbnails will be added here dynamically -->
+                        </HBox>
+
+                        <ScrollPane fx:id="imageScrollPane" VBox.vgrow="ALWAYS"
+                                    fitToWidth="true" fitToHeight="true"
+                                    pannable="true" styleClass="image-scroll-pane"
+                                    hbarPolicy="NEVER" vbarPolicy="NEVER">
+                            <StackPane>
+                                <ImageView fx:id="imageView" preserveRatio="true" smooth="true"
+                                           pickOnBounds="true" styleClass="main-image" />
+                            </StackPane>
+                        </ScrollPane>
+                    </items>
+                </SplitPane>
             </VBox>
         </SplitPane>
     </center>

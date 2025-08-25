@@ -2,7 +2,10 @@
 package com.imagesorter.model;
 
 import javafx.scene.image.Image;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -90,6 +93,20 @@ public class ImageCache {
         return cache.isEmpty() ? 0.0 : 0.8; // Placeholder value
     }
     
+    public synchronized List<Image> getRecentImages(int count) {
+        List<Image> recentImages = new ArrayList<>();
+        if (cache.isEmpty()) {
+            return recentImages;
+        }
+
+        List<CacheEntry> entries = new ArrayList<>(cache.values());
+        for (int i = entries.size() - 1; i >= 0 && recentImages.size() < count; i--) {
+            recentImages.add(entries.get(i).image);
+        }
+        Collections.reverse(recentImages);
+        return recentImages;
+    }
+
     /**
      * Removes entries older than the specified time in milliseconds
      */
