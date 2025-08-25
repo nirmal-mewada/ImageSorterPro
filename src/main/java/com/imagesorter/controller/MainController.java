@@ -32,6 +32,8 @@ import javafx.stage.Stage;
 import java.awt.*;
 import java.io.File;
 import java.net.URL;
+import java.util.Deque;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -72,7 +74,7 @@ public class MainController implements Initializable {
     private List<ImageFile> currentImages;
     private int currentImageIndex = -1;
     private File currentSourceFolder;
-    private LastAction lastActionInfo;
+    private final Deque<LastAction> lastActionInfo = new LinkedList<>();
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -484,7 +486,7 @@ public class MainController implements Initializable {
         }
 
         // Store last action
-        lastActionInfo = new LastAction(LastAction.ActionType.MOVE, sourceFile, destinationFile);
+        addLastAction(new LastAction(LastAction.ActionType.MOVE, sourceFile, destinationFile));
 
         // Move file
         if (sourceFile.renameTo(destinationFile)) {
@@ -550,10 +552,11 @@ public class MainController implements Initializable {
             File destinationFile = new File(trashFolder, sourceFile.getName());
 
             // Store last action
-            lastActionInfo = new LastAction(LastAction.ActionType.DELETE, sourceFile, destinationFile);
+            addLastAction(new LastAction(LastAction.ActionType.DELETE, sourceFile, destinationFile));
 
             if (sourceFile.renameTo(destinationFile)) {
                 lastAction.setText("Last Action: [Deleted] " + currentImageFile.getName());
+                System.out.println("Last Action: [Deleted] "+currentImageFile.getFile().getAbsolutePath());
                 // Remove from list
                 currentImages.remove(currentImageIndex);
 
@@ -575,36 +578,47 @@ public class MainController implements Initializable {
         }
     }
 
+    private void addLastAction(LastAction action) {
+        if (lastActionInfo.size() >= configService.getConfig().getUndoSize()) {
+            lastActionInfo.removeLast();
+        }
+        lastActionInfo.addFirst(action);
+    }
+
     private void undoLastAction() {
-        if (lastActionInfo == null) {
+        if (lastActionInfo.isEmpty()) {
             lastAction.setText("Last Action: No action to undo.");
             return;
         }
 
-        switch (lastActionInfo.getActionType()) {
+        LastAction lastActionToUndo = lastActionInfo.removeFirst();
+
+        switch (lastActionToUndo.getActionType()) {
             case MOVE:
-                File sourceFile = lastActionInfo.getDestinationFile();
-                File destinationFile = lastActionInfo.getSourceFile().getParentFile();
-                if (sourceFile.renameTo(new File(destinationFile, sourceFile.getName()))) {
+                File sourceFile = lastActionToUndo.getDestinationFile();
+                File destinationFolder = lastActionToUndo.getSourceFile().getParentFile();
+                File destFile = new File(destinationFolder, sourceFile.getName());
+                if (sourceFile.renameTo(destFile)) {
                     lastAction.setText("Last Action: [Undo Move] " + sourceFile.getName());
+                    System.out.println("Last Action: [Undo Move] "+sourceFile.getAbsolutePath()+" -> "+destFile.getAbsolutePath());
                     loadImagesFromFolder(currentSourceFolder); // Reload to refresh the list
                 } else {
                     showAlert("Error", "Failed to undo move action.");
                 }
                 break;
             case DELETE:
-                File fileToRestore = lastActionInfo.getDestinationFile();
-                File originalLocation = lastActionInfo.getSourceFile().getParentFile();
-                if (fileToRestore.renameTo(new File(originalLocation, fileToRestore.getName()))) {
+                File fileToRestore = lastActionToUndo.getDestinationFile();
+                File originalLocation = lastActionToUndo.getSourceFile().getParentFile();
+                File destToRestore = new File(originalLocation, fileToRestore.getName());
+                if (fileToRestore.renameTo(destToRestore)) {
                     lastAction.setText("Last Action: [Restored] " + fileToRestore.getName());
+                    System.out.println("Last Action: [Restored] "+fileToRestore.getAbsolutePath()+" -> "+destToRestore.getAbsolutePath());
                     loadImagesFromFolder(currentSourceFolder); // Reload to refresh the list
                 } else {
                     showAlert("Error", "Failed to restore the deleted file.");
                 }
                 break;
         }
-
-        lastActionInfo = null; // Clear the last action after undo
     }
 
 

@@ -18,6 +18,7 @@ public class ConfigSettings {
     private int cacheSize;
     private int prevCache;
     private int nextCache;
+    private int undoSize;
     private int threadPoolSize;
     private String trashFolderPath;
     private HashSet<String> supportedExtensions = new HashSet<>(Arrays.asList(
@@ -32,6 +33,7 @@ public class ConfigSettings {
         this.nextCache= 8;
         this.threadPoolSize = 4;
         defaultFileChooseLocation = "";
+        undoSize = 50;
     }
     
     public String getFolderPath(String hotkey) {
@@ -118,17 +120,28 @@ public class ConfigSettings {
         this.trashFolderPath = trashFolderPath;
     }
 
+    public int getUndoSize() {
+        return undoSize;
+    }
+
+    public void setUndoSize(int undoSize) {
+        this.undoSize = undoSize;
+    }
+
     @Override
     public String toString() {
-        return "ConfigSettings{"
-                + "folderPaths=" + allFolderPaths + 
-                ", lastOpenedFolder='" + lastOpenedFolder + "'"
-                + ", confirmDelete=" + confirmDelete + 
-                ", cacheSize=" + cacheSize + 
-                ", prevCache=" + prevCache + 
-                ", nextCache=" + nextCache + 
-                ", threadPoolSize=" + threadPoolSize + 
-                ", supportedExtensions=" + supportedExtensions + 
+        return "ConfigSettings{" +
+                "allFolderPaths=" + allFolderPaths +
+                ", lastOpenedFolder='" + lastOpenedFolder + '\'' +
+                ", defaultFileChooseLocation='" + defaultFileChooseLocation + '\'' +
+                ", confirmDelete=" + confirmDelete +
+                ", cacheSize=" + cacheSize +
+                ", prevCache=" + prevCache +
+                ", nextCache=" + nextCache +
+                ", undoSize=" + undoSize +
+                ", threadPoolSize=" + threadPoolSize +
+                ", trashFolderPath='" + trashFolderPath + '\'' +
+                ", supportedExtensions=" + supportedExtensions +
                 '}';
     }
 
