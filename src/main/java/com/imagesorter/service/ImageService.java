@@ -69,7 +69,7 @@ public class ImageService {
      */
     public Image loadImage(ImageFile imageFile) throws IOException {
         String filePath = imageFile.getPath();
-        System.out.println("Loading: "+filePath+", Cache: "+this.imageCache.getStats().toString() +  ", Mem: "+ MemUtils.printHeapUsage());
+//        System.out.println("Loading: "+filePath+", Cache: "+this.imageCache.getStats().toString() +  ", Mem: "+ MemUtils.printHeapUsage());
 
         // Check cache first
         Image cachedImage = imageCache.get(filePath);

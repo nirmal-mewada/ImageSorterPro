@@ -31,6 +31,9 @@ public class ConfigController implements Initializable {
     @FXML private Button cancelButton;
     @FXML private Button clearAllButton;
 
+    @FXML private TextField trashFolderTextField;
+    @FXML private Button browseTrashFolderButton;
+
     // Services
     private ConfigService configService;
 
@@ -106,6 +109,8 @@ public class ConfigController implements Initializable {
             browseButtons.get(i).setOnAction(e -> browseForFolder(hotkey, textField));
         }
 
+        browseTrashFolderButton.setOnAction(e -> browseForFolder("Trash Folder", trashFolderTextField));
+
         // Setup action buttons
         saveButton.setOnAction(e -> saveConfiguration());
         cancelButton.setOnAction(e -> closeDialog());
@@ -119,6 +124,9 @@ public class ConfigController implements Initializable {
                 validateTextField(textField);
             });
         }
+        trashFolderTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+            validateTextField(trashFolderTextField);
+        });
     }
 
     private void validateTextField(TextField textField) {
@@ -169,10 +177,13 @@ public class ConfigController implements Initializable {
             textFields.get(i).setText(path != null ? path : "");
         }
 
+        trashFolderTextField.setText(config.getTrashFolderPath() != null ? config.getTrashFolderPath() : "");
+
         // Validate all fields after loading
         for (TextField textField : textFields) {
             validateTextField(textField);
         }
+        validateTextField(trashFolderTextField);
     }
 
     private void saveConfiguration() {
@@ -184,6 +195,8 @@ public class ConfigController implements Initializable {
             String path = textFields.get(i).getText().trim();
             config.setFolderPath(hotkey, path.isEmpty() ? null : path);
         }
+
+        config.setTrashFolderPath(trashFolderTextField.getText().trim().isEmpty() ? null : trashFolderTextField.getText().trim());
 
         // Validate configuration
         if (validateConfiguration()) {

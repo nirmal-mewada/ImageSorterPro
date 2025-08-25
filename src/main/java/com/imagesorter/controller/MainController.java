@@ -3,8 +3,10 @@ package com.imagesorter.controller;
 import com.imagesorter.MemUtils;
 import com.imagesorter.model.ConfigSettings;
 import com.imagesorter.model.ImageFile;
+import com.imagesorter.model.LastAction;
 import com.imagesorter.service.ConfigService;
 import com.imagesorter.service.ImageService;
+import com.imagesorter.utils.ImageUtils;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.event.EventHandler;
@@ -70,6 +72,7 @@ public class MainController implements Initializable {
     private List<ImageFile> currentImages;
     private int currentImageIndex = -1;
     private File currentSourceFolder;
+    private LastAction lastActionInfo;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -88,12 +91,16 @@ public class MainController implements Initializable {
         // Set initial status
         updateStatusBar();
 
+        openLastOpenedFolder();
+        setupKeyboardFocus();
+    }
+
+    private void openLastOpenedFolder() {
         String lastOpenedPath = configService.getConfig().getLastOpenedFolder();
         if(lastOpenedPath != null && new File(lastOpenedPath).exists()){
             System.out.println("Loading: "+configService.getConfig().getLastOpenedFolder());
             loadImagesFromFolder(new File(lastOpenedPath));
         }
-        setupKeyboardFocus();
     }
 
     private void setupKeyboardFocus() {
@@ -206,7 +213,9 @@ public class MainController implements Initializable {
         KeyCode code = event.getCode();
         String keyText = code.getName().toLowerCase();
 
-        if(event.isControlDown() && event.isShiftDown() && keyText.matches("[1-9a-z]") ){
+        if (event.isControlDown() && code == KeyCode.Z) {
+            undoLastAction();
+        } else if(event.isControlDown() && event.isShiftDown() && keyText.matches("[1-9a-z]") ){
             chooseOnDemandFolder(event,keyText);
         } else  if (currentImages == null || currentImages.isEmpty()) {
             return;
@@ -298,6 +307,10 @@ public class MainController implements Initializable {
     }
 
     private void loadImagesFromFolder(File folder) {
+        if(currentImages!=null) {
+            currentImages.clear();
+            currentImageIndex = -1;
+        }
         currentSourceFolder = folder;
 
         // Show loading indicator
@@ -358,9 +371,11 @@ public class MainController implements Initializable {
             if(image.isError()){
                 System.out.println("Error.........................."+image.getException());
                 image.getException().printStackTrace();
-
             }
             imageView.setImage(image);
+            if(currentImageFile.getExifRotate() == null){
+                currentImageFile.setExifRotate(ImageUtils.displayImageWithExifCorrection(currentImageFile.getFile()));
+            }
             imageView.setRotate(currentImageFile.getExifRotate());
         } else {
             // Load image asynchronously
@@ -468,6 +483,9 @@ public class MainController implements Initializable {
             counter++;
         }
 
+        // Store last action
+        lastActionInfo = new LastAction(LastAction.ActionType.MOVE, sourceFile, destinationFile);
+
         // Move file
         if (sourceFile.renameTo(destinationFile)) {
             // Remove from current list
@@ -513,8 +531,28 @@ public class MainController implements Initializable {
         }
         if (!configService.getConfig().isConfirmDelete() || (result.isPresent() && result.get() == ButtonType.OK)) {
             ImageFile currentImageFile = currentImages.get(currentImageIndex);
+            String trashFolderPath = configService.getConfig().getTrashFolderPath();
 
-            if (deleteFile(currentImageFile)) {
+            if (trashFolderPath == null || trashFolderPath.trim().isEmpty()) {
+                showAlert("Configuration Error", "Trash folder is not configured. Please configure it in the settings.");
+                return;
+            }
+
+            File trashFolder = new File(trashFolderPath);
+            if (!trashFolder.exists()) {
+                if (!trashFolder.mkdirs()) {
+                    showAlert("Error", "Failed to create trash folder: " + trashFolderPath);
+                    return;
+                }
+            }
+
+            File sourceFile = currentImageFile.getFile();
+            File destinationFile = new File(trashFolder, sourceFile.getName());
+
+            // Store last action
+            lastActionInfo = new LastAction(LastAction.ActionType.DELETE, sourceFile, destinationFile);
+
+            if (sourceFile.renameTo(destinationFile)) {
                 lastAction.setText("Last Action: [Deleted] " + currentImageFile.getName());
                 // Remove from list
                 currentImages.remove(currentImageIndex);
@@ -532,23 +570,43 @@ public class MainController implements Initializable {
                     updateStatusBar();
                 }
             } else {
-                showAlert("Error", "Failed to delete the image file.");
+                showAlert("Error", "Failed to move the image to the trash folder.");
             }
         }
     }
 
-    private boolean deleteFile(ImageFile currentImageFile) {
-        if (!Desktop.isDesktopSupported()) {
-            throw new UnsupportedOperationException("Desktop API not supported!");
+    private void undoLastAction() {
+        if (lastActionInfo == null) {
+            lastAction.setText("Last Action: No action to undo.");
+            return;
         }
 
-        Desktop desktop = Desktop.getDesktop();
-        if (desktop.isSupported(Desktop.Action.MOVE_TO_TRASH)) {
-            return desktop.moveToTrash(currentImageFile.getFile());
-
+        switch (lastActionInfo.getActionType()) {
+            case MOVE:
+                File sourceFile = lastActionInfo.getDestinationFile();
+                File destinationFile = lastActionInfo.getSourceFile().getParentFile();
+                if (sourceFile.renameTo(new File(destinationFile, sourceFile.getName()))) {
+                    lastAction.setText("Last Action: [Undo Move] " + sourceFile.getName());
+                    loadImagesFromFolder(currentSourceFolder); // Reload to refresh the list
+                } else {
+                    showAlert("Error", "Failed to undo move action.");
+                }
+                break;
+            case DELETE:
+                File fileToRestore = lastActionInfo.getDestinationFile();
+                File originalLocation = lastActionInfo.getSourceFile().getParentFile();
+                if (fileToRestore.renameTo(new File(originalLocation, fileToRestore.getName()))) {
+                    lastAction.setText("Last Action: [Restored] " + fileToRestore.getName());
+                    loadImagesFromFolder(currentSourceFolder); // Reload to refresh the list
+                } else {
+                    showAlert("Error", "Failed to restore the deleted file.");
+                }
+                break;
         }
-        return false;
+
+        lastActionInfo = null; // Clear the last action after undo
     }
+
 
     private void openConfigDialog() {
         try {

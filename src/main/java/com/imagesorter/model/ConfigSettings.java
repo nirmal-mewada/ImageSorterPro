@@ -19,6 +19,7 @@ public class ConfigSettings {
     private int prevCache;
     private int nextCache;
     private int threadPoolSize;
+    private String trashFolderPath;
     private HashSet<String> supportedExtensions = new HashSet<>(Arrays.asList(
             "jpg", "jpeg", "png", "gif", "bmp", "tiff", "tif"
             ));
@@ -107,6 +108,14 @@ public class ConfigSettings {
 
     public void setThreadPoolSize(int threadPoolSize) {
         this.threadPoolSize = threadPoolSize;
+    }
+
+    public String getTrashFolderPath() {
+        return trashFolderPath;
+    }
+
+    public void setTrashFolderPath(String trashFolderPath) {
+        this.trashFolderPath = trashFolderPath;
     }
 
     @Override
