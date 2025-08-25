@@ -1,11 +1,14 @@
 package com.imagesorter.controller;
 
 import com.imagesorter.MemUtils;
+import com.sun.javafx.scene.control.LabeledText;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -165,6 +168,19 @@ public class MainController implements Initializable {
                 }
             }
         });
+        hotkeyListView.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent mouseEvent) {
+                Object target = mouseEvent.getTarget();
+                while (target instanceof Node && !(target instanceof ListCell)) {
+                    target = ((Node) target).getParent();
+                }
+                if (target instanceof ListCell) {
+                    String value = (String) ((ListCell<?>) target).getItem();
+//                    System.out.println("Clicked text: " + value);
+                }
+            }
+        });
     }
 
     private void setupMenuItems() {
@@ -177,14 +193,15 @@ public class MainController implements Initializable {
     @FXML
     private void handleKeyPressed(KeyEvent event) {
 //        System.out.println(event);
-        if (currentImages == null || currentImages.isEmpty()) {
-            return;
-        }
 
         KeyCode code = event.getCode();
         String keyText = code.getName().toLowerCase();
 
-        if(keyText.matches("[1-9a-z]") && !event.isControlDown()){
+        if(event.isControlDown() && event.isShiftDown() && keyText.matches("[1-9a-z]") ){
+            chooseOnDemandFolder(event,keyText);
+        } else  if (currentImages == null || currentImages.isEmpty()) {
+            return;
+        } else if(keyText.matches("[1-9a-z]") && !event.isControlDown()){
             moveToFolder(keyText);
         } else {
             switch (code) {
@@ -209,11 +226,27 @@ public class MainController implements Initializable {
                     if(event.isControlDown())
                         openConfigDialog();
                     break;
-
             }
         }
-
         event.consume();
+    }
+    private void chooseOnDemandFolder(KeyEvent event, String keyText) {
+        DirectoryChooser directoryChooser = new DirectoryChooser();
+        directoryChooser.setTitle("Select Folder for Hotkey " + keyText);
+        Stage stage = (Stage) imageView.getScene().getWindow();
+        String defaultFileChooseLocation = configService.getConfig().getDefaultFileChooseLocation();
+        if(defaultFileChooseLocation != null){
+            directoryChooser.setInitialDirectory(new File(defaultFileChooseLocation));
+        }
+
+        File selectedDirectory = directoryChooser.showDialog(stage);
+        if (selectedDirectory != null) {
+            String absolutePath = selectedDirectory.getAbsolutePath();
+            configService.getConfig().setFolderPath(keyText, absolutePath);
+            lastAction.setText("Configuration saved: "+keyText+"->"+ absolutePath);
+            configService.saveConfig();
+            updateHotkeyList();
+        }
     }
 
     private void handleImageClick(MouseEvent event) {
@@ -373,8 +406,8 @@ public class MainController implements Initializable {
         String folderPath = config.getFolderPath(hotkey);
 
         if (folderPath == null || folderPath.trim().isEmpty()) {
-             showAlert("Configuration Error",
-                     "Folder for hotkey '" + hotkey + "' is not configured. Please configure folders first.");
+            showAlert("Configuration Error",
+                    "Folder for hotkey '" + hotkey + "' is not configured. Please configure folders first.");
             return;
         }
 

@@ -13,6 +13,7 @@ import java.util.Map;
 public class ConfigSettings {
     private Map<String, String> allFolderPaths;
     private String lastOpenedFolder;
+    private String defaultFileChooseLocation;
     private boolean confirmDelete;
     private int cacheSize;
     private int prevCache;
@@ -29,6 +30,7 @@ public class ConfigSettings {
         this.prevCache = 5;
         this.nextCache= 8;
         this.threadPoolSize = 4;
+        defaultFileChooseLocation = "";
     }
     
     public String getFolderPath(String hotkey) {
@@ -62,7 +64,15 @@ public class ConfigSettings {
     public int getConfiguredFolderCount() {
         return allFolderPaths.size();
     }
-    
+
+    public String getDefaultFileChooseLocation() {
+        return defaultFileChooseLocation;
+    }
+
+    public void setDefaultFileChooseLocation(String defaultFileChooseLocation) {
+        this.defaultFileChooseLocation = defaultFileChooseLocation;
+    }
+
     // Other getters and setters
     public String getLastOpenedFolder() { return lastOpenedFolder; }
     public void setLastOpenedFolder(String lastOpenedFolder) { this.lastOpenedFolder = lastOpenedFolder; }

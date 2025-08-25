@@ -56,6 +56,7 @@
                 <Label text="← → Arrow Keys: Previous/Next" styleClass="help-text" />
                 <Label text="Delete Key: Delete current image" styleClass="help-text" />
                 <Label text="Mouse Click: Left=Previous, Right=Next" styleClass="help-text" />
+                <Label text="CTRL + SHIFT + {X} : Config update" styleClass="help-text" />
             </VBox>
 
             <!-- Center Panel - Image Viewer -->
