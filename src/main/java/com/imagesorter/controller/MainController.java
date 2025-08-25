@@ -1,7 +1,10 @@
 package com.imagesorter.controller;
 
 import com.imagesorter.MemUtils;
-import com.sun.javafx.scene.control.LabeledText;
+import com.imagesorter.model.ConfigSettings;
+import com.imagesorter.model.ImageFile;
+import com.imagesorter.service.ConfigService;
+import com.imagesorter.service.ImageService;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.event.EventHandler;
@@ -23,10 +26,6 @@ import javafx.scene.input.MouseEvent;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import com.imagesorter.model.ConfigSettings;
-import com.imagesorter.model.ImageFile;
-import com.imagesorter.service.ConfigService;
-import com.imagesorter.service.ImageService;
 
 import java.awt.*;
 import java.io.File;
@@ -41,11 +40,14 @@ import java.util.ResourceBundle;
  */
 public class MainController implements Initializable {
 
+
     // FXML injected components
     @FXML private MenuItem openFolderMenuItem;
     @FXML private MenuItem configureFoldersMenuItem;
     @FXML private MenuItem exitMenuItem;
 //    @FXML private MenuItem resetFocus;
+
+    @FXML private  CheckBox clickToMoveCheckBox;
 
     @FXML private ListView<String> hotkeyListView;
     @FXML private ImageView imageView;
@@ -178,6 +180,13 @@ public class MainController implements Initializable {
                 if (target instanceof ListCell) {
                     String value = (String) ((ListCell<?>) target).getItem();
 //                    System.out.println("Clicked text: " + value);
+                    if(value != null && value.trim() !="" && clickToMoveCheckBox.isSelected()){
+                        //extract char from squire brackets at start and send ot to move files method
+                        String key = value.charAt(1)+"";
+                        if(key.matches("[1-9a-z]")){
+                            moveToFolder(key);
+                        }
+                    }
                 }
             }
         });

@@ -46,7 +46,9 @@
                 <Label text="Press number keys 1-9 to move current image" styleClass="help-text" />
                 <Label text="Press 0 to move to Archive folder" styleClass="help-text" />
                 <Separator />
-
+                <CheckBox text="Enable click to move" fx:id="clickToMoveCheckBox"
+                          selected="true" styleClass="help-text" />
+                <Separator />
                 <ListView fx:id="hotkeyListView" VBox.vgrow="ALWAYS"
                           styleClass="hotkey-list1" minHeight="200.0">
                 </ListView>
