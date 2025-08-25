@@ -1,16 +1,33 @@
-# Image Sorter Pro
+# ImageSorterPro
 
-A powerful JavaFX desktop application for rapidly sorting images from a source folder into multiple pre-configured destination folders using keyboard hotkeys.
+ImageSorterPro is a lightweight, cross-platform desktop application built with JavaFX that helps you quickly sort and organize your image files. It provides a streamlined workflow for reviewing images and moving them to predefined destination folders using keyboard shortcuts or mouse clicks.
 
 ## Features
 
-- **Fast Image Navigation**: Browse through images using arrow keys or mouse clicks
-- **Hotkey Sorting**: Instantly move images to configured folders using number keys 1-9
-- **Archive Function**: Move images to an archive folder using the 0 key
-- **Image Caching**: Pre-loads next 10 images for smooth navigation
-- **Progress Tracking**: Real-time status showing current file and progress
-- **Flexible Configuration**: Easy setup of destination folders through GUI
-- **File Safety**: Automatic handling of naming conflicts
+*   **Image Preview:** Large, clear preview of images.
+*   **Hotkey-based Sorting:** Assign destination folders to keyboard hotkeys (1-9, a-z) for rapid image categorization.
+*   **Click-to-Move:** Optionally move images by clicking on the left/right side of the image preview.
+*   **Configurable Folders:** Easily set up and manage your destination folders through a dedicated configuration dialog.
+*   **Virtual Delete with Undo:** Move unwanted images to a configurable "trash" folder instead of permanent deletion, with the ability to undo the last 50 actions (moves or virtual deletes).
+*   **Navigation:** Navigate through images using arrow keys or mouse clicks.
+*   **EXIF Orientation Support:** Automatically rotates images based on EXIF orientation data.
+*   **Memory Efficient Caching:** Pre-caches surrounding images for smooth navigation.
+*   **Cross-Platform:** Built with JavaFX, runs on Windows, macOS, and Linux.
+*   **Adjustable Layout:** Use the SplitPane to adjust the width between the image viewer and the hotkey list.
+
+## Screenshots
+
+### Main Application Window
+
+The main window provides an image preview, a list of configured hotkey folders, and status information.
+
+![Main Application Window](screenshots/main.png)
+
+### Configuration Dialog
+
+The configuration dialog allows you to set up your destination folders for hotkeys and specify a trash folder for virtual deletes.
+
+![Configuration Dialog](screenshots/config.png)
 
 ## System Requirements
 
@@ -20,121 +37,63 @@ A powerful JavaFX desktop application for rapidly sorting images from a source f
 - Minimum 4GB RAM recommended
 - 100MB free disk space
 
-## Quick Start
+## How to Use
 
-### 1. Setup Development Environment
+### 1. Open a Folder
 
-1. Install JDK 11+ from [Oracle](https://www.oracle.com/java/technologies/downloads/) or [OpenJDK](https://openjdk.org/)
-2. Install [IntelliJ IDEA](https://www.jetbrains.com/idea/)
-3. Download JavaFX SDK from [Gluon](https://gluonhq.com/products/javafx/)
+Click "File" -> "Open Folder..." or press `Ctrl+O` to select a folder containing your images.
 
-### 2. Create Project
+### 2. Configure Destination Folders
 
-1. Open IntelliJ IDEA
-2. Create New Project → JavaFX → Maven
-3. Set Project Name: `ImageSorterPro`
-4. Follow the detailed setup guide in the setup artifact
+Click "File" -> "Configure Folders..." or press `Ctrl+P` to open the configuration dialog.
+*   Assign a folder path to each hotkey (1-9, a-z).
+*   Specify a "Trash Folder" where deleted images will be moved.
+*   Click "Save" to apply your changes.
 
-### 3. Run Application
+### 3. Sort Images
+
+*   **Hotkey Sorting:** With an image displayed, press the corresponding hotkey (1-9, a-z) to move the image to its assigned folder.
+*   **Click-to-Move:** If "Enable click to move" is checked in the main window, click the right half of the image to go to the next image, and the left half to go to the previous image.
+*   **Navigation:** Use the `Right Arrow` key for the next image, and `Left Arrow` key for the previous image.
+*   **Virtual Delete:** Press the `Delete` key to move the current image to the configured "Trash Folder".
+*   **Undo Last Action:** Press `Ctrl+Z` to undo the last move or virtual delete action. You can undo up to 50 actions.
+*   **Archive:** Press `0` (zero) to move the current image to an "Archive" subfolder within the current source directory.
+
+## Building from Source
+
+ImageSorterPro is a Maven project.
+
+### Prerequisites
+
+*   Java Development Kit (JDK) 11 or higher
+*   Maven (usually bundled with IDEs like IntelliJ IDEA or can be installed separately)
+*   Download JavaFX SDK from [Gluon](https://gluonhq.com/products/javafx/
+
+### Steps
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/your-username/ImageSorterPro.git
+    cd ImageSorterPro
+    ```
+2.  **Build the project:**
+    ```bash
+    ./mvnw clean install
+    ```
+    This command will compile the source code, run tests, and package the application into a JAR file in the `target/` directory.
+
+## Running the Application
+
+After building, you can run the application from the `target/` directory:
 
 ```bash
-# Using Maven
-mvn clean javafx:run
-
-# Or in IntelliJ
-Run → Run 'ImageSorterApp'
+java -jar target/ImageSorterPro-1.0-SNAPSHOT.jar
 ```
 
-## Usage Guide
+Alternatively, you can use the provided wrapper scripts:
 
-### Initial Setup
-
-1. **Launch Application**: Start Image Sorter Pro
-2. **Configure Folders**: Go to File → Configure Folders
-3. **Set Destinations**: Assign folders to hotkeys 1-9 using Browse buttons
-4. **Save Configuration**: Click Save to store your settings
-
-### Sorting Workflow
-
-1. **Open Image Folder**: File → Open Folder (Ctrl+O)
-2. **Navigate Images**:
-    - Right Arrow / Right Click: Next image
-    - Left Arrow / Left Click: Previous image
-3. **Sort Images**:
-    - Press 1-9: Move to configured folder
-    - Press 0: Move to Archive folder
-    - Delete Key: Delete current image (with confirmation)
-
-### Keyboard Shortcuts
-
-| Key | Action |
-|-----|--------|
-| Ctrl+O | Open Folder |
-| Ctrl+P | Configure Folders |
-| 1-9 | Move image to configured folder |
-| 0 | Move image to Archive |
-| ← → | Navigate previous/next image |
-| Delete | Delete current image |
-| Alt+F4 | Exit application |
-
-## Project Structure
-
-```
-ImageSorterPro/
-├── src/main/java/com/imagesorter/
-│   ├── ImageSorterApp.java              # Main application class
-│   ├── controller/
-│   │   ├── MainController.java          # Main window controller
-│   │   └── ConfigController.java        # Configuration dialog controller
-│   ├── model/
-│   │   ├── ImageFile.java               # Image file representation
-│   │   ├── ConfigSettings.java          # Configuration data model
-│   │   └── ImageCache.java              # LRU cache for images
-│   └── service/
-│       ├── ImageService.java            # Image loading and caching
-│       └── ConfigService.java           # Configuration management
-├── src/main/resources/com/imagesorter/
-│   ├── view/
-│   │   ├── main.fxml                    # Main window layout
-│   │   └── config.fxml                  # Configuration dialog layout
-│   └── css/
-│       └── styles.css                   # Application stylesheet
-├── pom.xml                              # Maven configuration
-└── README.md                            # This file
-```
-
-## Advanced Features
-
-### Image Caching System
-
-- **Smart Pre-loading**: Automatically caches next 10 images for instant navigation
-- **Memory Management**: LRU (Least Recently Used) cache eviction
-- **Background Loading**: Non-blocking image loading using background threads
-
-### Configuration Management
-
-- **Persistent Settings**: Configuration saved in `~/.imagesorter/config.json`
-- **Automatic Backup**: Configuration backed up before changes
-- **Validation**: Automatic validation of folder paths and permissions
-
-### File Operations
-
-- **Safe Moving**: Atomic file operations with conflict resolution
-- **Naming Conflicts**: Automatic renaming (file_1.jpg, file_2.jpg, etc.)
-- **Archive Function**: Creates Archive subfolder in source directory
-
-## Supported Image Formats
-
-- JPEG (.jpg, .jpeg)
-- PNG (.png)
-- GIF (.gif)
-- BMP (.bmp)
-- TIFF (.tiff, .tif)
-
-## Configuration File Location
-
-- **Windows**: `%USERPROFILE%\.imagesorter\config.json`
-- **Linux/Mac**: `~/.imagesorter/config.json`
+*   **Windows:** `mvnw.cmd javafx:run`
+*   **Linux/macOS:** `./mvnw javafx:run`
 
 ## Troubleshooting
 
@@ -159,99 +118,10 @@ Error: JavaFX runtime components are missing
 - Close other memory-intensive applications
 - Check available system memory
 
-### Debug Mode
-
-Enable debug logging by adding VM option:
-```
--Dcom.imagesorter.debug=true
-```
-
-## Building for Distribution
-
-### Create Executable JAR
-
-```bash
-mvn clean package
-```
-
-### Create Native Installer (Windows)
-
-1. Install [jpackage](https://docs.oracle.com/en/java/javase/14/jpackage/)
-2. Run packaging script:
-
-```bash
-jpackage --input target/ \
-  --name "Image Sorter Pro" \
-  --main-jar ImageSorterPro-1.0-SNAPSHOT.jar \
-  --main-class com.imagesorter.ImageSorterApp \
-  --type exe \
-  --win-dir-chooser \
-  --win-shortcut \
-  --win-menu
-```
-
-## Performance Tips
-
-1. **Optimal Cache Size**: Set cache to 15-25 images for best performance
-2. **SSD Storage**: Use SSD for source and destination folders
-3. **Memory**: Allocate sufficient heap space: `-Xmx2G`
-4. **Image Size**: Large images (>10MB) may impact performance
-
-## Development
-
-### Adding New Features
-
-1. **Controllers**: Add UI logic in `controller` package
-2. **Models**: Add data structures in `model` package
-3. **Services**: Add business logic in `service` package
-4. **FXML**: Update UI layouts in `resources/view`
-5. **CSS**: Style changes in `resources/css`
-
-### Testing
-
-```bash
-# Run tests
-mvn test
-
-# Run with coverage
-mvn test jacoco:report
-```
-
-### Code Style
-
-- Use Java naming conventions
-- Document public methods with Javadoc
-- Keep methods under 50 lines
-- Use meaningful variable names
-
 ## Contributing
 
-1. Fork the repository
-2. Create feature branch: `git checkout -b feature-name`
-3. Commit changes: `git commit -m "Add feature"`
-4. Push branch: `git push origin feature-name`
-5. Submit pull request
+Feel free to fork the repository, make improvements, and submit pull requests.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Support
-
-For issues and questions:
-- Create an issue on GitHub
-- Check troubleshooting section
-- Review configuration settings
-
-## Changelog
-
-### Version 1.0.0
-- Initial release
-- Basic image sorting functionality
-- Configuration management
-- Keyboard shortcuts
-- Image caching system
-
----
-
-**Image Sorter Pro** - Streamline your image organization workflow!
+This project is licensed under the MIT License - see the `LICENSE` file for details.
