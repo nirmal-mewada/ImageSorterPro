@@ -1,13 +1,17 @@
 package com.imagesorter.service;
 
-import com.imagesorter.MemUtils;
 import com.imagesorter.model.ImageCache;
 import com.imagesorter.model.ImageFile;
 import com.imagesorter.utils.ImageUtils;
 import javafx.concurrent.Task;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
 
-import java.io.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -22,8 +26,6 @@ public class ImageService {
 
     private final ImageCache imageCache;
     private final ExecutorService executorService;
-    private int processedCount = 0;
-    private  ConfigService configService = ConfigService.getInstance();
 
     public ImageService() {
         ConfigService configService = ConfigService.getInstance();
@@ -59,42 +61,110 @@ public class ImageService {
         imageFiles.sort((a, b) -> a.getName().compareToIgnoreCase(b.getName()));
 
         // Reset processed count when loading new folder
-        processedCount = 0;
-
         return imageFiles;
     }
 
-    /**
+        /**
      * Loads an image from file with EXIF rotation applied
      */
     public Image loadImage(ImageFile imageFile) throws IOException {
         String filePath = imageFile.getPath();
-//        System.out.println("Loading: "+filePath+", Cache: "+this.imageCache.getStats().toString() +  ", Mem: "+ MemUtils.printHeapUsage());
 
-        // Check cache first
+        // Return cached image if available
         Image cachedImage = imageCache.get(filePath);
         if (cachedImage != null) {
+            ensureExifRotation(imageFile);
             return cachedImage;
         }
-
         // Load image from file
         Image image;
-        try (InputStream fis = new BufferedInputStream (new FileInputStream(imageFile.getFile()))) {
-            image = new Image(fis, 1024, 0, true, true);
+        int size = ConfigService.getInstance().getConfig().getImageQualityPx();
+        try (InputStream fis = Files.newInputStream(imageFile.getFile().toPath())) {
+            image = new Image(fis, size, 0, true, true);
         }
 
-        if(imageFile.getExifRotate() == null){
-            imageFile.setExifRotate(ImageUtils.displayImageWithExifCorrection(imageFile.getFile()));
-        }
-        if(image.isError()){
-           throw  new RuntimeException(image.getException());
+        ensureExifRotation(imageFile);
 
+        // Apply rotation if needed
+        if (imageFile.getExifRotate() != 0) {
+            BufferedImage bufferedImage = SwingFXUtils.fromFXImage(image, null);
+            bufferedImage = ImageUtils.rotateImage(bufferedImage, imageFile.getExifRotate());
+            image = SwingFXUtils.toFXImage(bufferedImage, null);
         }
 
-        // Cache the rotated image
+        // Throw exception if image loading failed
+        if (image.isError()) {
+            throw new RuntimeException(image.getException());
+        }
+
+        // Cache the loaded image
         imageCache.put(filePath, image, imageFile.getSize());
 
         return image;
+    }
+//    public Image loadImage1(ImageFile imageFile) throws IOException {
+//        String filePath = imageFile.getPath();
+//
+//        // 1. Return cached image if available
+//        Image cachedImage = imageCache.get(filePath);
+//        if (cachedImage != null) {
+//            return cachedImage;
+//        }
+//
+//        // 2. Read EXIF rotation once
+//        ensureExifRotation(imageFile);
+//
+//        // 3. Load scaled image
+//        int size = ConfigService.getInstance().getConfig().getImageQualityPx();
+//        Image image;
+//        try (InputStream fis = Files.newInputStream(imageFile.getFile().toPath())) {
+//            image = new Image(fis, size, 0, true, true);
+//        }
+//
+//        // 4. Apply rotation if needed (JavaFX Canvas, not SwingFXUtils)
+//        if (imageFile.getExifRotate() != 0) {
+//            image = rotateFXImage(image, imageFile.getExifRotate());
+//        }
+//
+//        // 5. Validate
+//        if (image.isError()) {
+//            throw new RuntimeException(image.getException());
+//        }
+//
+//        // 6. Cache final image (already rotated)
+//        imageCache.put(filePath, image, imageFile.getSize());
+//
+//        return image;
+//    }
+//    private Image rotateFXImage(Image src, int angle) {
+//        double w = src.getWidth();
+//        double h = src.getHeight();
+//
+//        double newW = (angle % 180 == 0) ? w : h;
+//        double newH = (angle % 180 == 0) ? h : w;
+//
+//        Canvas canvas = new Canvas(newW, newH);
+//        GraphicsContext gc = canvas.getGraphicsContext2D();
+//
+//        gc.save();
+//        // Translate to center of new canvas
+//        gc.translate(newW / 2, newH / 2);
+//        gc.rotate(angle);
+//        // Draw with original center aligned
+//        gc.drawImage(src, -w / 2, -h / 2);
+//        gc.restore();
+//
+//        SnapshotParameters params = new SnapshotParameters();
+//        params.setFill(Color.TRANSPARENT);
+//        return canvas.snapshot(params, null);
+//    }
+
+
+
+    private void ensureExifRotation(ImageFile imageFile) {
+        if (imageFile.getExifRotate() == null) {
+            imageFile.setExifRotate(ImageUtils.displayImageWithExifCorrection(imageFile.getFile()));
+        }
     }
 
 
@@ -178,27 +248,6 @@ public class ImageService {
      */
     public ImageCache.CacheStats getCacheStats() {
         return imageCache.getStats();
-    }
-
-    /**
-     * Increments processed count (called when image is moved/deleted)
-     */
-    public void incrementProcessedCount() {
-        processedCount++;
-    }
-
-    /**
-     * Gets the number of processed images
-     */
-    public int getProcessedCount() {
-        return processedCount;
-    }
-
-    /**
-     * Resets the processed count
-     */
-    public void resetProcessedCount() {
-        processedCount = 0;
     }
 
     /**

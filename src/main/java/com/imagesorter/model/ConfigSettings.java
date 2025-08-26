@@ -21,6 +21,9 @@ public class ConfigSettings {
     private int undoSize;
     private int threadPoolSize;
     private String trashFolderPath;
+    private int thumbnailSize;
+    private int thumbnailCount;
+     private int imageQualityPx;
     private HashSet<String> supportedExtensions = new HashSet<>(Arrays.asList(
             "jpg", "jpeg", "png", "gif", "bmp", "tiff", "tif"
             ));
@@ -34,6 +37,9 @@ public class ConfigSettings {
         this.threadPoolSize = 4;
         defaultFileChooseLocation = "";
         undoSize = 50;
+        this.thumbnailSize = 150;
+        this.thumbnailCount = 9;
+        this.imageQualityPx = 1024;
     }
     
     public String getFolderPath(String hotkey) {
@@ -128,6 +134,30 @@ public class ConfigSettings {
         this.undoSize = undoSize;
     }
 
+    public int getThumbnailSize() {
+        return thumbnailSize;
+    }
+
+    public void setThumbnailSize(int thumbnailSize) {
+        this.thumbnailSize = thumbnailSize;
+    }
+
+    public int getThumbnailCount() {
+        return thumbnailCount;
+    }
+
+    public void setThumbnailCount(int thumbnailCount) {
+        this.thumbnailCount = thumbnailCount;
+    }
+
+    public int getImageQualityPx() {
+        return imageQualityPx;
+    }
+
+    public void setImageQualityPx(int imageQualityPx) {
+        this.imageQualityPx = imageQualityPx;
+    }
+
     @Override
     public String toString() {
         return "ConfigSettings{" +
@@ -141,6 +171,9 @@ public class ConfigSettings {
                 ", undoSize=" + undoSize +
                 ", threadPoolSize=" + threadPoolSize +
                 ", trashFolderPath='" + trashFolderPath + '\'' +
+                ", thumbnailSize=" + thumbnailSize +
+                ", thumbnailCount=" + thumbnailCount +
+                ", imageQualityPx=" + imageQualityPx +
                 ", supportedExtensions=" + supportedExtensions +
                 '}';
     }

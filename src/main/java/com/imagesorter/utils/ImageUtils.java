@@ -98,4 +98,30 @@ public class ImageUtils {
         return 0;
     }
 
+    public static BufferedImage rotateImage(BufferedImage image, int angle) {
+        if (angle == 0) {
+            return image;
+        }
+
+        double radians = Math.toRadians(angle);
+        double sin = Math.abs(Math.sin(radians));
+        double cos = Math.abs(Math.cos(radians));
+
+        int originalWidth = image.getWidth();
+        int originalHeight = image.getHeight();
+
+        int newWidth = (int) Math.floor(originalWidth * cos + originalHeight * sin);
+        int newHeight = (int) Math.floor(originalHeight * cos + originalWidth * sin);
+
+        BufferedImage rotatedImage = new BufferedImage(newWidth, newHeight, image.getType());
+        java.awt.Graphics2D g2d = rotatedImage.createGraphics();
+
+        g2d.translate((newWidth - originalWidth) / 2, (newHeight - originalHeight) / 2);
+        g2d.rotate(radians, originalWidth / 2, originalHeight / 2);
+        g2d.drawRenderedImage(image, null);
+        g2d.dispose();
+
+        return rotatedImage;
+    }
+
 }

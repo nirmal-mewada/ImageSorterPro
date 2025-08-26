@@ -6,7 +6,6 @@ import com.imagesorter.model.ImageFile;
 import com.imagesorter.model.LastAction;
 import com.imagesorter.service.ConfigService;
 import com.imagesorter.service.ImageService;
-import com.imagesorter.utils.ImageUtils;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.event.EventHandler;
@@ -17,28 +16,20 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.control.Label;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.HBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.Deque;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.ResourceBundle;
+import java.util.*;
 
 /**
  * Controller for the main application window
@@ -78,6 +69,8 @@ public class MainController implements Initializable {
     private int currentImageIndex = -1;
     private File currentSourceFolder;
     private final Deque<LastAction> lastActionInfo = new LinkedList<>();
+
+    @FXML private SplitPane splitPan;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -133,12 +126,25 @@ public class MainController implements Initializable {
         imageView.setCache(true);
         imageView.setPickOnBounds(true); // Important for mouse events
 
-        // Bind image view size to scroll pane
-        imageView.fitWidthProperty().bind(imageScrollPane.widthProperty().subtract(20));
-        imageView.fitHeightProperty().bind(imageScrollPane.heightProperty().subtract(20));
+
+
+        // Bind image view size to scroll pane's viewport
+        imageView.fitWidthProperty().bind(imageScrollPane.widthProperty().subtract(10));
+        imageView.fitHeightProperty().bind(imageScrollPane.heightProperty().subtract(10));
 
         // Add mouse click handlers for navigation
         imageView.setOnMouseClicked(this::handleImageClick);
+
+
+        // Add scroll handler for navigation
+        imageScrollPane.setOnScroll(event -> {
+            if (event.getDeltaY() < 0) {
+                navigateNext();
+            } else {
+                navigatePrevious();
+            }
+            event.consume();
+        });
 
         // Also add click handler to the scroll pane as backup
         imageScrollPane.setOnMouseClicked(event -> {
@@ -308,6 +314,7 @@ public class MainController implements Initializable {
         File selectedDirectory = directoryChooser.showDialog(imageView.getScene().getWindow());
 
         if (selectedDirectory != null && selectedDirectory.exists()) {
+            currentImageIndex = 0;
             loadImagesFromFolder(selectedDirectory);
         }
     }
@@ -370,39 +377,16 @@ public class MainController implements Initializable {
         ImageFile currentImageFile = currentImages.get(currentImageIndex);
         Image image = imageService.getCachedImage(currentImageFile);
 
-
         if (image != null) {
             imageView.setImage(image);
-            if(currentImageFile.getExifRotate() == null){
-                currentImageFile.setExifRotate(ImageUtils.displayImageWithExifCorrection(currentImageFile.getFile()));
-            }
-            imageView.setRotate(currentImageFile.getExifRotate());
         } else {
-            // Load image asynchronously
-            Task<Image> imageTask = new Task<Image>() {
-                @Override
-                protected Image call() throws Exception {
-                    return imageService.loadImage(currentImageFile);
-                }
+            try {
+                Image img = imageService.loadImage(currentImageFile);
+                imageView.setImage(img);
+            } catch (IOException e) {
+                showAlert("Error", "Failed to load image: " + currentImageFile.getName());
 
-                @Override
-                protected void succeeded() {
-                    Platform.runLater(() -> {
-                        imageView.setImage(getValue());
-                        imageView.setRotate(currentImageFile.getExifRotate());
-
-                    });
-                }
-
-                @Override
-                protected void failed() {
-                    Platform.runLater(() -> {
-                        showAlert("Error", "Failed to load image: " + currentImageFile.getName());
-                    });
-                }
-            };
-
-            new Thread(imageTask).start();
+            }
         }
 
         updateStatusBar();
@@ -419,7 +403,8 @@ public class MainController implements Initializable {
             return;
         }
 
-        int halfThumbnails = 5;
+        int thumbnailCount = configService.getConfig().getThumbnailCount();
+        int halfThumbnails = thumbnailCount / 2;
         int startIndex = Math.max(0, currentImageIndex - halfThumbnails);
         int endIndex = Math.min(currentImages.size() - 1, currentImageIndex + halfThumbnails);
 
@@ -441,20 +426,16 @@ public class MainController implements Initializable {
             ImageView thumbnail = new ImageView(image);
             thumbnail.setPreserveRatio(true);
             thumbnail.getStyleClass().add("thumbnail-image");
-//            thumbnail.fitHeightProperty().bind(thumbnailBox.heightProperty().subtract(5));
-//            System.out.println( thumbnailBox.heightProperty());
-            double thumbBoxheight = thumbnailBox.getHeight();
+            double thumbBoxheight = configService.getConfig().getThumbnailSize();
             if (i == currentImageIndex) {
-                thumbnail.setFitHeight(thumbBoxheight);
-                thumbnail.setFitWidth(thumbBoxheight);
                 thumbnail.getStyleClass().add("thumbnail-selected");
             } else {
                 thumbBoxheight = thumbBoxheight * 0.7;
-                thumbnail.setFitHeight(thumbBoxheight);
-                thumbnail.setFitWidth(thumbBoxheight);
             }
-
+            thumbnail.setFitHeight(thumbBoxheight);
+            thumbnail.setFitWidth(thumbBoxheight);
             thumbnailBox.getChildren().add(thumbnail);
+
         }
     }
 
@@ -539,9 +520,6 @@ public class MainController implements Initializable {
             System.out.println("Moved: " + sourceFile.getAbsolutePath() + " -> " + destinationFile.getAbsolutePath());
             lastAction.setText("Last Action: [Moved] " + sourceFile.getName() +" ->" + destinationFolder.getPath());
             currentImages.remove(currentImageIndex);
-
-            // Increment processed count
-            imageService.incrementProcessedCount();
 
             // Adjust index if necessary
             if (currentImageIndex >= currentImages.size() && !currentImages.isEmpty()) {
@@ -698,8 +676,7 @@ public class MainController implements Initializable {
             String hotkey = String.valueOf(i);
             String path = config.getFolderPath(hotkey);
             if(path != null && !path.trim().isEmpty()){
-                String displayText = String.format("[%s] %s", hotkey,
-                        path != null && !path.trim().isEmpty() ? path : "<Not Configured>");
+                String displayText = String.format("[%s] %s", hotkey, path );
                 hotkeyListView.getItems().add(displayText);
             }
 
@@ -710,8 +687,7 @@ public class MainController implements Initializable {
             String hotkey = String.valueOf(c);
             String path = config.getFolderPath(hotkey);
             if (path != null && !path.trim().isEmpty()) {
-                String displayText = String.format("[%s] %s", hotkey,
-                        path != null && !path.trim().isEmpty() ? path : "<Not Configured>");
+                String displayText = String.format("[%s] %s", hotkey, path );
                 hotkeyListView.getItems().add(displayText);
             }
         }
@@ -727,14 +703,13 @@ public class MainController implements Initializable {
             ImageFile currentImageFile = currentImages.get(currentImageIndex);
             currentFileLabel.setText("Current File: " + currentImageFile.getName());
 
-            int totalOriginal = currentImages.size() +
-                    (currentSourceFolder != null ? imageService.getProcessedCount() : 0);
+            int totalOriginal = currentImages.size();
             progressLabel.setText(String.format("Image %d / %d",
                     currentImageIndex + 1, currentImages.size()));
 //            remainingLabel.setText("Remaining: " + currentImages.size());
 
             if (totalOriginal > 0) {
-                double progress = (double) imageService.getProcessedCount() / totalOriginal;
+                double progress = (double) currentImageIndex / totalOriginal;
                 progressBar.setProgress(progress);
             }
             memoryUsage.setText("Mem:"+ MemUtils.printHeapUsage());

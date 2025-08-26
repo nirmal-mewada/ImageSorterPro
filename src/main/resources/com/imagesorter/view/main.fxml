@@ -112,8 +112,8 @@
 
                 <Separator orientation="VERTICAL" />
 
-<!--                <Label fx:id="remainingLabel" text="Remaining: 0"-->
-<!--                       styleClass="status-label" />-->
+                <!--                <Label fx:id="remainingLabel" text="Remaining: 0"-->
+                <!--                       styleClass="status-label" />-->
                 <Region HBox.hgrow="ALWAYS" />
 
                 <ProgressBar fx:id="progressBar" progress="0.0"
