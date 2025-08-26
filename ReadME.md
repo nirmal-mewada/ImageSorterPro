@@ -87,7 +87,7 @@ ImageSorterPro is a Maven project.
 After building, you can run the application from the `target/` directory:
 
 ```bash
-java -jar target/ImageSorterPro-1.0-SNAPSHOT.jar
+java -Xms1G -Xmx1G -jar --module-path "D:\n-temp\javafx-sdk-24.0.2\lib" --add-modules javafx.controls,javafx.fxml,javafx.swing ImageSorterPro-1.0-SNAPSHOT.jar
 ```
 
 Alternatively, you can use the provided wrapper scripts:
