@@ -22,6 +22,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -30,6 +31,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
+import java.util.function.Consumer;
 
 /**
  * Controller for the main application window
@@ -42,6 +44,8 @@ public class MainController implements Initializable {
     @FXML private MenuItem openFolderMenuItem;
     @FXML private MenuItem configureFoldersMenuItem;
     @FXML private MenuItem exitMenuItem;
+    @FXML private MenuItem toggleLeftViewMenuItem;
+    @FXML private MenuItem toggleThumbnailBoxMenuItem;
 //    @FXML private MenuItem resetFocus;
 
     @FXML private  CheckBox clickToMoveCheckBox;
@@ -49,6 +53,9 @@ public class MainController implements Initializable {
     @FXML private ListView<String> hotkeyListView;
     @FXML private ImageView imageView;
     @FXML private HBox thumbnailBox;
+    @FXML private VBox leftVBox;
+    @FXML private SplitPane horizontalSplitPane;
+    @FXML private SplitPane verticalSplitPane;
     @FXML private ScrollPane imageScrollPane;
 
     @FXML private Label currentFileLabel;
@@ -70,7 +77,13 @@ public class MainController implements Initializable {
     private File currentSourceFolder;
     private final Deque<LastAction> lastActionInfo = new LinkedList<>();
 
-    @FXML private SplitPane splitPan;
+    
+
+    Consumer<Integer> progressUpdaterCallback = (i) -> {
+//        Platform.runLater(() -> {
+//            remainingLabel.setText(imageService.getCacheStats().toString());
+//        });
+    };
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -215,7 +228,31 @@ public class MainController implements Initializable {
         openFolderMenuItem.setOnAction(e -> openFolder());
         configureFoldersMenuItem.setOnAction(e -> openConfigDialog());
         exitMenuItem.setOnAction(e -> Platform.exit());
+        toggleLeftViewMenuItem.setOnAction(e -> toggleNodeVisibility(leftVBox));
+        toggleThumbnailBoxMenuItem.setOnAction(e -> toggleNodeVisibility(thumbnailBox));
 //        resetFocus.setOnAction(e -> setupKeyboardFocus());
+    }
+
+    private void toggleNodeVisibility(Node node) {
+        if (node == leftVBox) {
+            if (horizontalSplitPane != null) {
+                if (horizontalSplitPane.getItems().contains(leftVBox)) {
+                    horizontalSplitPane.getItems().remove(leftVBox);
+                } else {
+                    horizontalSplitPane.getItems().add(0, leftVBox);
+                    horizontalSplitPane.setDividerPositions(0.2);
+                }
+            }
+        } else if (node == thumbnailBox) {
+            if (verticalSplitPane != null) {
+                if (verticalSplitPane.getItems().contains(thumbnailBox)) {
+                    verticalSplitPane.getItems().remove(thumbnailBox);
+                } else {
+                    verticalSplitPane.getItems().add(0, thumbnailBox);
+                    verticalSplitPane.setDividerPositions(0.2);
+                }
+            }
+        }
     }
 
     @FXML
@@ -344,7 +381,7 @@ public class MainController implements Initializable {
                         displayCurrentImage();
                         updateThumbnails();
                         // Pre-cache next 10 images
-                        imageService.preCacheImages(currentImages, currentImageIndex, configService.getConfig().getPrevCache(),configService.getConfig().getNextCache());
+                        imageService.preCacheImages(currentImages, currentImageIndex, configService.getConfig().getPrevCache(),configService.getConfig().getNextCache(), progressUpdaterCallback);
                     } else {
                         showAlert("No Images", "No supported image files found in the selected folder.");
                     }
@@ -380,6 +417,7 @@ public class MainController implements Initializable {
         if (image != null) {
             imageView.setImage(image);
         } else {
+            System.out.println("cache miss"+currentImageFile.getName());
             try {
                 Image img = imageService.loadImage(currentImageFile);
                 imageView.setImage(img);
@@ -393,11 +431,13 @@ public class MainController implements Initializable {
         updateThumbnails();
 
         // Pre-cache surrounding images
-        imageService.preCacheImages(currentImages, currentImageIndex, configService.getConfig().getPrevCache(),configService.getConfig().getNextCache());
+
+        imageService.preCacheImages(currentImages, currentImageIndex, configService.getConfig().getPrevCache(),configService.getConfig().getNextCache(), progressUpdaterCallback);
     }
 
     private void updateThumbnails() {
         thumbnailBox.getChildren().clear();
+
 
         if (currentImages == null || currentImages.isEmpty()) {
             return;
@@ -424,6 +464,7 @@ public class MainController implements Initializable {
             }
 
             ImageView thumbnail = new ImageView(image);
+
             thumbnail.setPreserveRatio(true);
             thumbnail.getStyleClass().add("thumbnail-image");
             double thumbBoxheight = configService.getConfig().getThumbnailSize();

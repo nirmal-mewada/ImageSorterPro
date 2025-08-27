@@ -136,8 +136,8 @@ public class ImageCache {
         
         @Override
         public String toString() {
-            return String.format("CacheStats{size: %d/%d, memory: %d bytes}",
-                currentSize, maxSize, totalMemoryUsage);
+            return String.format("Cache: %d/%d, Mem: %d MB",
+                currentSize, maxSize, totalMemoryUsage/(1024*1024));
         }
     }
 }

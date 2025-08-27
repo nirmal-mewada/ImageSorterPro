@@ -22,6 +22,9 @@
 
             </Menu>
             <Menu mnemonicParsing="false" text="View">
+                <MenuItem fx:id="toggleLeftViewMenuItem" mnemonicParsing="false" text="Show/Hide Left View"/>
+                <MenuItem fx:id="toggleThumbnailBoxMenuItem" mnemonicParsing="false" text="Show/Hide Thumbnail Box"/>
+                <SeparatorMenuItem/>
                 <MenuItem mnemonicParsing="false" text="Zoom In" accelerator="Ctrl+Plus" disable="true" />
                 <MenuItem mnemonicParsing="false" text="Zoom Out" accelerator="Ctrl+Minus" disable="true" />
                 <MenuItem mnemonicParsing="false" text="Actual Size" accelerator="Ctrl+0" disable="true" />
@@ -35,9 +38,9 @@
 
     <!-- Main Content Area -->
     <center>
-        <SplitPane dividerPositions="0.3" HBox.hgrow="ALWAYS">
+        <SplitPane fx:id="horizontalSplitPane" dividerPositions="0.3" HBox.hgrow="ALWAYS">
             <!-- Left Panel - Hotkey Folder List -->
-            <VBox spacing="5.0" minWidth="100.0" maxWidth="600.0">
+            <VBox fx:id="leftVBox" spacing="5.0" minWidth="100.0" maxWidth="600.0">
                 <Label text="Destination Folders" styleClass="section-title" />
                 <CheckBox text="Enable click to move" fx:id="clickToMoveCheckBox"
                           selected="true" styleClass="help-text" />
@@ -64,7 +67,7 @@
             <VBox spacing="5.0">
                 <Label text="Image Preview" styleClass="section-title" />
 
-                <SplitPane dividerPositions="0.2" orientation="VERTICAL" VBox.vgrow="ALWAYS">
+                <SplitPane fx:id="verticalSplitPane" dividerPositions="0.2" orientation="VERTICAL" VBox.vgrow="ALWAYS">
                     <items>
                         <HBox fx:id="thumbnailBox" alignment="CENTER" spacing="5" styleClass="thumbnail-bar">
                             <!-- Thumbnails will be added here dynamically -->
@@ -112,8 +115,8 @@
 
                 <Separator orientation="VERTICAL" />
 
-                <!--                <Label fx:id="remainingLabel" text="Remaining: 0"-->
-                <!--                       styleClass="status-label" />-->
+                <Label fx:id="remainingLabel" text=""
+                                       styleClass="status-label" />
                 <Region HBox.hgrow="ALWAYS" />
 
                 <ProgressBar fx:id="progressBar" progress="0.0"

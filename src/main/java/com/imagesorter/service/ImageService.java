@@ -14,9 +14,10 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.function.Consumer;
 
 /**
  * Service for handling image operations including loading, caching, EXIF rotation, and file management
@@ -25,12 +26,12 @@ public class ImageService {
 
 
     private final ImageCache imageCache;
-    private final ExecutorService executorService;
+    private final ThreadPoolExecutor executorService;
 
     public ImageService() {
         ConfigService configService = ConfigService.getInstance();
         this.imageCache = new ImageCache(configService.getConfig().getCacheSize());
-        this.executorService = Executors.newFixedThreadPool(configService.getConfig().getThreadPoolSize());
+        this.executorService = (ThreadPoolExecutor) Executors.newFixedThreadPool(configService.getConfig().getThreadPoolSize());
     }
 
     /**
@@ -80,7 +81,7 @@ public class ImageService {
         Image image;
         int size = ConfigService.getInstance().getConfig().getImageQualityPx();
         try (InputStream fis = Files.newInputStream(imageFile.getFile().toPath())) {
-            image = new Image(fis, size, 0, true, true);
+            image = new Image(fis, size, 0, true, false);
         }
 
         ensureExifRotation(imageFile);
@@ -185,7 +186,7 @@ public class ImageService {
     /**
      * Pre-caches images around the current index for fast navigation
      */
-    public void preCacheImages(List<ImageFile> images, int currentIndex, int prevImage, int nextImage) {
+    public void preCacheImages(List<ImageFile> images, int currentIndex, int prevImage, int nextImage, Consumer<Integer> progress) {
         if (images == null || images.isEmpty()) {
             return;
         }
@@ -207,6 +208,8 @@ public class ImageService {
             executorService.submit(() -> {
                 try {
                     loadImage(imageFile);
+                    if(progress!=null)
+                        progress.accept(executorService.getActiveCount()-1);
                 } catch (IOException e) {
                     // Log error but don't throw - this is background caching
                     System.err.println("Failed to pre-cache image: " + imageFile.getName() +
