@@ -1,5 +1,6 @@
 package com.imagesorter;
 
+import atlantafx.base.theme.*;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -23,6 +24,8 @@ public class ImageSorterApp extends Application {
     @Override
     public void start(Stage primaryStage) {
         try {
+            Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
+//            Application.setUserAgentStylesheet(new Dracula().getUserAgentStylesheet());
             // Initialize configuration service
             ConfigService configService = ConfigService.getInstance();
             configService.loadConfig();

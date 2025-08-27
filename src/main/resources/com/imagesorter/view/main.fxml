@@ -40,8 +40,8 @@
     <center>
         <SplitPane fx:id="horizontalSplitPane" dividerPositions="0.3" HBox.hgrow="ALWAYS">
             <!-- Left Panel - Hotkey Folder List -->
-            <VBox fx:id="leftVBox" spacing="5.0" minWidth="100.0" maxWidth="600.0">
-                <Label text="Destination Folders" styleClass="section-title" />
+            <VBox fx:id="leftVBox" spacing="2.0" minWidth="100.0" maxWidth="600.0">
+
                 <CheckBox text="Enable click to move" fx:id="clickToMoveCheckBox"
                           selected="true" styleClass="help-text" />
                 <Separator />
@@ -65,9 +65,7 @@
 
             <!-- Center Panel - Image Viewer -->
             <VBox spacing="5.0">
-                <Label text="Image Preview" styleClass="section-title" />
-
-                <SplitPane fx:id="verticalSplitPane" dividerPositions="0.2" orientation="VERTICAL" VBox.vgrow="ALWAYS">
+                <SplitPane fx:id="verticalSplitPane" dividerPositions="0.1" orientation="VERTICAL" VBox.vgrow="ALWAYS">
                     <items>
                         <HBox fx:id="thumbnailBox" alignment="CENTER" spacing="5" styleClass="thumbnail-bar">
                             <!-- Thumbnails will be added here dynamically -->
@@ -75,17 +73,20 @@
 
                         <ScrollPane fx:id="imageScrollPane" VBox.vgrow="ALWAYS"
                                     fitToWidth="true" fitToHeight="true"
-                                    pannable="true" styleClass="image-scroll-pane"
+                                    pannable="false" styleClass="image-scroll-pane"
                                     hbarPolicy="NEVER" vbarPolicy="NEVER">
-                            <StackPane>
+
+                           <StackPane>
                                 <ImageView fx:id="imageView" preserveRatio="true" smooth="true"
-                                           pickOnBounds="true" styleClass="main-image" />
+                                           pickOnBounds="true" styleClass="main-image"/>
+
                             </StackPane>
                         </ScrollPane>
                     </items>
                 </SplitPane>
             </VBox>
         </SplitPane>
+
     </center>
 
     <!-- Bottom Panel - Status Bar -->

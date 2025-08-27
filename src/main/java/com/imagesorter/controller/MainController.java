@@ -21,6 +21,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
@@ -150,14 +151,18 @@ public class MainController implements Initializable {
 
 
         // Add scroll handler for navigation
-        imageScrollPane.setOnScroll(event -> {
+        EventHandler<ScrollEvent> scrollEventEventHandler = event -> {
             if (event.getDeltaY() < 0) {
                 navigateNext();
             } else {
                 navigatePrevious();
             }
             event.consume();
-        });
+        };
+        imageScrollPane.setOnScroll(scrollEventEventHandler);
+
+        thumbnailBox.setOnScroll(scrollEventEventHandler);
+
 
         // Also add click handler to the scroll pane as backup
         imageScrollPane.setOnMouseClicked(event -> {
@@ -190,7 +195,7 @@ public class MainController implements Initializable {
                 } else {
                     setText(item);
                     setStyle("-fx-font-family: 'Consolas', 'Monaco', 'Courier New', monospace; " +
-                            "-fx-font-size: 11px; " +
+                            "-fx-font-size: 12px; " +
                             "-fx-text-fill: #2c3e50; " +
                             "-fx-padding: 5 8 5 8;");
 
@@ -249,7 +254,7 @@ public class MainController implements Initializable {
                     verticalSplitPane.getItems().remove(thumbnailBox);
                 } else {
                     verticalSplitPane.getItems().add(0, thumbnailBox);
-                    verticalSplitPane.setDividerPositions(0.2);
+                    verticalSplitPane.setDividerPositions(0.1);
                 }
             }
         }

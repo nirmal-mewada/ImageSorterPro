@@ -65,7 +65,7 @@ public class ImageService {
         return imageFiles;
     }
 
-        /**
+    /**
      * Loads an image from file with EXIF rotation applied
      */
     public Image loadImage(ImageFile imageFile) throws IOException {
@@ -79,8 +79,8 @@ public class ImageService {
         }
         // Load image from file
         Image image;
-        int size = ConfigService.getInstance().getConfig().getImageQualityPx();
         try (InputStream fis = Files.newInputStream(imageFile.getFile().toPath())) {
+            int size = ConfigService.getInstance().getConfig().getImageQualityPx();
             image = new Image(fis, size, 0, true, false);
         }
 
