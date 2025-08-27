@@ -17,9 +17,10 @@ import java.util.List;
  */
 public class ConfigService {
 
-    private static final String CONFIG_DIR = System.getProperty("user.home") +
-            File.separator + ".imagesorter";
-    private static final String CONFIG_FILE = "config.json";
+//    private static final String CONFIG_DIR = System.getProperty("user.home") +
+//            File.separator + ".imagesorter";
+    private static final String CONFIG_DIR = System.getProperty("user.dir");
+    private static final String CONFIG_FILE = "image_sort_config.json";
     private static final String CONFIG_PATH = CONFIG_DIR + File.separator + CONFIG_FILE;
 
     private static ConfigService instance;
@@ -49,7 +50,7 @@ public class ConfigService {
      */
     public void loadConfig() {
         File configFile = new File(CONFIG_PATH);
-
+        System.out.println("Config Path: "+CONFIG_PATH);
         if (configFile.exists()) {
             try {
                 config = objectMapper.readValue(configFile, ConfigSettings.class);

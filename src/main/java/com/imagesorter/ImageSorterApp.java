@@ -9,6 +9,7 @@ import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import com.imagesorter.service.ConfigService;
 
+import java.io.File;
 import java.util.Objects;
 
 /**
@@ -28,8 +29,7 @@ public class ImageSorterApp extends Application {
 //            Application.setUserAgentStylesheet(new Dracula().getUserAgentStylesheet());
             // Initialize configuration service
             ConfigService configService = ConfigService.getInstance();
-            configService.loadConfig();
-            
+
             // Load main FXML
             FXMLLoader loader = new FXMLLoader(getClass().getResource(MAIN_FXML));
             Parent root = loader.load();
@@ -72,6 +72,17 @@ public class ImageSorterApp extends Application {
     }
     
     public static void main(String[] args) {
+        ConfigService configService = ConfigService.getInstance();
+        configService.loadConfig();
+        if(args != null && args.length > 0){
+            String startFolder = args[0];
+            //ConfigService.getInstance().setLastOpenedFolder(startFolder);
+            System.out.println("Starting with folder: " + startFolder);
+            File startFile = new File(startFolder);
+            if(startFile.exists()){
+                configService.getConfig().setLastOpenedFolder(startFile.getAbsolutePath());
+            }
+        }
         launch(args);
     }
 }

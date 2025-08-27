@@ -1,0 +1,1 @@
+xcopy /y target\ImageSorterPro-1.0-SNAPSHOT.jar D:\master-drive\SyncJobs\
