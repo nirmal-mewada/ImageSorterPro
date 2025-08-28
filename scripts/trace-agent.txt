@@ -1,0 +1,22 @@
+https://bell-sw.com/blog/how-to-create-javafx-native-images/
+
+Download from Microsoft:
+👉 https://visualstudio.microsoft.com/visual-cpp-build-tools/
+
+During installation, select:
+
+✅ Desktop development with C++ workload
+
+✅ Windows SDK (comes with it)
+
+record reachability
+%JAVA_HOME%\bin\java.exe -agentlib:native-image-agent=config-merge-dir=./agent-data -jar  --add-modules javafx.controls,javafx.fxml,javafx.swing target\ImageSorterPro-1.0-SNAPSHOT.jar
+
+build option 1
+%JAVA_HOME%\bin\native-image -H:ConfigurationFileDirectories=./agent-data -jar target\ImageSorterPro-1.0-SNAPSHOT.jar
+
+build option 2
+Link for visual studio
+"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+
+mvn -Pnative package
