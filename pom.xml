@@ -14,38 +14,7 @@
         <maven.compiler.target>11</maven.compiler.target>
         <javafx.version>21</javafx.version>
     </properties>
-
     <profiles>
-        <profile>
-            <id>native</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.graalvm.buildtools</groupId>
-                        <artifactId>native-maven-plugin</artifactId>
-                        <version>0.10.5</version>
-                        <extensions>true</extensions>
-                        <executions>
-                            <execution>
-                                <id>build-native</id>
-                                <goals>
-                                    <goal>compile-no-fork</goal>
-                                </goals>
-                                <phase>package</phase>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <mainClass>com.imagesorter.ImageSorterApp</mainClass>
-                            <imageName>ImageSorterApp</imageName>
-                            <outputDirectory>target/native</outputDirectory>
-                            <buildArgs>
-                                <buildArg>-H:ConfigurationFileDirectories=./agent-data</buildArg>
-                            </buildArgs>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
         <!-- auto-detect platform for JavaFX -->
         <profile>
             <id>windows</id>
