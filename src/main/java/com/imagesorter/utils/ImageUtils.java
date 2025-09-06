@@ -13,16 +13,17 @@ import org.apache.commons.imaging.Imaging;
 import org.apache.commons.imaging.common.ImageMetadata;
 import org.apache.commons.imaging.formats.jpeg.JpegImageMetadata;
 import org.apache.commons.imaging.formats.jpeg.exif.ExifRewriter;
+import org.apache.commons.imaging.formats.tiff.TiffField;
 import org.apache.commons.imaging.formats.tiff.TiffImageMetadata;
 import org.apache.commons.imaging.formats.tiff.constants.TiffTagConstants;
 import org.apache.commons.imaging.formats.tiff.write.TiffOutputDirectory;
 import org.apache.commons.imaging.formats.tiff.write.TiffOutputSet;
 
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 
 public class ImageUtils {
 
@@ -123,33 +124,68 @@ public class ImageUtils {
         return rotatedImage;
     }
 
-    public static void rotateImageAndUpdateExif(File file, int angle) throws IOException, ImageReadException, ImageWriteException {
-        BufferedImage image = ImageIO.read(file);
-        BufferedImage rotatedImage = rotateImage(image, angle);
+    public static void rotateExifOrientation(File jpegFile, boolean rotateRight)
+            throws IOException, ImageReadException, ImageWriteException {
+
+        // Read metadata
+        ImageMetadata metadata = Imaging.getMetadata(jpegFile);
 
         TiffOutputSet outputSet = null;
-        ImageMetadata metadata = Imaging.getMetadata(file);
+        int currentOrientation = 1; // default normal
+
         if (metadata instanceof JpegImageMetadata) {
-            JpegImageMetadata jpegMetadata = (JpegImageMetadata) metadata;
-            if (null != jpegMetadata) {
-                TiffImageMetadata exif = jpegMetadata.getExif();
-                if (null != exif) {
-                    outputSet = exif.getOutputSet();
+            TiffImageMetadata exif = ((JpegImageMetadata)metadata).getExif();
+            if (exif != null) {
+                outputSet = exif.getOutputSet();
+
+                TiffField orientationField =
+                        exif.findField(TiffTagConstants.TIFF_TAG_ORIENTATION, true);
+                if (orientationField != null) {
+                    currentOrientation = orientationField.getIntValue();
                 }
             }
         }
 
-        if (null == outputSet) {
+        if (outputSet == null) {
             outputSet = new TiffOutputSet();
         }
 
+        // Compute new orientation
+        int newOrientation;
+        if (rotateRight) {
+            // Right (CW): 1→6, 6→3, 3→8, 8→1
+            switch (currentOrientation) {
+                case 6 -> newOrientation = 3;
+                case 3 -> newOrientation = 8;
+                case 8 -> newOrientation = 1;
+                default -> newOrientation = 6;
+            }
+        } else {
+            // Left (CCW): 1→8, 8→3, 3→6, 6→1
+            switch (currentOrientation) {
+                case 8 -> newOrientation = 3;
+                case 3 -> newOrientation = 6;
+                case 6 -> newOrientation = 1;
+                default -> newOrientation = 8;
+            }
+        }
+
+        // Update EXIF tag
         TiffOutputDirectory exifDirectory = outputSet.getOrCreateExifDirectory();
         exifDirectory.removeField(TiffTagConstants.TIFF_TAG_ORIENTATION);
-        exifDirectory.add(TiffTagConstants.TIFF_TAG_ORIENTATION, (short) 1);
+        exifDirectory.add(TiffTagConstants.TIFF_TAG_ORIENTATION, (short) newOrientation);
 
-        File tempFile = File.createTempFile("image-", ".jpg");
+        System.out.println("Rotating: "+currentOrientation+" -> "+newOrientation);
+
+        // Write back losslessly
+        File tempFile = new File("C:\\Users\\Nirmal\\Desktop\\"+jpegFile.getName());
         try (FileOutputStream fos = new FileOutputStream(tempFile)) {
-            new ExifRewriter().updateExifMetadataLossless(rotatedImage, fos, outputSet);
+            new ExifRewriter().updateExifMetadataLossless(jpegFile, fos, outputSet);
         }
+
+        Files.copy(tempFile.toPath(), jpegFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
     }
+
+
+
 }

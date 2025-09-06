@@ -30,7 +30,7 @@
                 <MenuItem mnemonicParsing="false" text="Actual Size" accelerator="Ctrl+0" disable="true" />
             </Menu>
             <Menu mnemonicParsing="false" text="Help">
-                <MenuItem mnemonicParsing="false" text="Keyboard Shortcuts" accelerator="F1" disable="true" />
+                <MenuItem fx:id="helpShortcutsMenuItem" mnemonicParsing="false" text="Keyboard Shortcuts" accelerator="F1" />
                 <MenuItem mnemonicParsing="false" text="About" disable="true" />
             </Menu>
         </MenuBar>
@@ -51,15 +51,7 @@
 
                 <Separator />
 
-                <Label text="Press (Shift+ to Archive) any keys  1-9 or a-z to move current image" styleClass="help-text" />
-                <Label text="Press 0 to move to global Archive folder" styleClass="help-text" />
-                <Label text="CTRL + SHIFT + {X} : Config update" styleClass="help-text" />
-                <Label text="CTRL + Z : Undo" styleClass="help-text" />
-                <Label text="Delete Key: Delete current image" styleClass="help-text" />
-                <Separator />
-                <Label text="Navigation:" styleClass="help-text" />
-                <Label text="   ← → Arrow Keys: Previous/Next" styleClass="help-text" />
-                <Label text="   Mouse Click: Left=Previous, Right=Next" styleClass="help-text" />
+                <!-- Help text removed and moved to Help Menu -->
 
             </VBox>
 

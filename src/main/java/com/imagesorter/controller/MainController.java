@@ -53,6 +53,7 @@ public class MainController implements Initializable {
     @FXML private MenuItem exitMenuItem;
     @FXML private MenuItem toggleLeftViewMenuItem;
     @FXML private MenuItem toggleThumbnailBoxMenuItem;
+    @FXML private MenuItem helpShortcutsMenuItem;
 //    @FXML private MenuItem resetFocus;
 
     @FXML private  CheckBox clickToMoveCheckBox;
@@ -241,7 +242,44 @@ public class MainController implements Initializable {
         exitMenuItem.setOnAction(e -> Platform.exit());
         toggleLeftViewMenuItem.setOnAction(e -> toggleNodeVisibility(leftVBox));
         toggleThumbnailBoxMenuItem.setOnAction(e -> toggleNodeVisibility(thumbnailBox));
+        helpShortcutsMenuItem.setOnAction(e -> showShortcuts());
 //        resetFocus.setOnAction(e -> setupKeyboardFocus());
+    }
+
+    private void showShortcuts() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Keyboard Shortcuts");
+        alert.setHeaderText("Here are the available keyboard shortcuts:");
+
+        String shortcuts = 
+                "MOVE:\n" +
+                "  - 1-9, a-z: Move to configured folder.\n" +
+                "  - Shift + 1-9, a-z: Move to configured folder and archive.\n" +
+                "  - 0 or Numpad 0: Move to global archive folder.\n" +
+                "\n" +
+                "NAVIGATION:\n" +
+                "  - Right Arrow: Next image.\n" +
+                "  - Left Arrow: Previous image.\n" +
+                "  - Mouse Click: Left side for previous, right side for next.\n" +
+                "  - Mouse Scroll: Up for previous, down for next.\n" +
+                "\n" +
+                "ACTIONS:\n" +
+                "  - Ctrl + Z: Undo last action.\n" +
+                "  - Delete or -: Delete current image.\n" +
+                "  - Ctrl + R: Rotate image right.\n" +
+                "  - Ctrl + L: Rotate image left.\n" +
+                "  - Ctrl + Alt + O: Open image in external viewer.\n" +
+                "\n" +
+                "CONFIGURATION:\n" +
+                "  - Ctrl + Shift + 1-9, a-z: Choose on-demand folder.\n" +
+                "  - Ctrl + O: Open folder.\n" +
+                "  - Ctrl + P: Open configuration dialog.\n" +
+                "\n" +
+                "VIEW:\n" +
+                "  - F1: Show this help dialog.\n";
+
+        alert.setContentText(shortcuts);
+        alert.showAndWait();
     }
 
     private void toggleNodeVisibility(Node node) {
@@ -292,6 +330,7 @@ public class MainController implements Initializable {
                     navigatePrevious();
                     break;
                 case DELETE:
+                case MINUS:
                     deleteCurrentImage();
                     break;
                 case NUMPAD0:
@@ -307,28 +346,33 @@ public class MainController implements Initializable {
                         openConfigDialog();
                     break;
                 case L:
-                    if (event.isControlDown()) {
-                        rotateCurrentImage(90);
-                    }
+//                    if (event.isControlDown()) {
+//                        rotateCurrentImage(false);
+//                    }
                     break;
                 case R:
-                    if (event.isControlDown()) {
-                        rotateCurrentImage(270);
-                    }
+//                    if (event.isControlDown()) {
+//                        rotateCurrentImage(true);
+//                    }
                     break;
             }
         }
         event.consume();
     }
 
-    private void rotateCurrentImage(int angle) {
+    /**
+     * TODO Not verified
+     * @param rotateRight
+     */
+    private void rotateCurrentImage(boolean  rotateRight) {
         if (currentImages != null && currentImageIndex >= 0 && currentImageIndex < currentImages.size()) {
             ImageFile currentImageFile = currentImages.get(currentImageIndex);
             File fileToRotate = currentImageFile.getFile();
             if (fileToRotate.exists()) {
                 try {
-                    ImageUtils.rotateImageAndUpdateExif(fileToRotate, angle);
+                    ImageUtils.rotateExifOrientation(fileToRotate, rotateRight);
                     imageService.clearCache(currentImageFile);
+                    currentImageFile.setExifRotate(null); // reset to force re-read
                     displayCurrentImage();
                 } catch (Exception e) {
                     showAlert("Error", "Could not rotate image: " + e.getMessage());
