@@ -6,6 +6,7 @@ import com.imagesorter.model.ImageFile;
 import com.imagesorter.model.LastAction;
 import com.imagesorter.service.ConfigService;
 import com.imagesorter.service.ImageService;
+import com.imagesorter.utils.ImageUtils;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.event.EventHandler;
@@ -16,6 +17,9 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -28,10 +32,12 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -269,8 +275,10 @@ public class MainController implements Initializable {
 
         if (event.isControlDown() && code == KeyCode.Z) {
             undoLastAction();
-        } else if(event.isControlDown() && event.isShiftDown() && keyText.matches("[1-9a-z]") ){
+        } else if(event.isControlDown() && event.isShiftDown() && keyText.matches("[1-9a-z]")) {
             chooseOnDemandFolder(event,keyText);
+        } else if (event.isControlDown() && event.isAltDown() && code == KeyCode.O) {
+            openInExternalViewer();
         } else  if (currentImages == null || currentImages.isEmpty()) {
             return;
         } else if(keyText.matches("[1-9a-z]") && !event.isControlDown()){
@@ -298,10 +306,55 @@ public class MainController implements Initializable {
                     if(event.isControlDown())
                         openConfigDialog();
                     break;
+                case L:
+                    if (event.isControlDown()) {
+                        rotateCurrentImage(90);
+                    }
+                    break;
+                case R:
+                    if (event.isControlDown()) {
+                        rotateCurrentImage(270);
+                    }
+                    break;
             }
         }
         event.consume();
     }
+
+    private void rotateCurrentImage(int angle) {
+        if (currentImages != null && currentImageIndex >= 0 && currentImageIndex < currentImages.size()) {
+            ImageFile currentImageFile = currentImages.get(currentImageIndex);
+            File fileToRotate = currentImageFile.getFile();
+            if (fileToRotate.exists()) {
+                try {
+                    ImageUtils.rotateImageAndUpdateExif(fileToRotate, angle);
+                    imageService.clearCache(currentImageFile);
+                    displayCurrentImage();
+                } catch (Exception e) {
+                    showAlert("Error", "Could not rotate image: " + e.getMessage());
+                }
+            } else {
+                showAlert("Error", "Image file does not exist.");
+            }
+        }
+    }
+
+    private void openInExternalViewer() {
+        if (currentImages != null && currentImageIndex >= 0 && currentImageIndex < currentImages.size()) {
+            ImageFile currentImageFile = currentImages.get(currentImageIndex);
+            File fileToOpen = currentImageFile.getFile();
+            if (fileToOpen.exists()) {
+                try {
+                    Desktop.getDesktop().open(fileToOpen);
+                } catch (IOException e) {
+                    showAlert("Error", "Could not open image in external viewer: " + e.getMessage());
+                }
+            } else {
+                showAlert("Error", "Image file does not exist.");
+            }
+        }
+    }
+    
     private void chooseOnDemandFolder(KeyEvent event, String keyText) {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Select Folder for Hotkey " + keyText);
@@ -320,6 +373,7 @@ public class MainController implements Initializable {
             updateHotkeyList();
         }
     }
+
 
     private void handleImageClick(MouseEvent event) {
         if (event.getClickCount() == 1) {

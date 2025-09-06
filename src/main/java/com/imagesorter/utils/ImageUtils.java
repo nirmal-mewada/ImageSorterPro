@@ -5,25 +5,24 @@ import com.drew.imaging.ImageProcessingException;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.MetadataException;
 import com.drew.metadata.exif.ExifIFD0Directory;
-import com.drew.metadata.jpeg.JpegDirectory;
-import com.imagesorter.model.ImageFile;
 import com.imagesorter.service.ConfigService;
 import com.imagesorter.service.ImageService;
-import javafx.embed.swing.SwingFXUtils;
-import javafx.scene.image.Image;
-import javafx.scene.image.PixelReader;
-import javafx.scene.image.PixelWriter;
-import javafx.scene.image.WritableImage;
+import org.apache.commons.imaging.ImageReadException;
+import org.apache.commons.imaging.ImageWriteException;
+import org.apache.commons.imaging.Imaging;
+import org.apache.commons.imaging.common.ImageMetadata;
+import org.apache.commons.imaging.formats.jpeg.JpegImageMetadata;
+import org.apache.commons.imaging.formats.jpeg.exif.ExifRewriter;
+import org.apache.commons.imaging.formats.tiff.TiffImageMetadata;
+import org.apache.commons.imaging.formats.tiff.constants.TiffTagConstants;
+import org.apache.commons.imaging.formats.tiff.write.TiffOutputDirectory;
+import org.apache.commons.imaging.formats.tiff.write.TiffOutputSet;
 
 import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
-import javax.imageio.stream.ImageInputStream;
-import java.awt.geom.AffineTransform;
-import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Iterator;
 
 public class ImageUtils {
 
@@ -124,4 +123,33 @@ public class ImageUtils {
         return rotatedImage;
     }
 
+    public static void rotateImageAndUpdateExif(File file, int angle) throws IOException, ImageReadException, ImageWriteException {
+        BufferedImage image = ImageIO.read(file);
+        BufferedImage rotatedImage = rotateImage(image, angle);
+
+        TiffOutputSet outputSet = null;
+        ImageMetadata metadata = Imaging.getMetadata(file);
+        if (metadata instanceof JpegImageMetadata) {
+            JpegImageMetadata jpegMetadata = (JpegImageMetadata) metadata;
+            if (null != jpegMetadata) {
+                TiffImageMetadata exif = jpegMetadata.getExif();
+                if (null != exif) {
+                    outputSet = exif.getOutputSet();
+                }
+            }
+        }
+
+        if (null == outputSet) {
+            outputSet = new TiffOutputSet();
+        }
+
+        TiffOutputDirectory exifDirectory = outputSet.getOrCreateExifDirectory();
+        exifDirectory.removeField(TiffTagConstants.TIFF_TAG_ORIENTATION);
+        exifDirectory.add(TiffTagConstants.TIFF_TAG_ORIENTATION, (short) 1);
+
+        File tempFile = File.createTempFile("image-", ".jpg");
+        try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+            new ExifRewriter().updateExifMetadataLossless(rotatedImage, fos, outputSet);
+        }
+    }
 }

@@ -242,8 +242,8 @@ public class ImageService {
     /**
      * Clears the image cache
      */
-    public void clearCache() {
-        imageCache.clear();
+    public void clearCache(ImageFile currentImageFile) {
+        imageCache.remove(currentImageFile.getPath());
     }
 
     /**
