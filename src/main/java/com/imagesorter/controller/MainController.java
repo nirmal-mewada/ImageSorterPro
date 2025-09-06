@@ -40,6 +40,8 @@ import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
 
+import static com.imagesorter.utils.ImageUtils.*;
+
 /**
  * Controller for the main application window
  * Handles UI interactions, keyboard shortcuts, and image operations
@@ -370,7 +372,7 @@ public class MainController implements Initializable {
             File fileToRotate = currentImageFile.getFile();
             if (fileToRotate.exists()) {
                 try {
-                    ImageUtils.rotateExifOrientation(fileToRotate, rotateRight);
+                    rotateExifOrientation(fileToRotate, rotateRight);
                     imageService.clearCache(currentImageFile);
                     currentImageFile.setExifRotate(null); // reset to force re-read
                     displayCurrentImage();
@@ -845,7 +847,8 @@ public class MainController implements Initializable {
             progressBar.setProgress(0);
         } else {
             ImageFile currentImageFile = currentImages.get(currentImageIndex);
-            currentFileLabel.setText("Current File: " + currentImageFile.getName());
+            String text = String.format("Current File: %s, Size: %s", currentImageFile.getName(), humanReadableByteCountSI(currentImageFile.getFile().length()));
+            currentFileLabel.setText(text);
 
             int totalOriginal = currentImages.size();
             progressLabel.setText(String.format("Image %d / %d",
