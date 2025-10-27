@@ -1,54 +1,80 @@
 package com.imagesorter.videoplayer;
 
 import com.imagesorter.model.ImageFile;
+import javafx.beans.binding.Bindings;
+import javafx.geometry.Pos;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaView;
 
 import java.net.MalformedURLException;
 
-public class Player extends BorderPane // Player class extend BorderPane
-        // in order to divide the media
-        // player into regions
-{
-    Media media;
+public class Player extends BorderPane {
+    private Media media;
     public MediaPlayer player;
-    MediaView view;
-    Pane mpane;
-    MediaBar bar;
+    private MediaView view;
+    private StackPane mpane;
+    private MediaBar bar;
 
-    public Player(ImageFile currentImageFile) throws MalformedURLException { // Default constructor
+    public Player(ImageFile currentImageFile) throws MalformedURLException {
+        // Prepare Media and Player
         String file = currentImageFile.getFile().toURI().toURL().toExternalForm();
         media = new Media(file);
         player = new MediaPlayer(media);
         view = new MediaView(player);
-        mpane = new Pane();
-        mpane.getChildren().add(view); // Calling the function getChildren
-
         view.setPreserveRatio(true);
-//        int rotation = ((currentImageFile.getExifRotate() % 360) + 360) % 360;
-        int rotation = Math.abs(currentImageFile.getExifRotate());
 
-        view.setRotate(rotation);
+        // --- Container to center video properly ---
+        mpane = new StackPane(view);
+        mpane.setAlignment(Pos.CENTER);
+        mpane.setStyle("-fx-background-color: black;"); // Ensures black background
 
+        // Handle rotation (normalize)
+        int rotation = ((currentImageFile.getExifRotate() % 360) + 360) % 360;
+        switch (rotation) {
+            case 90 -> {
+                view.setRotate(90);
+                view.setScaleX(-1); // flips vertically to correct upside-down
+            }
+            case 270 -> {
+                view.setRotate(270);
+                view.setScaleX(-1); // flips horizontally to correct upside-down
+            }
+            case 180 -> {
+                view.setRotate(180);
+            }
+            default -> {
+                view.setRotate(0);
+            }
+        }
+        System.out.println(rotation);
+
+        // Fit bindings (handle both portrait & landscape)
         if (rotation == 90 || rotation == 270) {
-            view.fitWidthProperty().bind(heightProperty());
-            view.fitHeightProperty().bind(widthProperty());
+            view.fitWidthProperty().bind(Bindings.createDoubleBinding(
+                    () -> mpane.getHeight(),
+                    mpane.heightProperty()
+            ));
+            view.fitHeightProperty().bind(Bindings.createDoubleBinding(
+                    () -> mpane.getWidth(),
+                    mpane.widthProperty()
+            ));
         } else {
-//            // For 0 or 180 degrees, bindings are standard.
-            view.fitWidthProperty().bind(widthProperty());
-            view.fitHeightProperty().bind(heightProperty());
+            view.fitWidthProperty().bind(mpane.widthProperty());
+            view.fitHeightProperty().bind(mpane.heightProperty());
         }
 
-        // inorder to add the view
+        // Layout
         setCenter(mpane);
-        bar = new MediaBar(player); // Passing the player to MediaBar
-        setBottom(bar); // Setting the MediaBar at bottom
-        setStyle("-fx-background-color:#bfc2c7"); // Adding color to the mediabar
-        player.play(); // Making the video play
+        bar = new MediaBar(player);
+        setBottom(bar);
+
+        setStyle("-fx-background-color:#bfc2c7;");
+        player.play();
     }
+
     public void dispose() {
         try {
             if (player != null) {
@@ -72,5 +98,4 @@ public class Player extends BorderPane // Player class extend BorderPane
             e.printStackTrace();
         }
     }
-
 }
