@@ -27,6 +27,9 @@ public class ConfigSettings {
     private HashSet<String> supportedExtensions = new HashSet<>(Arrays.asList(
             "jpg", "jpeg", "png", "gif", "bmp", "tiff", "tif","mp4"
             ));
+    private HashSet<String> supportedVideoExtensions = new HashSet<>(Arrays.asList(
+            "mp4"
+    ));
     
     public ConfigSettings() {
         this.allFolderPaths = new HashMap<>();
@@ -184,5 +187,8 @@ public class ConfigSettings {
 
     public void setSupportedExtensions(HashSet<String> supportedExtensions) {
         this.supportedExtensions = supportedExtensions;
+    }
+    public HashSet<String> getSupportedVideoExtensions() {
+        return supportedVideoExtensions;
     }
 }

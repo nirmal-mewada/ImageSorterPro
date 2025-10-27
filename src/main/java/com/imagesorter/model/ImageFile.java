@@ -32,7 +32,7 @@ public class ImageFile {
     }
 
     public boolean isVideoFile() {
-        return extension.equalsIgnoreCase("mp4");
+        return ConfigService.getInstance().getConfig().getSupportedVideoExtensions().contains(extension.toLowerCase());
     }
     
     // Getters

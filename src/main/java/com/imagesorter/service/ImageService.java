@@ -52,7 +52,7 @@ public class ImageService {
         for (File file : files) {
             if (file.isFile() && ImageUtils.isImageFile(this, file)) {
                 ImageFile imageFile = new ImageFile(file);
-                if (imageFile.isValidImageFile()) {
+                if (imageFile.isValidImageFile() || imageFile.isVideoFile()) {
                     imageFiles.add(imageFile);
                 }
             }

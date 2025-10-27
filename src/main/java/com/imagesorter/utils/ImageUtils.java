@@ -7,6 +7,7 @@ import com.drew.metadata.Metadata;
 import com.drew.metadata.MetadataException;
 import com.drew.metadata.exif.ExifIFD0Directory;
 import com.drew.metadata.mp4.media.Mp4VideoDirectory;
+import com.imagesorter.model.ConfigSettings;
 import com.imagesorter.service.ConfigService;
 import com.imagesorter.service.ImageService;
 import org.apache.commons.imaging.ImageReadException;
@@ -41,7 +42,8 @@ public class ImageUtils {
 
         if (dotIndex >= 0 && dotIndex < name.length() - 1) {
             String extension = name.substring(dotIndex + 1);
-            return ConfigService.getInstance().getConfig().getSupportedExtensions().contains(extension);
+            ConfigSettings config = ConfigService.getInstance().getConfig();
+            return (config.getSupportedExtensions().contains(extension) || config.getSupportedVideoExtensions().contains(extension));
         }
 
         return false;
