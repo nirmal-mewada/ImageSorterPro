@@ -523,10 +523,7 @@ public class MainController implements Initializable {
         }
 
         ImageFile currentImageFile = currentImages.get(currentImageIndex);
-        if(currentMediaPlayer != null){
-            currentMediaPlayer.dispose();
-            currentMediaPlayer = null;
-        }
+        clearVideo();
 
         if(currentImageFile.isVideoFile()){
             System.out.println("Video file detected, skipping: "+ currentImageFile.getName());
@@ -699,6 +696,7 @@ public class MainController implements Initializable {
         addLastAction(new LastAction(LastAction.ActionType.MOVE, sourceFile, destinationFile));
 
         // Move file
+        clearVideo();
         if (sourceFile.renameTo(destinationFile)) {
             // Remove from current list
             System.out.println("Moved: " + sourceFile.getAbsolutePath() + " -> " + destinationFile.getAbsolutePath());
@@ -761,6 +759,7 @@ public class MainController implements Initializable {
             // Store last action
             addLastAction(new LastAction(LastAction.ActionType.DELETE, sourceFile, destinationFile));
 
+            clearVideo();
             if (sourceFile.renameTo(destinationFile)) {
                 lastAction.setText("Last Action: [Deleted] " + currentImageFile.getName());
                 System.out.println("Last Action: [Deleted] "+currentImageFile.getFile().getAbsolutePath());
@@ -782,6 +781,13 @@ public class MainController implements Initializable {
             } else {
                 showAlert("Error", "Failed to move the image to the trash folder.");
             }
+        }
+    }
+
+    private void clearVideo() {
+        if(currentMediaPlayer!= null){
+            currentMediaPlayer.dispose();
+            currentMediaPlayer = null;
         }
     }
 

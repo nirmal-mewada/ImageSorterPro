@@ -17,9 +17,11 @@ public class Player extends BorderPane {
     private MediaView view;
     private StackPane mpane;
     private MediaBar bar;
+    ImageFile currentImageFile;
 
     public Player(ImageFile currentImageFile) throws MalformedURLException {
         // Prepare Media and Player
+        this.currentImageFile = currentImageFile;
         String file = currentImageFile.getFile().toURI().toURL().toExternalForm();
         media = new Media(file);
         player = new MediaPlayer(media);
@@ -32,15 +34,33 @@ public class Player extends BorderPane {
         mpane.setStyle("-fx-background-color: black;"); // Ensures black background
 
         // Handle rotation (normalize)
+        setRotation();
+
+        // Layout
+        setCenter(mpane);
+        bar = new MediaBar(player,this);
+        setBottom(bar);
+
+        setStyle("-fx-background-color:#bfc2c7;");
+        player.play();
+    }
+    public void rotate90() {
+        Integer exifRotate = currentImageFile.getExifRotate();
+        exifRotate = (exifRotate + 90) % 360;
+        currentImageFile.setExifRotate(exifRotate);
+        setRotation();
+    }
+
+    public void setRotation() {
         int rotation = ((currentImageFile.getExifRotate() % 360) + 360) % 360;
         switch (rotation) {
             case 90 -> {
-                view.setRotate(90);
-                view.setScaleX(-1); // flips vertically to correct upside-down
+                view.setRotate(270);
+//                view.setScaleY(-1); // flips vertically to correct upside-down
             }
             case 270 -> {
-                view.setRotate(270);
-                view.setScaleX(-1); // flips horizontally to correct upside-down
+                view.setRotate(90);
+//                view.setScaleX(-1); // flips horizontally to correct upside-down
             }
             case 180 -> {
                 view.setRotate(180);
@@ -65,14 +85,6 @@ public class Player extends BorderPane {
             view.fitWidthProperty().bind(mpane.widthProperty());
             view.fitHeightProperty().bind(mpane.heightProperty());
         }
-
-        // Layout
-        setCenter(mpane);
-        bar = new MediaBar(player);
-        setBottom(bar);
-
-        setStyle("-fx-background-color:#bfc2c7;");
-        player.play();
     }
 
     public void dispose() {

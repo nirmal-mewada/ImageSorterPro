@@ -14,20 +14,29 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaPlayer.Status;
+import javafx.util.Duration;
 
 public class MediaBar extends HBox { // MediaBar extends Horizontal Box
 
     // introducing Sliders
+    Button rotate = new Button("⟳"); // For rotating the video
+
     Slider time = new Slider(); // Slider for time
     Slider vol = new Slider(); // Slider for volume
     Button PlayButton = new Button("||"); // For pausing the player
     Label volume = new Label("Volume: ");
-    MediaPlayer player;
+    MediaPlayer mediaPlayer;
+    private final Label playTime = new Label();
 
-    public MediaBar(MediaPlayer play)
+    Player player;
+
+    public MediaBar(MediaPlayer mediaPlayer, Player player)
     { // Default constructor taking
         // the MediaPlayer object
-        player = play;
+        this.mediaPlayer = mediaPlayer;
+        this.player = player;
+
+        rotate.setStyle("-fx-background-color: #8cb6f5; ");
 
         setAlignment(Pos.CENTER); // setting the HBox to center
         setPadding(new Insets(5, 10, 5, 10));
@@ -40,8 +49,10 @@ public class MediaBar extends HBox { // MediaBar extends Horizontal Box
 
         // Adding the components to the bottom
 
+        getChildren().add(rotate);
         getChildren().add(PlayButton); // Playbutton
-        getChildren().add(time); // time slider
+        getChildren().add(time);
+        getChildren().add(playTime);
         getChildren().add(volume); // volume slider
         getChildren().add(vol);
 
@@ -50,32 +61,32 @@ public class MediaBar extends HBox { // MediaBar extends Horizontal Box
         PlayButton.setOnAction(new EventHandler<ActionEvent>() {
             public void handle(ActionEvent e)
             {
-                Status status = player.getStatus(); // To get the status of Player
+                Status status = MediaBar.this.mediaPlayer.getStatus(); // To get the status of Player
                 if (status == status.PLAYING) {
 
                     // If the status is Video playing
-                    if (player.getCurrentTime().greaterThanOrEqualTo(player.getTotalDuration())) {
+                    if (MediaBar.this.mediaPlayer.getCurrentTime().greaterThanOrEqualTo(MediaBar.this.mediaPlayer.getTotalDuration())) {
 
                         // If the player is at the end of video
-                        player.seek(player.getStartTime()); // Restart the video
-                        player.play();
+                        MediaBar.this.mediaPlayer.seek(MediaBar.this.mediaPlayer.getStartTime()); // Restart the video
+                        MediaBar.this.mediaPlayer.play();
                     }
                     else {
                         // Pausing the player
-                        player.pause();
+                        MediaBar.this.mediaPlayer.pause();
 
                         PlayButton.setText(">");
                     }
                 } // If the video is stopped, halted or paused
                 if (status == Status.HALTED || status == Status.STOPPED || status == Status.PAUSED) {
-                    player.play(); // Start the video
+                    MediaBar.this.mediaPlayer.play(); // Start the video
                     PlayButton.setText("||");
                 }
             }
         });
 
         // Providing functionality to time slider
-        player.currentTimeProperty().addListener(new InvalidationListener() {
+        this.mediaPlayer.currentTimeProperty().addListener(new InvalidationListener() {
             public void invalidated(Observable ov)
             {
                 updatesValues();
@@ -88,7 +99,7 @@ public class MediaBar extends HBox { // MediaBar extends Horizontal Box
             {
                 if (time.isPressed()) { // It would set the time
                     // as specified by user by pressing
-                    player.seek(player.getMedia().getDuration().multiply(time.getValue() / 100));
+                    MediaBar.this.mediaPlayer.seek(MediaBar.this.mediaPlayer.getMedia().getDuration().multiply(time.getValue() / 100));
                 }
             }
         });
@@ -98,10 +109,13 @@ public class MediaBar extends HBox { // MediaBar extends Horizontal Box
             public void invalidated(Observable ov)
             {
                 if (vol.isPressed()) {
-                    player.setVolume(vol.getValue() / 100); // It would set the volume
+                    MediaBar.this.mediaPlayer.setVolume(vol.getValue() / 100); // It would set the volume
                     // as specified by user by pressing
                 }
             }
+        });
+        rotate.setOnAction((e)->{
+            player.rotate90();
         });
     }
 
@@ -113,11 +127,26 @@ public class MediaBar extends HBox { // MediaBar extends Horizontal Box
             {
                 // Updating to the new time value
                 // This will move the slider while running your video
-                time.setValue(player.getCurrentTime().toMillis()/
-                        player.getTotalDuration()
+                time.setValue(mediaPlayer.getCurrentTime().toMillis()/
+                        mediaPlayer.getTotalDuration()
                                 .toMillis()
                         * 100);
+                updateTime();
             }
         });
+    }
+    private void updateTime() {
+        Duration current = mediaPlayer.getCurrentTime();
+        Duration total = mediaPlayer.getTotalDuration();
+        String currentText = formatTime(current);
+        String totalText = total != null && total.greaterThan(Duration.ZERO) ? formatTime(total) : "--:--";
+        playTime.setText(currentText + " / " + totalText);
+    }
+
+    private String formatTime(Duration duration) {
+        int seconds = (int) Math.floor(duration.toSeconds());
+        int minutes = seconds / 60;
+        seconds = seconds % 60;
+        return String.format("%02d:%02d  ", minutes, seconds);
     }
 }
