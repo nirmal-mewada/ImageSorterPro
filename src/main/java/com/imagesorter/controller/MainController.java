@@ -7,6 +7,7 @@ import com.imagesorter.model.LastAction;
 import com.imagesorter.service.ConfigService;
 import com.imagesorter.service.ImageService;
 import com.imagesorter.utils.ImageUtils;
+import com.imagesorter.videoplayer.Player;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.event.EventHandler;
@@ -27,7 +28,9 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.media.MediaPlayer;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -35,6 +38,7 @@ import javafx.stage.Stage;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 import java.util.List;
@@ -86,8 +90,10 @@ public class MainController implements Initializable {
     private int currentImageIndex = -1;
     private File currentSourceFolder;
     private final Deque<LastAction> lastActionInfo = new LinkedList<>();
+    @FXML private StackPane mediaContainer;
+    private  MediaPlayer currentMediaPlayer;
 
-    
+
 
     Consumer<Integer> progressUpdaterCallback = (i) -> {
 //        Platform.runLater(() -> {
@@ -253,32 +259,32 @@ public class MainController implements Initializable {
         alert.setTitle("Keyboard Shortcuts");
         alert.setHeaderText("Here are the available keyboard shortcuts:");
 
-        String shortcuts = 
+        String shortcuts =
                 "MOVE:\n" +
-                "  - 1-9, a-z: Move to configured folder.\n" +
-                "  - Shift + 1-9, a-z: Move to configured folder and archive.\n" +
-                "  - 0 or Numpad 0: Move to global archive folder.\n" +
-                "\n" +
-                "NAVIGATION:\n" +
-                "  - Right Arrow: Next image.\n" +
-                "  - Left Arrow: Previous image.\n" +
-                "  - Mouse Click: Left side for previous, right side for next.\n" +
-                "  - Mouse Scroll: Up for previous, down for next.\n" +
-                "\n" +
-                "ACTIONS:\n" +
-                "  - Ctrl + Z: Undo last action.\n" +
-                "  - Delete or -: Delete current image.\n" +
-                "  - Ctrl + R: Rotate image right.\n" +
-                "  - Ctrl + L: Rotate image left.\n" +
-                "  - Ctrl + Alt + O: Open image in external viewer.\n" +
-                "\n" +
-                "CONFIGURATION:\n" +
-                "  - Ctrl + Shift + 1-9, a-z: Choose on-demand folder.\n" +
-                "  - Ctrl + O: Open folder.\n" +
-                "  - Ctrl + P: Open configuration dialog.\n" +
-                "\n" +
-                "VIEW:\n" +
-                "  - F1: Show this help dialog.\n";
+                        "  - 1-9, a-z: Move to configured folder.\n" +
+                        "  - Shift + 1-9, a-z: Move to configured folder and archive.\n" +
+                        "  - 0 or Numpad 0: Move to global archive folder.\n" +
+                        "\n" +
+                        "NAVIGATION:\n" +
+                        "  - Right Arrow: Next image.\n" +
+                        "  - Left Arrow: Previous image.\n" +
+                        "  - Mouse Click: Left side for previous, right side for next.\n" +
+                        "  - Mouse Scroll: Up for previous, down for next.\n" +
+                        "\n" +
+                        "ACTIONS:\n" +
+                        "  - Ctrl + Z: Undo last action.\n" +
+                        "  - Delete or -: Delete current image.\n" +
+                        "  - Ctrl + R: Rotate image right.\n" +
+                        "  - Ctrl + L: Rotate image left.\n" +
+                        "  - Ctrl + Alt + O: Open image in external viewer.\n" +
+                        "\n" +
+                        "CONFIGURATION:\n" +
+                        "  - Ctrl + Shift + 1-9, a-z: Choose on-demand folder.\n" +
+                        "  - Ctrl + O: Open folder.\n" +
+                        "  - Ctrl + P: Open configuration dialog.\n" +
+                        "\n" +
+                        "VIEW:\n" +
+                        "  - F1: Show this help dialog.\n";
 
         alert.setContentText(shortcuts);
         alert.showAndWait();
@@ -400,7 +406,7 @@ public class MainController implements Initializable {
             }
         }
     }
-    
+
     private void chooseOnDemandFolder(KeyEvent event, String keyText) {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Select Folder for Hotkey " + keyText);
@@ -510,34 +516,66 @@ public class MainController implements Initializable {
         new Thread(loadTask).start();
     }
 
-    private synchronized void displayCurrentImage() {
+    private synchronized void displayCurrentImage() throws RuntimeException {
         if (currentImages == null || currentImageIndex < 0 || currentImageIndex >= currentImages.size()) {
             imageView.setImage(null);
             return;
         }
 
         ImageFile currentImageFile = currentImages.get(currentImageIndex);
-        Image image = imageService.getCachedImage(currentImageFile);
-
-        if (image != null) {
-            imageView.setImage(image);
-        } else {
-            System.out.println("cache miss"+currentImageFile.getName());
-            try {
-                Image img = imageService.loadImage(currentImageFile);
-                imageView.setImage(img);
-            } catch (IOException e) {
-                showAlert("Error", "Failed to load image: " + currentImageFile.getName());
-
-            }
+        if(currentMediaPlayer != null){
+            currentMediaPlayer.dispose();
+            currentMediaPlayer = null;
         }
 
+        if(currentImageFile.isVideoFile()){
+            System.out.println("Video file detected, skipping: "+ currentImageFile.getName());
+            mediaContainer.getChildren().clear();
+            Player videoPlayer;
+            imageService.ensureExifRotation(currentImageFile);
+            try {
+                videoPlayer = new Player(currentImageFile);
+            } catch (Exception e) {
+                throw  new RuntimeException(e);
+            }
+
+
+            mediaContainer.getChildren().clear();
+
+            // Use your Player class
+            mediaContainer.getChildren().add(videoPlayer);
+
+            // Keep reference for stopping later
+            currentMediaPlayer = videoPlayer.player;
+            currentMediaPlayer.play();
+
+        } else {
+            mediaContainer.getChildren().clear();
+
+            mediaContainer.getChildren().add(imageView);
+
+            Image image = imageService.getCachedImage(currentImageFile);
+
+            if (image != null) {
+                imageView.setImage(image);
+            } else {
+                System.out.println("cache miss" + currentImageFile.getName());
+                try {
+                    Image img = imageService.loadImage(currentImageFile);
+                    imageView.setImage(img);
+                } catch (IOException e) {
+                    showAlert("Error", "Failed to load image: " + currentImageFile.getName());
+
+                }
+            }
+        }
         updateStatusBar();
         updateThumbnails();
 
         // Pre-cache surrounding images
 
-        imageService.preCacheImages(currentImages, currentImageIndex, configService.getConfig().getPrevCache(),configService.getConfig().getNextCache(), progressUpdaterCallback);
+        imageService.preCacheImages(currentImages, currentImageIndex, configService.getConfig().getPrevCache(), configService.getConfig().getNextCache(), progressUpdaterCallback);
+
     }
 
     private void updateThumbnails() {

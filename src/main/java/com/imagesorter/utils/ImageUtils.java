@@ -2,9 +2,11 @@ package com.imagesorter.utils;
 
 import com.drew.imaging.ImageMetadataReader;
 import com.drew.imaging.ImageProcessingException;
+import com.drew.metadata.Directory;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.MetadataException;
 import com.drew.metadata.exif.ExifIFD0Directory;
+import com.drew.metadata.mp4.media.Mp4VideoDirectory;
 import com.imagesorter.service.ConfigService;
 import com.imagesorter.service.ImageService;
 import org.apache.commons.imaging.ImageReadException;
@@ -43,6 +45,19 @@ public class ImageUtils {
         }
 
         return false;
+    }
+    public static int getVideoRotation(File file) {
+        try {
+            Metadata metadata = ImageMetadataReader.readMetadata(file);
+            for (Directory directory : metadata.getDirectories()) {
+                if (directory.containsTag(Mp4VideoDirectory.TAG_ROTATION)) {
+                    return directory.getInt(Mp4VideoDirectory.TAG_ROTATION);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Unable to read rotation metadata: " + e.getMessage());
+        }
+        return 0; // default: no rotation
     }
 
 
@@ -200,4 +215,5 @@ public class ImageUtils {
         }
         return String.format("%.1f %cB", bytes / 1000.0, ci.current());
     }
+
 }

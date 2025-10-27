@@ -68,7 +68,7 @@
                                     pannable="false" styleClass="image-scroll-pane"
                                     hbarPolicy="NEVER" vbarPolicy="NEVER">
 
-                           <StackPane>
+                           <StackPane fx:id="mediaContainer">
                                 <ImageView fx:id="imageView" preserveRatio="true" smooth="true"
                                            pickOnBounds="true" styleClass="main-image"/>
 

@@ -25,7 +25,7 @@ public class ConfigSettings {
     private int thumbnailCount;
      private int imageQualityPx;
     private HashSet<String> supportedExtensions = new HashSet<>(Arrays.asList(
-            "jpg", "jpeg", "png", "gif", "bmp", "tiff", "tif"
+            "jpg", "jpeg", "png", "gif", "bmp", "tiff", "tif","mp4"
             ));
     
     public ConfigSettings() {

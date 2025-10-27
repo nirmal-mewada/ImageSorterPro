@@ -77,27 +77,35 @@ public class ImageService {
             ensureExifRotation(imageFile);
             return cachedImage;
         }
-        // Load image from file
         Image image;
-        try (InputStream fis = Files.newInputStream(imageFile.getFile().toPath())) {
-            int size = ConfigService.getInstance().getConfig().getImageQualityPx();
-            image = new Image(fis, size, 0, true, false);
+
+        if(imageFile.isVideoFile()) {
+            try (InputStream fis =ImageService.class.getClassLoader().getResourceAsStream("video.png")) {
+                int size = ConfigService.getInstance().getConfig().getImageQualityPx();
+                image = new Image(fis, size, 0, true, false);
+            }
+        } else {
+            // Load image from file
+
+            try (InputStream fis = Files.newInputStream(imageFile.getFile().toPath())) {
+                int size = ConfigService.getInstance().getConfig().getImageQualityPx();
+                image = new Image(fis, size, 0, true, false);
+            }
+
+            ensureExifRotation(imageFile);
+
+            // Apply rotation if needed
+            if (imageFile.getExifRotate() != 0) {
+                BufferedImage bufferedImage = SwingFXUtils.fromFXImage(image, null);
+                bufferedImage = ImageUtils.rotateImage(bufferedImage, imageFile.getExifRotate());
+                image = SwingFXUtils.toFXImage(bufferedImage, null);
+            }
+
+            // Throw exception if image loading failed
+            if (image.isError()) {
+                throw new RuntimeException(image.getException());
+            }
         }
-
-        ensureExifRotation(imageFile);
-
-        // Apply rotation if needed
-        if (imageFile.getExifRotate() != 0) {
-            BufferedImage bufferedImage = SwingFXUtils.fromFXImage(image, null);
-            bufferedImage = ImageUtils.rotateImage(bufferedImage, imageFile.getExifRotate());
-            image = SwingFXUtils.toFXImage(bufferedImage, null);
-        }
-
-        // Throw exception if image loading failed
-        if (image.isError()) {
-            throw new RuntimeException(image.getException());
-        }
-
         // Cache the loaded image
         imageCache.put(filePath, image, imageFile.getSize());
 
@@ -162,9 +170,13 @@ public class ImageService {
 
 
 
-    private void ensureExifRotation(ImageFile imageFile) {
+    public void ensureExifRotation(ImageFile imageFile) {
         if (imageFile.getExifRotate() == null) {
-            imageFile.setExifRotate(ImageUtils.displayImageWithExifCorrection(imageFile.getFile()));
+            if(imageFile.isVideoFile()){
+                imageFile.setExifRotate(ImageUtils.getVideoRotation(imageFile.getFile()));
+            }else {
+                imageFile.setExifRotate(ImageUtils.displayImageWithExifCorrection(imageFile.getFile()));
+            }
         }
     }
 

@@ -1,6 +1,8 @@
 // ImageFile.java
 package com.imagesorter.model;
 
+import com.imagesorter.service.ConfigService;
+
 import java.io.File;
 import java.time.LocalDateTime;
 
@@ -28,6 +30,10 @@ public class ImageFile {
         int dotIndex = name.lastIndexOf('.');
         this.extension = dotIndex >= 0 ? name.substring(dotIndex + 1).toLowerCase() : "";
     }
+
+    public boolean isVideoFile() {
+        return extension.equalsIgnoreCase("mp4");
+    }
     
     // Getters
     public File getFile() { return file; }
@@ -45,7 +51,8 @@ public class ImageFile {
     }
     
     public boolean isValidImageFile() {
-        return extension.matches("jpg|jpeg|png|gif|bmp|tiff|tif");
+        return ConfigService.getInstance().getConfig().getSupportedExtensions().contains(extension);
+//        return extension.matches("jpg|jpeg|png|gif|bmp|tiff|tif|");
     }
 
     public Integer getExifRotate() {
