@@ -41,7 +41,16 @@ public class Player extends BorderPane {
         setBottom(bar);
 
         setStyle("-fx-background-color:#bfc2c7;");
-        player.play();
+//        player.play();
+        player.setOnReady(() -> {
+            setRotation();
+            player.play();
+        });
+
+        // Handle error or stalled media
+        player.setOnError(() -> System.err.println("Error: " + player.getError()));
+        player.setOnEndOfMedia(() -> player.stop());
+
     }
     public void rotate90() {
         Integer exifRotate = currentImageFile.getExifRotate();
@@ -110,6 +119,6 @@ public class Player extends BorderPane {
     }
 
     public void play() {
-        player.play();
+//        player.play();
     }
 }

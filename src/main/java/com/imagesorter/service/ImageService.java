@@ -3,6 +3,7 @@ package com.imagesorter.service;
 import com.imagesorter.model.ImageCache;
 import com.imagesorter.model.ImageFile;
 import com.imagesorter.utils.ImageUtils;
+import com.imagesorter.videoplayer.FastVideoThumbnailUtil;
 import javafx.concurrent.Task;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
@@ -80,10 +81,7 @@ public class ImageService {
         Image image;
 
         if(imageFile.isVideoFile()) {
-            try (InputStream fis =ImageService.class.getClassLoader().getResourceAsStream("video.png")) {
-                int size = ConfigService.getInstance().getConfig().getImageQualityPx();
-                image = new Image(fis, size, 0, true, false);
-            }
+            image = FastVideoThumbnailUtil.createVideoThumbnail(imageFile.getFile());
         } else {
             // Load image from file
 
@@ -111,64 +109,6 @@ public class ImageService {
 
         return image;
     }
-//    public Image loadImage1(ImageFile imageFile) throws IOException {
-//        String filePath = imageFile.getPath();
-//
-//        // 1. Return cached image if available
-//        Image cachedImage = imageCache.get(filePath);
-//        if (cachedImage != null) {
-//            return cachedImage;
-//        }
-//
-//        // 2. Read EXIF rotation once
-//        ensureExifRotation(imageFile);
-//
-//        // 3. Load scaled image
-//        int size = ConfigService.getInstance().getConfig().getImageQualityPx();
-//        Image image;
-//        try (InputStream fis = Files.newInputStream(imageFile.getFile().toPath())) {
-//            image = new Image(fis, size, 0, true, true);
-//        }
-//
-//        // 4. Apply rotation if needed (JavaFX Canvas, not SwingFXUtils)
-//        if (imageFile.getExifRotate() != 0) {
-//            image = rotateFXImage(image, imageFile.getExifRotate());
-//        }
-//
-//        // 5. Validate
-//        if (image.isError()) {
-//            throw new RuntimeException(image.getException());
-//        }
-//
-//        // 6. Cache final image (already rotated)
-//        imageCache.put(filePath, image, imageFile.getSize());
-//
-//        return image;
-//    }
-//    private Image rotateFXImage(Image src, int angle) {
-//        double w = src.getWidth();
-//        double h = src.getHeight();
-//
-//        double newW = (angle % 180 == 0) ? w : h;
-//        double newH = (angle % 180 == 0) ? h : w;
-//
-//        Canvas canvas = new Canvas(newW, newH);
-//        GraphicsContext gc = canvas.getGraphicsContext2D();
-//
-//        gc.save();
-//        // Translate to center of new canvas
-//        gc.translate(newW / 2, newH / 2);
-//        gc.rotate(angle);
-//        // Draw with original center aligned
-//        gc.drawImage(src, -w / 2, -h / 2);
-//        gc.restore();
-//
-//        SnapshotParameters params = new SnapshotParameters();
-//        params.setFill(Color.TRANSPARENT);
-//        return canvas.snapshot(params, null);
-//    }
-
-
 
     public void ensureExifRotation(ImageFile imageFile) {
         if (imageFile.getExifRotate() == null) {
@@ -179,10 +119,6 @@ public class ImageService {
             }
         }
     }
-
-
-
-
 
     /**
      * Gets cached image if available
