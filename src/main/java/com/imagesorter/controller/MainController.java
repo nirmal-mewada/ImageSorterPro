@@ -91,7 +91,7 @@ public class MainController implements Initializable {
     private File currentSourceFolder;
     private final Deque<LastAction> lastActionInfo = new LinkedList<>();
     @FXML private StackPane mediaContainer;
-    private  MediaPlayer currentMediaPlayer;
+    private  Player currentMediaPlayer;
 
 
 
@@ -455,11 +455,16 @@ public class MainController implements Initializable {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Select Image Folder");
 
+        File selectedDirectory;
         if (currentSourceFolder != null) {
             directoryChooser.setInitialDirectory(currentSourceFolder);
         }
+        if(currentMediaPlayer != null) {
+            selectedDirectory = directoryChooser.showDialog(currentMediaPlayer.getScene().getWindow());
+        }else {
+            selectedDirectory = directoryChooser.showDialog(imageView.getScene().getWindow());
+        }
 
-        File selectedDirectory = directoryChooser.showDialog(imageView.getScene().getWindow());
 
         if (selectedDirectory != null && selectedDirectory.exists()) {
             currentImageIndex = 0;
@@ -543,7 +548,7 @@ public class MainController implements Initializable {
             mediaContainer.getChildren().add(videoPlayer);
 
             // Keep reference for stopping later
-            currentMediaPlayer = videoPlayer.player;
+            currentMediaPlayer = videoPlayer;
             currentMediaPlayer.play();
 
         } else {

@@ -35,7 +35,6 @@ public class Player extends BorderPane {
 
         // Handle rotation (normalize)
         setRotation();
-
         // Layout
         setCenter(mpane);
         bar = new MediaBar(player,this);
@@ -69,7 +68,6 @@ public class Player extends BorderPane {
                 view.setRotate(0);
             }
         }
-        System.out.println(rotation);
 
         // Fit bindings (handle both portrait & landscape)
         if (rotation == 90 || rotation == 270) {
@@ -109,5 +107,9 @@ public class Player extends BorderPane {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public void play() {
+        player.play();
     }
 }
