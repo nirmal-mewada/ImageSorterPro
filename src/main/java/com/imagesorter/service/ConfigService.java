@@ -17,25 +17,67 @@ import java.util.List;
  */
 public class ConfigService {
 
-//    private static final String CONFIG_DIR = System.getProperty("user.home") +
-//            File.separator + ".imagesorter";
     private static final String CONFIG_DIR = System.getProperty("user.dir");
-    private static final String CONFIG_FILE = "image_sort_config.json";
-    private static final String CONFIG_PATH = CONFIG_DIR + File.separator + CONFIG_FILE;
+    private static final String DEFAULT_CONFIG_FILE = "image_sort_config.json";
+    private static final String POINTER_FILE = "config_pointer.txt";
+    private static final String DEFAULT_CONFIG_PATH = CONFIG_DIR + File.separator + DEFAULT_CONFIG_FILE;
+    private static final String POINTER_PATH = CONFIG_DIR + File.separator + POINTER_FILE;
 
     private static ConfigService instance;
     private ConfigSettings config;
     private ObjectMapper objectMapper;
+    private String configPath;
 
     private ConfigService() {
         this.objectMapper = new ObjectMapper();
         this.objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
+        resolveConfigPath();
+
         this.config = new ConfigSettings();
 
         // Ensure config directory exists
         createConfigDirectory();
+    }
+
+    private void resolveConfigPath() {
+        File pointerFile = new File(POINTER_PATH);
+        if (pointerFile.exists()) {
+            try {
+                byte[] bytes = java.nio.file.Files.readAllBytes(pointerFile.toPath());
+                String customPath = new String(bytes, java.nio.charset.StandardCharsets.UTF_8).trim();
+                if (!customPath.isEmpty()) {
+                    configPath = customPath;
+                    return;
+                }
+            } catch (IOException e) {
+                System.err.println("Failed to read config pointer: " + e.getMessage());
+            }
+        }
+        configPath = DEFAULT_CONFIG_PATH;
+    }
+
+    public void setConfigPath(String newPath) {
+        if (newPath == null || newPath.trim().isEmpty()) {
+            return;
+        }
+        
+        File newFile = new File(newPath);
+        File parent = newFile.getParentFile();
+        if (parent != null && !parent.exists()) {
+            parent.mkdirs();
+        }
+        
+        File pointerFile = new File(POINTER_PATH);
+        try {
+            java.nio.file.Files.write(pointerFile.toPath(), newPath.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            System.err.println("Failed to write config pointer: " + e.getMessage());
+        }
+        
+        this.configPath = newPath;
+        saveConfig();
     }
 
     public static synchronized ConfigService getInstance() {
@@ -49,12 +91,12 @@ public class ConfigService {
      * Loads configuration from file
      */
     public void loadConfig() {
-        File configFile = new File(CONFIG_PATH);
-        System.out.println("Config Path: "+CONFIG_PATH);
+        File configFile = new File(configPath);
+        System.out.println("Config Path: "+configPath);
         if (configFile.exists()) {
             try {
                 config = objectMapper.readValue(configFile, ConfigSettings.class);
-                System.out.println("Configuration loaded from: " + CONFIG_PATH);
+                System.out.println("Configuration loaded from: " + configPath);
             } catch (IOException e) {
                 System.err.println("Failed to load configuration: " + e.getMessage());
                 System.err.println("Using default configuration.");
@@ -71,9 +113,9 @@ public class ConfigService {
      */
     public void saveConfig() {
         try {
-            File configFile = new File(CONFIG_PATH);
+            File configFile = new File(configPath);
             objectMapper.writeValue(configFile, config);
-            System.out.println("Configuration saved to: " + CONFIG_PATH);
+            System.out.println("Configuration saved to: " + configPath);
         } catch (IOException e) {
             System.err.println("Failed to save configuration: " + e.getMessage());
         }
@@ -105,14 +147,14 @@ public class ConfigService {
      * Gets the configuration file path
      */
     public String getConfigPath() {
-        return CONFIG_PATH;
+        return configPath;
     }
 
     /**
      * Checks if configuration file exists
      */
     public boolean configFileExists() {
-        return new File(CONFIG_PATH).exists();
+        return new File(configPath).exists();
     }
 
     /**
@@ -133,12 +175,12 @@ public class ConfigService {
      * Backs up current configuration file
      */
     public boolean backupConfig() {
-        File configFile = new File(CONFIG_PATH);
+        File configFile = new File(configPath);
         if (!configFile.exists()) {
             return false;
         }
 
-        String backupPath = CONFIG_PATH + ".backup." + System.currentTimeMillis();
+        String backupPath = configPath + ".backup." + System.currentTimeMillis();
         File backupFile = new File(backupPath);
 
         try {

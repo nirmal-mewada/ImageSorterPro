@@ -49,6 +49,12 @@
                     <Button fx:id="browseTrashFolderButton" text="Browse..." styleClass="browse-button" />
                 </HBox>
 
+                <HBox spacing="10.0" alignment="CENTER_LEFT">
+                    <Label text="Config File:" styleClass="hotkey-label" />
+                    <TextField fx:id="configFileTextField" promptText="Configuration file location..." HBox.hgrow="ALWAYS" />
+                    <Button fx:id="browseConfigFileButton" text="Browse..." styleClass="browse-button" />
+                </HBox>
+
                 <Separator />
 
                 <!-- Additional Information -->

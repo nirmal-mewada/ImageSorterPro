@@ -34,6 +34,9 @@ public class ConfigController implements Initializable {
     @FXML private TextField trashFolderTextField;
     @FXML private Button browseTrashFolderButton;
 
+    @FXML private TextField configFileTextField;
+    @FXML private Button browseConfigFileButton;
+
     // Services
     private ConfigService configService;
 
@@ -110,6 +113,7 @@ public class ConfigController implements Initializable {
         }
 
         browseTrashFolderButton.setOnAction(e -> browseForFolder("Trash Folder", trashFolderTextField));
+        browseConfigFileButton.setOnAction(e -> browseForConfigFile());
 
         // Setup action buttons
         saveButton.setOnAction(e -> saveConfiguration());
@@ -127,6 +131,26 @@ public class ConfigController implements Initializable {
         trashFolderTextField.textProperty().addListener((observable, oldValue, newValue) -> {
             validateTextField(trashFolderTextField);
         });
+        configFileTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+            validateConfigFileField();
+        });
+    }
+
+    private void validateConfigFileField() {
+        String path = configFileTextField.getText().trim();
+        if (path.isEmpty()) {
+            configFileTextField.setStyle("-fx-border-color: red; -fx-border-width: 1px;");
+        } else {
+            File file = new File(path);
+            File parent = file.getParentFile();
+            boolean parentExists = parent == null || parent.exists();
+            boolean isJson = path.toLowerCase().endsWith(".json");
+            if (parentExists && isJson) {
+                configFileTextField.setStyle("-fx-border-color: green; -fx-border-width: 1px;");
+            } else {
+                configFileTextField.setStyle("-fx-border-color: red; -fx-border-width: 1px;");
+            }
+        }
     }
 
     private void validateTextField(TextField textField) {
@@ -168,6 +192,30 @@ public class ConfigController implements Initializable {
         }
     }
 
+    private void browseForConfigFile() {
+        javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
+        fileChooser.setTitle("Choose Configuration File");
+        fileChooser.getExtensionFilters().add(new javafx.stage.FileChooser.ExtensionFilter("JSON Files (*.json)", "*.json"));
+        
+        String currentPath = configFileTextField.getText().trim();
+        if (!currentPath.isEmpty()) {
+            File currentFile = new File(currentPath);
+            File parentDir = currentFile.getParentFile();
+            if (parentDir != null && parentDir.exists()) {
+                fileChooser.setInitialDirectory(parentDir);
+            }
+            fileChooser.setInitialFileName(currentFile.getName());
+        } else {
+            fileChooser.setInitialFileName("image_sort_config.json");
+        }
+        
+        Stage stage = (Stage) configFileTextField.getScene().getWindow();
+        File selectedFile = fileChooser.showSaveDialog(stage);
+        if (selectedFile != null) {
+            configFileTextField.setText(selectedFile.getAbsolutePath());
+        }
+    }
+
     private void loadCurrentConfig() {
         ConfigSettings config = configService.getConfig();
 
@@ -178,12 +226,14 @@ public class ConfigController implements Initializable {
         }
 
         trashFolderTextField.setText(config.getTrashFolderPath() != null ? config.getTrashFolderPath() : "");
+        configFileTextField.setText(configService.getConfigPath() != null ? configService.getConfigPath() : "");
 
         // Validate all fields after loading
         for (TextField textField : textFields) {
             validateTextField(textField);
         }
         validateTextField(trashFolderTextField);
+        validateConfigFileField();
     }
 
     private void saveConfiguration() {
@@ -200,8 +250,33 @@ public class ConfigController implements Initializable {
 
         // Validate configuration
         if (validateConfiguration()) {
-            // Save configuration
-            configService.saveConfig();
+            // Check if config file path changed
+            String newConfigPath = configFileTextField.getText().trim();
+            if (!newConfigPath.isEmpty() && !newConfigPath.equals(configService.getConfigPath())) {
+                File targetFile = new File(newConfigPath);
+                if (targetFile.exists()) {
+                    Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
+                    confirmAlert.setTitle("Config File Exists");
+                    confirmAlert.setHeaderText("Configuration File Already Exists");
+                    confirmAlert.setContentText("The configuration file at:\n" + newConfigPath + 
+                                               "\nalready exists.\n\n" +
+                                               "Choose 'OK' to save current settings to this file (overwrite).\n" +
+                                               "Choose 'Cancel' to load settings from this file instead.");
+                                               
+                    if (confirmAlert.showAndWait().orElse(javafx.scene.control.ButtonType.CANCEL) == javafx.scene.control.ButtonType.OK) {
+                        configService.setConfigPath(newConfigPath);
+                    } else {
+                        // Switch path and load
+                        configService.setConfigPath(newConfigPath);
+                        configService.loadConfig();
+                    }
+                } else {
+                    configService.setConfigPath(newConfigPath);
+                }
+            } else {
+                // Save configuration to current path
+                configService.saveConfig();
+            }
 
             // Notify parent that config was saved
             if (onConfigSaved != null) {
