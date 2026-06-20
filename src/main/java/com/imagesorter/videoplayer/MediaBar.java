@@ -36,6 +36,11 @@ public class MediaBar extends HBox { // MediaBar extends Horizontal Box
         this.mediaPlayer = mediaPlayer;
         this.player = player;
 
+        rotate.setFocusTraversable(false);
+        PlayButton.setFocusTraversable(false);
+        time.setFocusTraversable(false);
+        vol.setFocusTraversable(false);
+
         rotate.setStyle("-fx-background-color: #8cb6f5; ");
 
         setAlignment(Pos.CENTER); // setting the HBox to center

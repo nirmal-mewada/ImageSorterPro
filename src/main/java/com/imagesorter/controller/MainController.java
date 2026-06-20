@@ -92,6 +92,7 @@ public class MainController implements Initializable {
     private final Deque<LastAction> lastActionInfo = new LinkedList<>();
     @FXML private StackPane mediaContainer;
     private  Player currentMediaPlayer;
+    private boolean keyFilterRegistered = false;
 
 
 
@@ -139,11 +140,10 @@ public class MainController implements Initializable {
                 imageView.getScene().getRoot().setFocusTraversable(true);
                 imageView.getScene().getRoot().requestFocus();
 
-                // Add key event filter to the scene to catch all key events
-                imageView.getScene().setOnKeyPressed(this::handleKeyPressed);
-
-                // Also add to the root node as backup
-                imageView.getScene().getRoot().setOnKeyPressed(this::handleKeyPressed);
+                if (!keyFilterRegistered) {
+                    imageView.getScene().addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyPressed);
+                    keyFilterRegistered = true;
+                }
             }
         });
     }
@@ -314,20 +314,19 @@ public class MainController implements Initializable {
 
     @FXML
     private void handleKeyPressed(KeyEvent event) {
-//        System.out.println(event);
-
         KeyCode code = event.getCode();
         String keyText = code.getName().toLowerCase();
+        boolean handled = true;
 
         if (event.isControlDown() && code == KeyCode.Z) {
             undoLastAction();
-        } else if(event.isControlDown() && event.isShiftDown() && keyText.matches("[1-9a-z]")) {
-            chooseOnDemandFolder(event,keyText);
+        } else if (event.isControlDown() && event.isShiftDown() && keyText.matches("[1-9a-z]")) {
+            chooseOnDemandFolder(event, keyText);
         } else if (event.isControlDown() && event.isAltDown() && code == KeyCode.O) {
             openInExternalViewer();
-        } else  if (currentImages == null || currentImages.isEmpty()) {
-            return;
-        } else if(keyText.matches("[1-9a-z]") && !event.isControlDown()){
+        } else if (currentImages == null || currentImages.isEmpty()) {
+            handled = false;
+        } else if (keyText.matches("[1-9a-z]") && !event.isControlDown()) {
             moveToFolder(keyText, event.isShiftDown());
         } else {
             switch (code) {
@@ -346,26 +345,25 @@ public class MainController implements Initializable {
                     moveToArchive(currentSourceFolder);
                     break;
                 case O:
-                    if(event.isControlDown())
+                    if (event.isControlDown())
                         openFolder();
+                    else
+                        handled = false;
                     break;
                 case P:
-                    if(event.isControlDown())
+                    if (event.isControlDown())
                         openConfigDialog();
+                    else
+                        handled = false;
                     break;
-                case L:
-//                    if (event.isControlDown()) {
-//                        rotateCurrentImage(false);
-//                    }
-                    break;
-                case R:
-//                    if (event.isControlDown()) {
-//                        rotateCurrentImage(true);
-//                    }
+                default:
+                    handled = false;
                     break;
             }
         }
-        event.consume();
+        if (handled) {
+            event.consume();
+        }
     }
 
     /**
@@ -449,6 +447,26 @@ public class MainController implements Initializable {
         event.consume();
         setupKeyboardFocus();
 
+    }
+
+    private void handleVideoClick(MouseEvent event) {
+        // If clicking on the bottom controls area (MediaBar), don't trigger navigation
+        if (event.getY() > mediaContainer.getHeight() - 50) {
+            setupKeyboardFocus();
+            return;
+        }
+
+        if (event.getClickCount() == 1 && clickToMoveCheckBox.isSelected()) {
+            double clickX = event.getX();
+            double centerX = mediaContainer.getWidth() / 2;
+
+            if (clickX > centerX) {
+                navigateNext();
+            } else {
+                navigatePrevious();
+            }
+        }
+        setupKeyboardFocus();
     }
 
     private void openFolder() {
@@ -537,6 +555,7 @@ public class MainController implements Initializable {
             imageService.ensureExifRotation(currentImageFile);
             try {
                 videoPlayer = new Player(currentImageFile);
+                videoPlayer.setOnMouseClicked(this::handleVideoClick);
             } catch (Exception e) {
                 throw  new RuntimeException(e);
             }
