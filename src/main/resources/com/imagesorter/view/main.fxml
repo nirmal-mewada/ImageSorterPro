@@ -18,12 +18,37 @@
                 <MenuItem fx:id="configureFoldersMenuItem" mnemonicParsing="false" text="Configure Folders..." accelerator="Ctrl+P" />
                 <SeparatorMenuItem />
                 <MenuItem fx:id="exitMenuItem" mnemonicParsing="false" text="Exit" accelerator="Alt+F4" />
-                <!--                <MenuItem fx:id="resetFocus" mnemonicParsing="false" text="Reset Focus"  />-->
-
+            </Menu>
+            <Menu fx:id="bookmarksMenu" mnemonicParsing="false" text="Bookmarks">
+                <MenuItem fx:id="addBookmarkMenuItem" mnemonicParsing="false" text="Add Current Folder to Bookmarks" />
+                <MenuItem fx:id="removeBookmarkMenuItem" mnemonicParsing="false" text="Remove a Bookmark..." />
+                <SeparatorMenuItem fx:id="bookmarksSeparator" />
+                <!-- Dynamic bookmarks will be appended here -->
             </Menu>
             <Menu mnemonicParsing="false" text="View">
                 <MenuItem fx:id="toggleLeftViewMenuItem" mnemonicParsing="false" text="Show/Hide Left View"/>
+                <MenuItem fx:id="toggleRightViewMenuItem" mnemonicParsing="false" text="Show/Hide Metadata Panel"/>
                 <MenuItem fx:id="toggleThumbnailBoxMenuItem" mnemonicParsing="false" text="Show/Hide Thumbnail Box"/>
+                <SeparatorMenuItem/>
+                <MenuItem fx:id="toggleFullScreenMenuItem" mnemonicParsing="false" text="Toggle Full Screen" accelerator="F11"/>
+                <SeparatorMenuItem/>
+                <Menu mnemonicParsing="false" text="Action Mode">
+                    <RadioMenuItem fx:id="actionModeMoveMenuItem" mnemonicParsing="false" text="Move Directly" selected="true" />
+                    <RadioMenuItem fx:id="actionModeCopyMenuItem" mnemonicParsing="false" text="Copy Directly" />
+                    <RadioMenuItem fx:id="actionModeStagedMoveMenuItem" mnemonicParsing="false" text="Stage Move (Batch)" />
+                    <RadioMenuItem fx:id="actionModeStagedCopyMenuItem" mnemonicParsing="false" text="Stage Copy (Batch)" />
+                </Menu>
+                <Menu mnemonicParsing="false" text="Slideshow">
+                    <CheckMenuItem fx:id="slideshowPlayMenuItem" mnemonicParsing="false" text="Play Slideshow" accelerator="F5"/>
+                    <Menu mnemonicParsing="false" text="Interval">
+                        <RadioMenuItem fx:id="interval1sMenuItem" mnemonicParsing="false" text="1 Second" />
+                        <RadioMenuItem fx:id="interval2sMenuItem" mnemonicParsing="false" text="2 Seconds" />
+                        <RadioMenuItem fx:id="interval3sMenuItem" mnemonicParsing="false" text="3 Seconds" selected="true" />
+                        <RadioMenuItem fx:id="interval5sMenuItem" mnemonicParsing="false" text="5 Seconds" />
+                        <RadioMenuItem fx:id="interval10sMenuItem" mnemonicParsing="false" text="10 Seconds" />
+                        <RadioMenuItem fx:id="intervalCustomMenuItem" mnemonicParsing="false" text="Custom..." />
+                    </Menu>
+                </Menu>
                 <SeparatorMenuItem/>
                 <MenuItem mnemonicParsing="false" text="Zoom In" accelerator="Ctrl+Plus" disable="true" />
                 <MenuItem mnemonicParsing="false" text="Zoom Out" accelerator="Ctrl+Minus" disable="true" />
@@ -38,29 +63,48 @@
 
     <!-- Main Content Area -->
     <center>
-        <SplitPane fx:id="horizontalSplitPane" dividerPositions="0.3" HBox.hgrow="ALWAYS">
+        <SplitPane fx:id="horizontalSplitPane" dividerPositions="0.25" HBox.hgrow="ALWAYS">
             <!-- Left Panel - Hotkey Folder List -->
-            <VBox fx:id="leftVBox" spacing="2.0" minWidth="100.0" maxWidth="600.0">
+            <VBox fx:id="leftVBox" spacing="8.0" minWidth="200.0" maxWidth="600.0" prefWidth="240.0">
+                <padding>
+                    <javafx.geometry.Insets top="10.0" right="10.0" bottom="10.0" left="10.0" />
+                </padding>
 
-                <CheckBox text="Enable click to move" fx:id="clickToMoveCheckBox"
+                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                    <CheckBox text="Enable click to move" fx:id="clickToMoveCheckBox"
+                              selected="true" styleClass="help-text" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <ToggleButton fx:id="pinLeftButton" styleClass="pin-button" text="📌" selected="false">
+                        <tooltip>
+                            <Tooltip text="Pin panel in Full Screen" />
+                        </tooltip>
+                    </ToggleButton>
+                </HBox>
+                <CheckBox text="Auto-advance on move" fx:id="autoAdvanceCheckBox"
                           selected="true" styleClass="help-text" />
                 <Separator />
+
                 <ListView fx:id="hotkeyListView" VBox.vgrow="ALWAYS"
                           styleClass="hotkey-list1" minHeight="200.0">
                 </ListView>
-
-                <Separator />
-
-                <!-- Help text removed and moved to Help Menu -->
-
             </VBox>
 
             <!-- Center Panel - Image Viewer -->
             <VBox spacing="5.0">
                 <SplitPane fx:id="verticalSplitPane" dividerPositions="0.1" orientation="VERTICAL" VBox.vgrow="ALWAYS">
                     <items>
-                        <HBox fx:id="thumbnailBox" alignment="CENTER" spacing="5" styleClass="thumbnail-bar">
-                            <!-- Thumbnails will be added here dynamically -->
+                        <HBox fx:id="thumbnailContainer" alignment="CENTER_LEFT" styleClass="thumbnail-bar" spacing="10.0">
+                            <HBox fx:id="thumbnailBox" alignment="CENTER" spacing="5.0" HBox.hgrow="ALWAYS">
+                                <!-- Thumbnails will be added here dynamically -->
+                            </HBox>
+                            <ToggleButton fx:id="pinThumbnailButton" styleClass="pin-button" text="📌" selected="false">
+                                <tooltip>
+                                    <Tooltip text="Pin thumbnails in Full Screen" />
+                                </tooltip>
+                                <HBox.margin>
+                                    <javafx.geometry.Insets right="10.0" />
+                                </HBox.margin>
+                            </ToggleButton>
                         </HBox>
 
                         <ScrollPane fx:id="imageScrollPane" VBox.vgrow="ALWAYS"
@@ -76,6 +120,31 @@
                         </ScrollPane>
                     </items>
                 </SplitPane>
+            </VBox>
+
+            <!-- Right Panel - Metadata -->
+            <VBox fx:id="rightVBox" spacing="10.0" minWidth="150.0" maxWidth="400.0" prefWidth="250.0" styleClass="hotkey-list">
+                <padding>
+                    <javafx.geometry.Insets top="10.0" right="10.0" bottom="10.0" left="10.0" />
+                </padding>
+                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                    <Label text="Metadata Properties" styleClass="section-title" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <ToggleButton fx:id="pinRightButton" styleClass="pin-button" text="📌" selected="false">
+                        <tooltip>
+                            <Tooltip text="Pin panel in Full Screen" />
+                        </tooltip>
+                    </ToggleButton>
+                </HBox>
+                <Separator />
+                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="image-scroll-pane" hbarPolicy="NEVER">
+                    <GridPane fx:id="metadataGridPane" hgap="10.0" vgap="8.0">
+                        <columnConstraints>
+                            <ColumnConstraints minWidth="90.0" prefWidth="110.0" halignment="RIGHT" />
+                            <ColumnConstraints hgrow="ALWAYS" minWidth="100.0" />
+                        </columnConstraints>
+                    </GridPane>
+                </ScrollPane>
             </VBox>
         </SplitPane>
 
@@ -110,6 +179,17 @@
 
                 <Label fx:id="remainingLabel" text=""
                                        styleClass="status-label" />
+                
+                <Separator orientation="VERTICAL" />
+
+                <!-- Staging Batch Controls in bottom status bar -->
+                <HBox fx:id="batchControlsBox" spacing="5.0" alignment="CENTER_LEFT" visible="false" managed="false">
+                    <Label fx:id="stagedCountLabel" text="Staged: 0" styleClass="status-label" />
+                    <Button fx:id="commitBatchButton" text="Commit Staged" styleClass="primary-button" />
+                    <Button fx:id="clearBatchButton" text="Clear Batch" styleClass="secondary-button" />
+                    <Separator orientation="VERTICAL" />
+                </HBox>
+
                 <Region HBox.hgrow="ALWAYS" />
 
                 <ProgressBar fx:id="progressBar" progress="0.0"

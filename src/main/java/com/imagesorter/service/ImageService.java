@@ -28,6 +28,7 @@ public class ImageService {
 
     private final ImageCache imageCache;
     private final ThreadPoolExecutor executorService;
+    private final java.util.Map<String, java.util.concurrent.Future<?>> pendingTasks = new java.util.concurrent.ConcurrentHashMap<>();
 
     public ImageService() {
         ConfigService configService = ConfigService.getInstance();
@@ -110,6 +111,48 @@ public class ImageService {
         return image;
     }
 
+    /**
+     * Loads a small thumbnail version of an image file to save memory and CPU
+     */
+    public Image loadThumbnail(ImageFile imageFile) throws IOException {
+        String filePath = imageFile.getPath() + "_thumb";
+
+        // Return cached image if available
+        Image cachedImage = imageCache.get(filePath);
+        if (cachedImage != null) {
+            return cachedImage;
+        }
+
+        Image image;
+        if (imageFile.isVideoFile()) {
+            image = FastVideoThumbnailUtil.createVideoThumbnail(imageFile.getFile());
+        } else {
+            try (InputStream fis = Files.newInputStream(imageFile.getFile().toPath())) {
+                // Smaller size (200px) specifically for thumbnails to reduce memory and load time
+                image = new Image(fis, 200, 0, true, false);
+            }
+
+            ensureExifRotation(imageFile);
+
+            // Apply rotation if needed
+            if (imageFile.getExifRotate() != 0) {
+                BufferedImage bufferedImage = SwingFXUtils.fromFXImage(image, null);
+                bufferedImage = ImageUtils.rotateImage(bufferedImage, imageFile.getExifRotate());
+                image = SwingFXUtils.toFXImage(bufferedImage, null);
+            }
+
+            // Throw exception if image loading failed
+            if (image.isError()) {
+                throw new RuntimeException(image.getException());
+            }
+        }
+
+        // Cache the loaded thumbnail (estimate memory usage as 1/10th of original)
+        imageCache.put(filePath, image, imageFile.getSize() / 10);
+
+        return image;
+    }
+
     public void ensureExifRotation(ImageFile imageFile) {
         if (imageFile.getExifRotate() == null) {
             if(imageFile.isVideoFile()){
@@ -142,28 +185,46 @@ public class ImageService {
         int start = Math.max(0, currentIndex - prevImage);
         int end = Math.min(images.size() - 1, currentIndex + nextImage );
 
+        // Cancel pending pre-cache tasks that are no longer within the navigation window
+        pendingTasks.forEach((path, future) -> {
+            boolean inWindow = false;
+            for (int i = start; i <= end; i++) {
+                if (images.get(i).getPath().equals(path)) {
+                    inWindow = true;
+                    break;
+                }
+            }
+            if (!inWindow) {
+                future.cancel(false); // Cancel task softly
+                pendingTasks.remove(path);
+            }
+        });
+
         // Cache images in background
         for (int i = start; i <= end; i++) {
             final int index = i;
             final ImageFile imageFile = images.get(index);
+            final String path = imageFile.getPath();
 
-            // Skip if already cached
-            if (imageCache.contains(imageFile.getPath())) {
+            // Skip if already cached or already being processed
+            if (imageCache.contains(path) || pendingTasks.containsKey(path)) {
                 continue;
             }
 
             // Submit loading task
-            executorService.submit(() -> {
+            java.util.concurrent.Future<?> future = executorService.submit(() -> {
                 try {
                     loadImage(imageFile);
                     if(progress!=null)
                         progress.accept(executorService.getActiveCount()-1);
                 } catch (IOException e) {
-                    // Log error but don't throw - this is background caching
                     System.err.println("Failed to pre-cache image: " + imageFile.getName() +
                             " - " + e.getMessage());
+                } finally {
+                    pendingTasks.remove(path);
                 }
             });
+            pendingTasks.put(path, future);
         }
     }
 

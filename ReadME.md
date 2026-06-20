@@ -4,16 +4,28 @@ ImageSorterPro is a lightweight, cross-platform desktop application built with J
 
 ## Features
 
-*   **Image Preview:** Large, clear preview of images.
+*   **Image & Video Preview:** Large, clear preview of images and videos.
 *   **Hotkey-based Sorting:** Assign destination folders to keyboard hotkeys (1-9, a-z) for rapid image categorization.
 *   **Click-to-Move:** Optionally move images by clicking on the left/right side of the image preview.
 *   **Configurable Folders:** Easily set up and manage your destination folders through a dedicated configuration dialog.
 *   **Virtual Delete with Undo:** Move unwanted images to a configurable "trash" folder instead of permanent deletion, with the ability to undo the last 50 actions (moves or virtual deletes).
-*   **Navigation:** Navigate through images using arrow keys or mouse clicks.
+*   **Navigation:** Navigate through images using arrow keys, mouse clicks, or mouse scrolling.
 *   **EXIF Orientation Support:** Automatically rotates images based on EXIF orientation data.
 *   **Memory Efficient Caching:** Pre-caches surrounding images for smooth navigation.
 *   **Cross-Platform:** Built with JavaFX, runs on Windows, macOS, and Linux.
-*   **Adjustable Layout:** Use the SplitPane to adjust the width between the image viewer and the hotkey list.
+*   **Adjustable Layout:** Use SplitPane to adjust layouts between panels.
+*   **Workspace Bookmarks:** Bookmark your favorite folders and reload them quickly from the "Bookmarks" top menu.
+*   **Action Modes:** Toggles under "View -> Action Mode" let you choose how to process items:
+    *   *Move Directly*: Instantly moves the file.
+    *   *Copy Directly*: Instantly copies the file.
+    *   *Stage Move (Batch)*: Queues move actions so you can commit them as a single batch later.
+    *   *Stage Copy (Batch)*: Queues copy actions for batch commit.
+*   **Batch Staging Controls**: Status bar controls let you commit or clear staged batches, showing queued counts.
+*   **Slideshow Mode:** Toggle automatic slideshow (F5 or "View -> Slideshow -> Play Slideshow") with preset intervals (1s, 2s, 3s, 5s, 10s) or a custom duration.
+*   **Immersive Full Screen Mode (F11):** 
+    *   Toggling full screen automatically hides the left panel, right metadata panel, and top thumbnail row for distraction-free viewing.
+    *   *Hover Reveal & Auto-hide*: Moving the mouse to the screen edges (left, right, or top) temporarily reveals the respective panels; moving the mouse away auto-hides them again.
+    *   *Panel Pinning*: Each panel features a pushpin (`📌`) button. Toggle the pin button to keep the panel locked in place (visible) even during full screen mode.
 
 ## Screenshots
 

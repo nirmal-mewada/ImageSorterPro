@@ -6,6 +6,7 @@ import com.drew.metadata.Directory;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.MetadataException;
 import com.drew.metadata.exif.ExifIFD0Directory;
+import com.drew.metadata.exif.ExifSubIFDDirectory;
 import com.drew.metadata.mp4.media.Mp4VideoDirectory;
 import com.imagesorter.model.ConfigSettings;
 import com.imagesorter.service.ConfigService;
@@ -216,6 +217,68 @@ public class ImageUtils {
             ci.next();
         }
         return String.format("%.1f %cB", bytes / 1000.0, ci.current());
+    }
+
+    public static java.util.Map<String, String> getMetadataMap(File file) {
+        java.util.Map<String, String> metadataMap = new java.util.LinkedHashMap<>();
+        if (file == null || !file.exists()) {
+            return metadataMap;
+        }
+
+        metadataMap.put("File Name", file.getName());
+        metadataMap.put("File Size", humanReadableByteCountSI(file.length()));
+
+        try {
+            Metadata metadata = ImageMetadataReader.readMetadata(file);
+
+            // Check Exif IFD0
+            ExifIFD0Directory ifd0Dir = metadata.getFirstDirectoryOfType(ExifIFD0Directory.class);
+            if (ifd0Dir != null) {
+                String make = ifd0Dir.getString(ExifIFD0Directory.TAG_MAKE);
+                String model = ifd0Dir.getString(ExifIFD0Directory.TAG_MODEL);
+                if (make != null || model != null) {
+                    metadataMap.put("Camera", ((make != null ? make.trim() : "") + " " + (model != null ? model.trim() : "")).trim());
+                }
+            }
+
+            // Check Exif SubIFD
+            ExifSubIFDDirectory subIfdDir = metadata.getFirstDirectoryOfType(ExifSubIFDDirectory.class);
+            if (subIfdDir != null) {
+                // Date Taken
+                java.util.Date date = subIfdDir.getDate(ExifSubIFDDirectory.TAG_DATETIME_ORIGINAL);
+                if (date != null) {
+                    metadataMap.put("Date Taken", date.toString());
+                }
+
+                // Shutter Speed
+                String exposureTime = subIfdDir.getDescription(ExifSubIFDDirectory.TAG_EXPOSURE_TIME);
+                if (exposureTime != null) {
+                    metadataMap.put("Shutter Speed", exposureTime);
+                }
+
+                // Aperture
+                String aperture = subIfdDir.getDescription(ExifSubIFDDirectory.TAG_FNUMBER);
+                if (aperture != null) {
+                    metadataMap.put("Aperture", aperture);
+                }
+
+                // ISO
+                String iso = subIfdDir.getDescription(ExifSubIFDDirectory.TAG_ISO_EQUIVALENT);
+                if (iso != null) {
+                    metadataMap.put("ISO", "ISO-" + iso);
+                }
+
+                // Focal Length
+                String focalLength = subIfdDir.getDescription(ExifSubIFDDirectory.TAG_FOCAL_LENGTH);
+                if (focalLength != null) {
+                    metadataMap.put("Focal Length", focalLength);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Could not parse EXIF metadata for: " + file.getName() + " - " + e.getMessage());
+        }
+
+        return metadataMap;
     }
 
 }

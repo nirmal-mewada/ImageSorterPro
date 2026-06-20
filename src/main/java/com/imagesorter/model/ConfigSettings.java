@@ -30,6 +30,8 @@ public class ConfigSettings {
     private HashSet<String> supportedVideoExtensions = new HashSet<>(Arrays.asList(
             "mp4"
     ));
+    private java.util.List<String> bookmarkedFolders = new java.util.ArrayList<>();
+    private String actionMode = "MOVE";
     
     public ConfigSettings() {
         this.allFolderPaths = new HashMap<>();
@@ -43,6 +45,8 @@ public class ConfigSettings {
         this.thumbnailSize = 150;
         this.thumbnailCount = 9;
         this.imageQualityPx = 1024;
+        this.bookmarkedFolders = new java.util.ArrayList<>();
+        this.actionMode = "MOVE";
     }
     
     public String getFolderPath(String hotkey) {
@@ -190,5 +194,27 @@ public class ConfigSettings {
     }
     public HashSet<String> getSupportedVideoExtensions() {
         return supportedVideoExtensions;
+    }
+
+    public java.util.List<String> getBookmarkedFolders() {
+        if (bookmarkedFolders == null) {
+            bookmarkedFolders = new java.util.ArrayList<>();
+        }
+        return bookmarkedFolders;
+    }
+
+    public void setBookmarkedFolders(java.util.List<String> bookmarkedFolders) {
+        this.bookmarkedFolders = bookmarkedFolders;
+    }
+
+    public String getActionMode() {
+        if (actionMode == null) {
+            actionMode = "MOVE";
+        }
+        return actionMode;
+    }
+
+    public void setActionMode(String actionMode) {
+        this.actionMode = actionMode;
     }
 }

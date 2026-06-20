@@ -7,8 +7,12 @@ import com.imagesorter.model.LastAction;
 import com.imagesorter.service.ConfigService;
 import com.imagesorter.service.ImageService;
 import com.imagesorter.utils.ImageUtils;
+import com.imagesorter.model.StagedAction;
 import com.imagesorter.videoplayer.Player;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
+import javafx.util.Duration;
 import javafx.concurrent.Task;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -27,6 +31,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -35,7 +40,7 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-import java.awt.*;
+import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -58,15 +63,23 @@ public class MainController implements Initializable {
     @FXML private MenuItem configureFoldersMenuItem;
     @FXML private MenuItem exitMenuItem;
     @FXML private MenuItem toggleLeftViewMenuItem;
+    @FXML private MenuItem toggleRightViewMenuItem;
     @FXML private MenuItem toggleThumbnailBoxMenuItem;
     @FXML private MenuItem helpShortcutsMenuItem;
 //    @FXML private MenuItem resetFocus;
 
     @FXML private  CheckBox clickToMoveCheckBox;
+    @FXML private  CheckBox autoAdvanceCheckBox;
 
     @FXML private ListView<String> hotkeyListView;
+    @FXML private VBox rightVBox;
+    @FXML private GridPane metadataGridPane;
     @FXML private ImageView imageView;
     @FXML private HBox thumbnailBox;
+    @FXML private HBox thumbnailContainer;
+    @FXML private ToggleButton pinLeftButton;
+    @FXML private ToggleButton pinRightButton;
+    @FXML private ToggleButton pinThumbnailButton;
     @FXML private VBox leftVBox;
     @FXML private SplitPane horizontalSplitPane;
     @FXML private SplitPane verticalSplitPane;
@@ -80,6 +93,41 @@ public class MainController implements Initializable {
     @FXML private Label lastAction;
 
     @FXML private ProgressBar progressBar;
+
+    // Injected components for new features
+    @FXML private Menu bookmarksMenu;
+    @FXML private MenuItem addBookmarkMenuItem;
+    @FXML private MenuItem removeBookmarkMenuItem;
+    @FXML private SeparatorMenuItem bookmarksSeparator;
+
+    @FXML private RadioMenuItem actionModeMoveMenuItem;
+    @FXML private RadioMenuItem actionModeCopyMenuItem;
+    @FXML private RadioMenuItem actionModeStagedMoveMenuItem;
+    @FXML private RadioMenuItem actionModeStagedCopyMenuItem;
+
+    @FXML private CheckMenuItem slideshowPlayMenuItem;
+    @FXML private RadioMenuItem interval1sMenuItem;
+    @FXML private RadioMenuItem interval2sMenuItem;
+    @FXML private RadioMenuItem interval3sMenuItem;
+    @FXML private RadioMenuItem interval5sMenuItem;
+    @FXML private RadioMenuItem interval10sMenuItem;
+    @FXML private RadioMenuItem intervalCustomMenuItem;
+
+    @FXML private MenuItem toggleFullScreenMenuItem;
+
+    @FXML private HBox batchControlsBox;
+    @FXML private Label stagedCountLabel;
+    @FXML private Button commitBatchButton;
+    @FXML private Button clearBatchButton;
+
+    // Additional state variables
+    private final List<StagedAction> stagedActions = new ArrayList<>();
+    private Timeline slideshowTimeline;
+    private int slideshowInterval = 3;
+    private boolean isFullScreenListenerRegistered = false;
+    private boolean wasLeftVisibleBeforeFS = true;
+    private boolean wasRightVisibleBeforeFS = true;
+    private boolean wasThumbnailVisibleBeforeFS = true;
 
     // Services
     private ImageService imageService;
@@ -112,6 +160,7 @@ public class MainController implements Initializable {
         setupImageView();
         setupHotkeyList();
         setupMenuItems();
+        setupNewFeatures();
 
         // Update UI with current config
         updateHotkeyList();
@@ -135,13 +184,15 @@ public class MainController implements Initializable {
     private void setupKeyboardFocus() {
         // Set up keyboard focus and event handling
         Platform.runLater(() -> {
-            if (imageView.getScene() != null) {
+            if (mediaContainer.getScene() != null) {
                 // Make the root focusable and request focus
-                imageView.getScene().getRoot().setFocusTraversable(true);
-                imageView.getScene().getRoot().requestFocus();
+                mediaContainer.getScene().getRoot().setFocusTraversable(true);
+                mediaContainer.getScene().getRoot().requestFocus();
+
+                setupFullScreenListener();
 
                 if (!keyFilterRegistered) {
-                    imageView.getScene().addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyPressed);
+                    mediaContainer.getScene().addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyPressed);
                     keyFilterRegistered = true;
                 }
             }
@@ -249,7 +300,8 @@ public class MainController implements Initializable {
         configureFoldersMenuItem.setOnAction(e -> openConfigDialog());
         exitMenuItem.setOnAction(e -> Platform.exit());
         toggleLeftViewMenuItem.setOnAction(e -> toggleNodeVisibility(leftVBox));
-        toggleThumbnailBoxMenuItem.setOnAction(e -> toggleNodeVisibility(thumbnailBox));
+        toggleRightViewMenuItem.setOnAction(e -> toggleNodeVisibility(rightVBox));
+        toggleThumbnailBoxMenuItem.setOnAction(e -> toggleNodeVisibility(thumbnailContainer));
         helpShortcutsMenuItem.setOnAction(e -> showShortcuts());
 //        resetFocus.setOnAction(e -> setupKeyboardFocus());
     }
@@ -300,12 +352,20 @@ public class MainController implements Initializable {
                     horizontalSplitPane.setDividerPositions(0.2);
                 }
             }
-        } else if (node == thumbnailBox) {
-            if (verticalSplitPane != null) {
-                if (verticalSplitPane.getItems().contains(thumbnailBox)) {
-                    verticalSplitPane.getItems().remove(thumbnailBox);
+        } else if (node == rightVBox) {
+            if (horizontalSplitPane != null) {
+                if (horizontalSplitPane.getItems().contains(rightVBox)) {
+                    horizontalSplitPane.getItems().remove(rightVBox);
                 } else {
-                    verticalSplitPane.getItems().add(0, thumbnailBox);
+                    horizontalSplitPane.getItems().add(rightVBox);
+                }
+            }
+        } else if (node == thumbnailContainer || node == thumbnailBox) {
+            if (verticalSplitPane != null) {
+                if (verticalSplitPane.getItems().contains(thumbnailContainer)) {
+                    verticalSplitPane.getItems().remove(thumbnailContainer);
+                } else {
+                    verticalSplitPane.getItems().add(0, thumbnailContainer);
                     verticalSplitPane.setDividerPositions(0.1);
                 }
             }
@@ -408,7 +468,7 @@ public class MainController implements Initializable {
     private void chooseOnDemandFolder(KeyEvent event, String keyText) {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Select Folder for Hotkey " + keyText);
-        Stage stage = (Stage) imageView.getScene().getWindow();
+        Stage stage = (Stage) mediaContainer.getScene().getWindow();
         String defaultFileChooseLocation = configService.getConfig().getDefaultFileChooseLocation();
         if(defaultFileChooseLocation != null){
             directoryChooser.setInitialDirectory(new File(defaultFileChooseLocation));
@@ -477,11 +537,7 @@ public class MainController implements Initializable {
         if (currentSourceFolder != null) {
             directoryChooser.setInitialDirectory(currentSourceFolder);
         }
-        if(currentMediaPlayer != null) {
-            selectedDirectory = directoryChooser.showDialog(currentMediaPlayer.getScene().getWindow());
-        }else {
-            selectedDirectory = directoryChooser.showDialog(imageView.getScene().getWindow());
-        }
+        selectedDirectory = directoryChooser.showDialog(mediaContainer.getScene().getWindow());
 
 
         if (selectedDirectory != null && selectedDirectory.exists()) {
@@ -570,6 +626,13 @@ public class MainController implements Initializable {
             currentMediaPlayer = videoPlayer;
             currentMediaPlayer.play();
 
+            // Refresh metadata details once the media player loads dimensions/duration
+            currentMediaPlayer.player.statusProperty().addListener((obs, oldStatus, newStatus) -> {
+                if (newStatus == javafx.scene.media.MediaPlayer.Status.READY) {
+                    Platform.runLater(this::updateMetadataPanel);
+                }
+            });
+
         } else {
             mediaContainer.getChildren().clear();
 
@@ -592,6 +655,7 @@ public class MainController implements Initializable {
         }
         updateStatusBar();
         updateThumbnails();
+        updateMetadataPanel();
 
         // Pre-cache surrounding images
 
@@ -616,7 +680,7 @@ public class MainController implements Initializable {
             ImageFile imageFile = currentImages.get(i);
             Image image = null;
             try {
-                image = imageService.loadImage(imageFile);
+                image = imageService.loadThumbnail(imageFile);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -641,6 +705,54 @@ public class MainController implements Initializable {
             thumbnail.setFitWidth(thumbBoxheight);
             thumbnailBox.getChildren().add(thumbnail);
 
+        }
+    }
+
+    private void updateMetadataPanel() {
+        if (metadataGridPane == null) return;
+        metadataGridPane.getChildren().clear();
+        if (currentImages == null || currentImages.isEmpty() || currentImageIndex < 0 || currentImageIndex >= currentImages.size()) {
+            return;
+        }
+
+        ImageFile currentImageFile = currentImages.get(currentImageIndex);
+        File file = currentImageFile.getFile();
+
+        // Get metadata map from ImageUtils helper
+        Map<String, String> metadata = ImageUtils.getMetadataMap(file);
+
+        // Add dimensions if we have loaded the image/video
+        if (!currentImageFile.isVideoFile()) {
+            Image image = imageView.getImage();
+            if (image != null && !image.isError()) {
+                metadata.put("Dimensions", String.format("%.0f x %.0f", image.getWidth(), image.getHeight()));
+            }
+        } else if (currentMediaPlayer != null && currentMediaPlayer.player != null) {
+            javafx.scene.media.Media media = currentMediaPlayer.player.getMedia();
+            if (media != null) {
+                // Dimensions might only be non-zero after ready state
+                if (media.getWidth() > 0 && media.getHeight() > 0) {
+                    metadata.put("Dimensions", String.format("%d x %d", media.getWidth(), media.getHeight()));
+                }
+                if (media.getDuration() != null && media.getDuration().greaterThan(javafx.util.Duration.ZERO)) {
+                    double seconds = media.getDuration().toSeconds();
+                    metadata.put("Duration", String.format("%.1f s", seconds));
+                }
+            }
+        }
+
+        int row = 0;
+        for (Map.Entry<String, String> entry : metadata.entrySet()) {
+            Label keyLabel = new Label(entry.getKey() + ":");
+            keyLabel.getStyleClass().add("metadata-key");
+
+            Label valueLabel = new Label(entry.getValue());
+            valueLabel.setWrapText(true);
+            valueLabel.getStyleClass().add("metadata-value");
+
+            metadataGridPane.add(keyLabel, 0, row);
+            metadataGridPane.add(valueLabel, 1, row);
+            row++;
         }
     }
 
@@ -704,9 +816,43 @@ public class MainController implements Initializable {
 
         ImageFile currentImageFile = currentImages.get(currentImageIndex);
         File sourceFile = currentImageFile.getFile();
+
+        // Intercept for Staging Mode
+        String mode = configService.getConfig().getActionMode();
+        if ("STAGED_MOVE".equals(mode) || "STAGED_COPY".equals(mode)) {
+            StagedAction.Type actionType = "STAGED_MOVE".equals(mode) ? StagedAction.Type.MOVE : StagedAction.Type.COPY;
+            StagedAction stagedAction = new StagedAction(currentImageFile, sourceFile, destinationFolder, actionType, currentImageIndex);
+            stagedActions.add(stagedAction);
+            updateStagedCount();
+            
+            lastAction.setText("Staged [" + (actionType == StagedAction.Type.MOVE ? "Move" : "Copy") + "] to " + destinationFolder.getName());
+            
+            clearVideo();
+            currentImages.remove(currentImageIndex);
+
+            if (currentImageIndex >= currentImages.size() && !currentImages.isEmpty()) {
+                currentImageIndex = currentImages.size() - 1;
+            }
+
+            if (autoAdvanceCheckBox.isSelected()) {
+                if (!currentImages.isEmpty()) {
+                    displayCurrentImage();
+                } else {
+                    imageView.setImage(null);
+                    updateStatusBar();
+                    showAlert("Complete", "All images sorted/staged!");
+                }
+            } else {
+                imageView.setImage(null);
+                clearVideo();
+                currentFileLabel.setText("File staged. Press Arrow keys to navigate.");
+            }
+            return;
+        }
+
+        boolean isCopyMode = "COPY".equals(mode);
         File destinationFile = new File(destinationFolder, sourceFile.getName());
 
-        // Handle file name conflicts
         int counter = 1;
         while (destinationFile.exists()) {
             String name = sourceFile.getName();
@@ -716,32 +862,53 @@ public class MainController implements Initializable {
             counter++;
         }
 
-        // Store last action
-        addLastAction(new LastAction(LastAction.ActionType.MOVE, sourceFile, destinationFile));
+        if (!isCopyMode) {
+            addLastAction(new LastAction(LastAction.ActionType.MOVE, sourceFile, destinationFile));
+        }
 
-        // Move file
         clearVideo();
-        if (sourceFile.renameTo(destinationFile)) {
-            // Remove from current list
-            System.out.println("Moved: " + sourceFile.getAbsolutePath() + " -> " + destinationFile.getAbsolutePath());
-            lastAction.setText("Last Action: [Moved] " + sourceFile.getName() +" ->" + destinationFolder.getPath());
+        boolean success = false;
+        if (isCopyMode) {
+            try {
+                java.nio.file.Files.copy(sourceFile.toPath(), destinationFile.toPath(), 
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                success = true;
+                lastAction.setText("Last Action: [Copied] " + sourceFile.getName() +" -> " + destinationFolder.getPath());
+            } catch (Exception e) {
+                showAlert("Error", "Failed to copy file: " + e.getMessage());
+            }
+        } else {
+            success = sourceFile.renameTo(destinationFile);
+            if (success) {
+                lastAction.setText("Last Action: [Moved] " + sourceFile.getName() +" -> " + destinationFolder.getPath());
+                System.out.println("Moved: " + sourceFile.getAbsolutePath() + " -> " + destinationFile.getAbsolutePath());
+            }
+        }
+
+        if (success) {
             currentImages.remove(currentImageIndex);
 
-            // Adjust index if necessary
             if (currentImageIndex >= currentImages.size() && !currentImages.isEmpty()) {
                 currentImageIndex = currentImages.size() - 1;
             }
 
-            // Display next image or clear if no more images
-            if (!currentImages.isEmpty()) {
-                displayCurrentImage();
+            if (autoAdvanceCheckBox.isSelected()) {
+                if (!currentImages.isEmpty()) {
+                    displayCurrentImage();
+                } else {
+                    imageView.setImage(null);
+                    updateStatusBar();
+                    showAlert("Complete", "All images have been sorted!");
+                }
             } else {
                 imageView.setImage(null);
-                updateStatusBar();
-                showAlert("Complete", "All images have been sorted!");
+                clearVideo();
+                currentFileLabel.setText(isCopyMode ? "File copied. Press Arrow keys to navigate." : "File moved. Press Arrow keys to navigate.");
             }
         } else {
-            showAlert("Error", "Failed to move file to: " + destinationFolder.getPath());
+            if (!isCopyMode) {
+                showAlert("Error", "Failed to move file to: " + destinationFolder.getPath());
+            }
         }
     }
 
@@ -795,12 +962,18 @@ public class MainController implements Initializable {
                     currentImageIndex = currentImages.size() - 1;
                 }
 
-                // Display next image
-                if (!currentImages.isEmpty()) {
-                    displayCurrentImage();
+                if (autoAdvanceCheckBox.isSelected()) {
+                    // Display next image
+                    if (!currentImages.isEmpty()) {
+                        displayCurrentImage();
+                    } else {
+                        imageView.setImage(null);
+                        updateStatusBar();
+                    }
                 } else {
                     imageView.setImage(null);
-                    updateStatusBar();
+                    clearVideo();
+                    currentFileLabel.setText("File deleted. Press Arrow keys to navigate.");
                 }
             } else {
                 showAlert("Error", "Failed to move the image to the trash folder.");
@@ -823,6 +996,24 @@ public class MainController implements Initializable {
     }
 
     private void undoLastAction() {
+        if (!stagedActions.isEmpty()) {
+            StagedAction lastStaged = stagedActions.remove(stagedActions.size() - 1);
+            updateStagedCount();
+            
+            if (currentImages != null) {
+                int index = Math.min(lastStaged.getOriginalIndex(), currentImages.size());
+                currentImages.add(index, lastStaged.getImageFile());
+                currentImageIndex = index;
+                try {
+                    displayCurrentImage();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                lastAction.setText("Last Action: [Undo Staged] " + lastStaged.getSourceFile().getName());
+            }
+            return;
+        }
+
         if (lastActionInfo.isEmpty()) {
             lastAction.setText("Last Action: No action to undo.");
             return;
@@ -868,7 +1059,9 @@ public class MainController implements Initializable {
             configStage.setTitle("Configure Folders");
             configStage.setScene(new Scene(root, 600, 800)); // Increased height
             configStage.initModality(Modality.APPLICATION_MODAL);
-            configStage.initOwner(imageView.getScene().getWindow());
+            if (mediaContainer.getScene() != null && mediaContainer.getScene().getWindow() != null) {
+                configStage.initOwner(mediaContainer.getScene().getWindow());
+            }
 
             ConfigController configController = loader.getController();
             configController.setOnConfigSaved(() -> updateHotkeyList());
@@ -939,6 +1132,426 @@ public class MainController implements Initializable {
         alert.showAndWait();
     }
 
+    private void setupNewFeatures() {
+        ConfigSettings config = configService.getConfig();
 
+        // 1. Setup Bookmarks Menu
+        refreshBookmarksMenu();
+        addBookmarkMenuItem.setOnAction(e -> {
+            if (currentSourceFolder != null) {
+                String path = currentSourceFolder.getAbsolutePath();
+                List<String> bookmarks = config.getBookmarkedFolders();
+                if (!bookmarks.contains(path)) {
+                    bookmarks.add(path);
+                    configService.saveConfig();
+                    refreshBookmarksMenu();
+                    lastAction.setText("Added bookmark: " + currentSourceFolder.getName());
+                }
+            } else {
+                showAlert("Info", "Please open a folder first to add it to bookmarks.");
+            }
+        });
+        removeBookmarkMenuItem.setOnAction(e -> {
+            List<String> bookmarks = config.getBookmarkedFolders();
+            if (bookmarks == null || bookmarks.isEmpty()) {
+                showAlert("Info", "No bookmarks to remove.");
+                return;
+            }
+            ChoiceDialog<String> dialog = new ChoiceDialog<>(bookmarks.get(0), bookmarks);
+            dialog.setTitle("Remove Bookmark");
+            dialog.setHeaderText("Select a bookmark to remove:");
+            dialog.setContentText("Bookmark:");
+            Optional<String> result = dialog.showAndWait();
+            result.ifPresent(selected -> {
+                bookmarks.remove(selected);
+                configService.saveConfig();
+                refreshBookmarksMenu();
+                lastAction.setText("Removed bookmark: " + selected);
+            });
+        });
 
+        // 2. Setup Action Mode Menu Items
+        ToggleGroup actionModeGroup = new ToggleGroup();
+        actionModeMoveMenuItem.setToggleGroup(actionModeGroup);
+        actionModeCopyMenuItem.setToggleGroup(actionModeGroup);
+        actionModeStagedMoveMenuItem.setToggleGroup(actionModeGroup);
+        actionModeStagedCopyMenuItem.setToggleGroup(actionModeGroup);
+
+        String currentMode = config.getActionMode();
+        if ("COPY".equals(currentMode)) {
+            actionModeCopyMenuItem.setSelected(true);
+        } else if ("STAGED_MOVE".equals(currentMode)) {
+            actionModeStagedMoveMenuItem.setSelected(true);
+        } else if ("STAGED_COPY".equals(currentMode)) {
+            actionModeStagedCopyMenuItem.setSelected(true);
+        } else {
+            actionModeMoveMenuItem.setSelected(true);
+        }
+
+        actionModeGroup.selectedToggleProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                String configMode = "MOVE";
+                boolean isStaged = false;
+                if (newVal == actionModeCopyMenuItem) {
+                    configMode = "COPY";
+                } else if (newVal == actionModeStagedMoveMenuItem) {
+                    configMode = "STAGED_MOVE";
+                    isStaged = true;
+                } else if (newVal == actionModeStagedCopyMenuItem) {
+                    configMode = "STAGED_COPY";
+                    isStaged = true;
+                }
+                config.setActionMode(configMode);
+                configService.saveConfig();
+
+                batchControlsBox.setVisible(isStaged);
+                batchControlsBox.setManaged(isStaged);
+                updateStagedCount();
+            }
+        });
+        
+        boolean isStagedInit = "STAGED_MOVE".equals(currentMode) || "STAGED_COPY".equals(currentMode);
+        batchControlsBox.setVisible(isStagedInit);
+        batchControlsBox.setManaged(isStagedInit);
+
+        commitBatchButton.setOnAction(e -> commitBatch());
+        clearBatchButton.setOnAction(e -> clearBatch());
+
+        // 3. Setup Slideshow Menu Items
+        slideshowPlayMenuItem.setOnAction(e -> {
+            if (slideshowPlayMenuItem.isSelected()) {
+                startSlideshow();
+            } else {
+                stopSlideshow();
+            }
+        });
+
+        ToggleGroup intervalGroup = new ToggleGroup();
+        interval1sMenuItem.setToggleGroup(intervalGroup);
+        interval2sMenuItem.setToggleGroup(intervalGroup);
+        interval3sMenuItem.setToggleGroup(intervalGroup);
+        interval5sMenuItem.setToggleGroup(intervalGroup);
+        interval10sMenuItem.setToggleGroup(intervalGroup);
+        intervalCustomMenuItem.setToggleGroup(intervalGroup);
+
+        intervalGroup.selectedToggleProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                if (newVal == interval1sMenuItem) {
+                    slideshowInterval = 1;
+                } else if (newVal == interval2sMenuItem) {
+                    slideshowInterval = 2;
+                } else if (newVal == interval3sMenuItem) {
+                    slideshowInterval = 3;
+                } else if (newVal == interval5sMenuItem) {
+                    slideshowInterval = 5;
+                } else if (newVal == interval10sMenuItem) {
+                    slideshowInterval = 10;
+                } else if (newVal == intervalCustomMenuItem) {
+                    TextInputDialog dialog = new TextInputDialog(String.valueOf(slideshowInterval));
+                    dialog.setTitle("Custom Slideshow Interval");
+                    dialog.setHeaderText("Set custom slideshow interval in seconds:");
+                    dialog.setContentText("Interval (seconds):");
+                    Optional<String> result = dialog.showAndWait();
+                    if (result.isPresent()) {
+                        try {
+                            int customVal = Integer.parseInt(result.get());
+                            if (customVal > 0) {
+                                slideshowInterval = customVal;
+                                intervalCustomMenuItem.setText("Custom (" + customVal + "s)");
+                            } else {
+                                showAlert("Error", "Interval must be greater than 0.");
+                                interval3sMenuItem.setSelected(true);
+                            }
+                        } catch (NumberFormatException nfe) {
+                            showAlert("Error", "Invalid number format.");
+                            interval3sMenuItem.setSelected(true);
+                        }
+                    } else {
+                        interval3sMenuItem.setSelected(true);
+                    }
+                }
+                
+                if (slideshowPlayMenuItem.isSelected()) {
+                    startSlideshow();
+                }
+            }
+        });
+
+        toggleFullScreenMenuItem.setOnAction(e -> toggleFullScreen());
+    }
+
+    private void refreshBookmarksMenu() {
+        bookmarksMenu.getItems().clear();
+        bookmarksMenu.getItems().addAll(addBookmarkMenuItem, removeBookmarkMenuItem, bookmarksSeparator);
+        
+        List<String> bookmarks = configService.getConfig().getBookmarkedFolders();
+        if (bookmarks == null || bookmarks.isEmpty()) {
+            MenuItem emptyItem = new MenuItem("No Bookmarks Saved");
+            emptyItem.setDisable(true);
+            bookmarksMenu.getItems().add(emptyItem);
+        } else {
+            for (String path : bookmarks) {
+                File file = new File(path);
+                MenuItem item = new MenuItem(file.getName() + " (" + path + ")");
+                item.setOnAction(e -> {
+                    currentImageIndex = 0;
+                    loadImagesFromFolder(file);
+                });
+                bookmarksMenu.getItems().add(item);
+            }
+        }
+    }
+
+    private void startSlideshow() {
+        if (slideshowTimeline != null) {
+            slideshowTimeline.stop();
+        }
+        slideshowTimeline = new Timeline(new KeyFrame(Duration.seconds(slideshowInterval), e -> {
+            if (currentImages != null && !currentImages.isEmpty()) {
+                if (currentImageIndex < currentImages.size() - 1) {
+                    currentImageIndex++;
+                } else {
+                    currentImageIndex = 0;
+                }
+                displayCurrentImage();
+            }
+        }));
+        slideshowTimeline.setCycleCount(Timeline.INDEFINITE);
+        slideshowTimeline.play();
+        slideshowPlayMenuItem.setSelected(true);
+        lastAction.setText("Slideshow started with interval: " + slideshowInterval + "s");
+    }
+
+    private void stopSlideshow() {
+        if (slideshowTimeline != null) {
+            slideshowTimeline.stop();
+            slideshowTimeline = null;
+        }
+        slideshowPlayMenuItem.setSelected(false);
+        lastAction.setText("Slideshow paused.");
+    }
+
+    private void updateStagedCount() {
+        if (stagedCountLabel != null) {
+            stagedCountLabel.setText("Staged: " + stagedActions.size());
+        }
+    }
+
+    private void clearBatch() {
+        if (stagedActions.isEmpty()) return;
+        
+        stagedActions.sort((a, b) -> Integer.compare(a.getOriginalIndex(), b.getOriginalIndex()));
+        for (StagedAction action : stagedActions) {
+            if (!currentImages.contains(action.getImageFile())) {
+                currentImages.add(Math.min(action.getOriginalIndex(), currentImages.size()), action.getImageFile());
+            }
+        }
+        stagedActions.clear();
+        updateStagedCount();
+        displayCurrentImage();
+        lastAction.setText("Cleared staged batch queue.");
+    }
+
+    private void commitBatch() {
+        if (stagedActions.isEmpty()) {
+            showAlert("Info", "No staged actions to commit.");
+            return;
+        }
+
+        progressBar.setVisible(true);
+        progressBar.setProgress(0);
+        
+        List<StagedAction> actionsToProcess = new ArrayList<>(stagedActions);
+        stagedActions.clear();
+        updateStagedCount();
+
+        java.util.concurrent.ExecutorService executor = java.util.concurrent.Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            int total = actionsToProcess.size();
+            int successCount = 0;
+            
+            for (int i = 0; i < total; i++) {
+                StagedAction action = actionsToProcess.get(i);
+                final double progress = (double) (i + 1) / total;
+                
+                boolean success = false;
+                try {
+                    File source = action.getSourceFile();
+                    File destDir = action.getDestinationFolder();
+                    if (!destDir.exists()) {
+                        destDir.mkdirs();
+                    }
+                    
+                    File destinationFile = new File(destDir, source.getName());
+                    int counter = 1;
+                    while (destinationFile.exists()) {
+                        String name = source.getName();
+                        int dotIdx = name.lastIndexOf('.');
+                        String baseName = dotIdx > 0 ? name.substring(0, dotIdx) : name;
+                        String extension = dotIdx > 0 ? name.substring(dotIdx) : "";
+                        destinationFile = new File(destDir, baseName + "_" + counter + extension);
+                        counter++;
+                    }
+
+                    if (action.getType() == StagedAction.Type.MOVE) {
+                        success = source.renameTo(destinationFile);
+                    } else {
+                        java.nio.file.Files.copy(source.toPath(), destinationFile.toPath(), 
+                                java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                        success = true;
+                    }
+                } catch (Exception e) {
+                    System.err.println("Failed staged action: " + e.getMessage());
+                }
+
+                if (success) {
+                    successCount++;
+                }
+                
+                Platform.runLater(() -> {
+                    progressBar.setProgress(progress);
+                });
+            }
+
+            final int finalSuccess = successCount;
+            Platform.runLater(() -> {
+                progressBar.setVisible(false);
+                progressBar.setProgress(0);
+                showAlert("Batch Completed", "Successfully processed " + finalSuccess + " of " + total + " actions.");
+                loadImagesFromFolder(currentSourceFolder);
+            });
+        });
+        executor.shutdown();
+    }
+
+    private void toggleFullScreen() {
+        Scene scene = mediaContainer.getScene();
+        if (scene != null) {
+            Stage stage = (Stage) scene.getWindow();
+            if (stage != null) {
+                stage.setFullScreen(!stage.isFullScreen());
+            }
+        }
+    }
+
+    private void setupFullScreenListener() {
+        if (isFullScreenListenerRegistered) return;
+        Scene scene = mediaContainer.getScene();
+        if (scene == null) {
+            mediaContainer.sceneProperty().addListener((obs, oldScene, newScene) -> {
+                if (newScene != null) {
+                    setupFullScreenListener();
+                }
+            });
+            return;
+        }
+        
+        Stage stage = (Stage) scene.getWindow();
+        if (stage == null) {
+            scene.windowProperty().addListener((obs, oldWin, newWin) -> {
+                if (newWin != null) {
+                    setupFullScreenListener();
+                }
+            });
+            return;
+        }
+        
+        isFullScreenListenerRegistered = true;
+        
+        stage.fullScreenProperty().addListener((obs, wasFS, isFS) -> {
+            if (isFS) {
+                wasLeftVisibleBeforeFS = horizontalSplitPane.getItems().contains(leftVBox);
+                wasRightVisibleBeforeFS = horizontalSplitPane.getItems().contains(rightVBox);
+                wasThumbnailVisibleBeforeFS = verticalSplitPane.getItems().contains(thumbnailContainer);
+                
+                if (wasLeftVisibleBeforeFS && (pinLeftButton == null || !pinLeftButton.isSelected())) {
+                    horizontalSplitPane.getItems().remove(leftVBox);
+                }
+                if (wasRightVisibleBeforeFS && (pinRightButton == null || !pinRightButton.isSelected())) {
+                    horizontalSplitPane.getItems().remove(rightVBox);
+                }
+                if (wasThumbnailVisibleBeforeFS && (pinThumbnailButton == null || !pinThumbnailButton.isSelected())) {
+                    verticalSplitPane.getItems().remove(thumbnailContainer);
+                }
+                lastAction.setText("Entered Full Screen. Move mouse to screen edges to reveal panels.");
+            } else {
+                if (wasLeftVisibleBeforeFS && !horizontalSplitPane.getItems().contains(leftVBox)) {
+                    horizontalSplitPane.getItems().add(0, leftVBox);
+                }
+                if (wasRightVisibleBeforeFS && !horizontalSplitPane.getItems().contains(rightVBox)) {
+                    horizontalSplitPane.getItems().add(rightVBox);
+                }
+                if (wasThumbnailVisibleBeforeFS && !verticalSplitPane.getItems().contains(thumbnailContainer)) {
+                    verticalSplitPane.getItems().add(0, thumbnailContainer);
+                }
+                
+                // Restore split pane divider positions based on which panels are visible
+                int count = horizontalSplitPane.getItems().size();
+                if (count == 3) {
+                    horizontalSplitPane.setDividerPositions(0.25, 0.75);
+                } else if (count == 2) {
+                    if (horizontalSplitPane.getItems().contains(leftVBox)) {
+                        horizontalSplitPane.setDividerPosition(0, 0.25);
+                    } else {
+                        horizontalSplitPane.setDividerPosition(0, 0.75);
+                    }
+                }
+                
+                if (verticalSplitPane.getItems().contains(thumbnailContainer)) {
+                    verticalSplitPane.setDividerPosition(0, 0.1);
+                }
+            }
+        });
+
+        scene.addEventFilter(MouseEvent.MOUSE_MOVED, event -> {
+            if (stage.isFullScreen()) {
+                double mouseX = event.getSceneX();
+                double mouseY = event.getSceneY();
+                double width = scene.getWidth();
+                
+                // Fallback widths / heights to handle layout delay
+                double leftWidth = leftVBox.getWidth() > 0 ? leftVBox.getWidth() : leftVBox.getPrefWidth();
+                double rightWidth = rightVBox.getWidth() > 0 ? rightVBox.getWidth() : rightVBox.getPrefWidth();
+                double thumbnailHeight = thumbnailContainer.getHeight() > 0 ? thumbnailContainer.getHeight() : 100.0;
+
+                // 1. Left view hover reveal / auto-hide
+                boolean isLeftShowing = horizontalSplitPane.getItems().contains(leftVBox);
+                boolean isLeftPinned = pinLeftButton != null && pinLeftButton.isSelected();
+                if (!isLeftShowing && mouseX <= 15) {
+                    horizontalSplitPane.getItems().add(0, leftVBox);
+                    if (horizontalSplitPane.getItems().contains(rightVBox)) {
+                        horizontalSplitPane.setDividerPositions(0.2, 0.8);
+                    } else {
+                        horizontalSplitPane.setDividerPosition(0, 0.2);
+                    }
+                } else if (isLeftShowing && !isLeftPinned && mouseX > leftWidth + 20) {
+                    horizontalSplitPane.getItems().remove(leftVBox);
+                }
+                
+                // 2. Right view hover reveal / auto-hide
+                boolean isRightShowing = horizontalSplitPane.getItems().contains(rightVBox);
+                boolean isRightPinned = pinRightButton != null && pinRightButton.isSelected();
+                if (!isRightShowing && mouseX >= width - 15) {
+                    horizontalSplitPane.getItems().add(rightVBox);
+                    if (horizontalSplitPane.getItems().contains(leftVBox)) {
+                        horizontalSplitPane.setDividerPositions(0.2, 0.8);
+                    } else {
+                        horizontalSplitPane.setDividerPosition(0, 0.8);
+                    }
+                } else if (isRightShowing && !isRightPinned && mouseX < width - rightWidth - 20) {
+                    horizontalSplitPane.getItems().remove(rightVBox);
+                }
+
+                // 3. Top thumbnail box hover reveal / auto-hide
+                boolean isThumbnailShowing = verticalSplitPane.getItems().contains(thumbnailContainer);
+                boolean isThumbnailPinned = pinThumbnailButton != null && pinThumbnailButton.isSelected();
+                if (!isThumbnailShowing && mouseY <= 15) {
+                    verticalSplitPane.getItems().add(0, thumbnailContainer);
+                    verticalSplitPane.setDividerPosition(0, 0.15);
+                } else if (isThumbnailShowing && !isThumbnailPinned && mouseY > thumbnailHeight + 20) {
+                    verticalSplitPane.getItems().remove(thumbnailContainer);
+                }
+            }
+        });
+    }
 }
