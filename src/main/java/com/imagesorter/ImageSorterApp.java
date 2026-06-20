@@ -46,7 +46,7 @@ public class ImageSorterApp extends Application {
             primaryStage.setScene(scene);
             primaryStage.setMinWidth(800);
             primaryStage.setMinHeight(600);
-            primaryStage.getIcons().add(new Image(Objects.requireNonNull(ImageSorterApp.class.getResourceAsStream("/com/imagesorter/images/img_2.png"))));
+            primaryStage.getIcons().add(new Image(Objects.requireNonNull(ImageSorterApp.class.getResourceAsStream("/com/imagesorter/images/app_icon.jpg"))));
 
 
             // Handle application close
