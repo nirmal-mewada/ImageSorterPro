@@ -36,5 +36,6 @@ build/
 
 ### Mac OS ###
 .DS_Store
-/image_sort_config.json
+/image_sort_config*.json
+/config_pointer.txt
 /dependency-reduced-pom.xml

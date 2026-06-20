@@ -125,7 +125,7 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>com.imagesorter.ImageSorterApp</mainClass>
+                    <mainClass>com.imagesorter.Main</mainClass>
                 </configuration>
             </plugin>
             <plugin>
@@ -141,7 +141,7 @@
                         <configuration>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.imagesorter.ImageSorterApp</mainClass>
+                                    <mainClass>com.imagesorter.Main</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>
