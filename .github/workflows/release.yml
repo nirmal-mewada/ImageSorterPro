@@ -1,12 +1,15 @@
-name: Build Standalone Windows Installer
+name: Build Standalone Windows Installer and Release
 
 on:
   push:
     branches: [ "master", "main" ]
 
+permissions:
+  contents: write
+
 jobs:
-  build_windows:
-    name: Build Windows EXE Installer
+  build_and_release:
+    name: Build Windows EXE Installer & Release
     runs-on: windows-latest
 
     steps:
@@ -35,8 +38,16 @@ jobs:
           jpackage --type exe --dest dist --name "ImageSorterPro" --input target/app --main-jar ImageSorterPro-1.0-SNAPSHOT.jar --main-class com.imagesorter.ImageSorterApp --win-shortcut --win-menu --win-dir-chooser --add-modules javafx.controls,javafx.fxml,javafx.swing,javafx.media
         shell: cmd
 
-      - name: Upload Installer Artifact
-        uses: actions/upload-artifact@v4
+      - name: Create GitHub Release and Upload Installer
+        uses: softprops/action-gh-release@v2
         with:
-          name: ImageSorterPro-Windows-Installer
-          path: dist/ImageSorterPro-*.exe
+          tag_name: v1.0.${{ github.run_number }}
+          name: Release v1.0.${{ github.run_number }}
+          body: |
+            Standalone Windows Installer package for ImageSorterPro.
+            Build trigger: push to ${{ github.ref_name }} (commit ${{ github.sha }})
+          draft: false
+          prerelease: false
+          files: dist/ImageSorterPro-*.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
