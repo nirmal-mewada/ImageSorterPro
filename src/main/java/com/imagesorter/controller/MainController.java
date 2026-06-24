@@ -738,8 +738,10 @@ public class MainController implements Initializable {
             });
 
         } else {
-            mediaContainer.getChildren().clear();
-            mediaContainer.getChildren().add(imageView);
+            if (!mediaContainer.getChildren().contains(imageView)) {
+                mediaContainer.getChildren().clear();
+                mediaContainer.getChildren().add(imageView);
+            }
 
             // Cancel any running image load task
             if (currentImageLoadTask != null && currentImageLoadTask.isRunning()) {
@@ -750,6 +752,8 @@ public class MainController implements Initializable {
 
             if (image != null) {
                 imageView.setImage(image);
+                mediaContainer.requestLayout();
+                imageScrollPane.requestLayout();
             } else {
                 System.out.println("cache miss" + currentImageFile.getName());
                 imageView.setImage(null);
