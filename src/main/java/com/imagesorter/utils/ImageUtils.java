@@ -198,12 +198,18 @@ public class ImageUtils {
         System.out.println("Rotating: "+currentOrientation+" -> "+newOrientation);
 
         // Write back losslessly
-        File tempFile = new File("C:\\Users\\Nirmal\\Desktop\\"+jpegFile.getName());
-        try (FileOutputStream fos = new FileOutputStream(tempFile)) {
-            new ExifRewriter().updateExifMetadataLossless(jpegFile, fos, outputSet);
-        }
+        File tempFile = File.createTempFile("exif_", ".jpg");
+        try {
+            try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+                new ExifRewriter().updateExifMetadataLossless(jpegFile, fos, outputSet);
+            }
 
-        Files.copy(tempFile.toPath(), jpegFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(tempFile.toPath(), jpegFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        } finally {
+            if (tempFile.exists()) {
+                tempFile.delete();
+            }
+        }
     }
 
 
