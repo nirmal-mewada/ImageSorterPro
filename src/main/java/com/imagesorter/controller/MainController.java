@@ -712,6 +712,17 @@ public class MainController implements Initializable {
             }
             thumbnail.setFitHeight(thumbBoxheight);
             thumbnail.setFitWidth(thumbBoxheight);
+            
+            // Navigate to image on click
+            final int targetIndex = i;
+            thumbnail.setOnMouseClicked(event -> {
+                currentImageIndex = targetIndex;
+                displayCurrentImage();
+                setupKeyboardFocus();
+                event.consume();
+            });
+            thumbnail.setCursor(javafx.scene.Cursor.HAND);
+
             thumbnailBox.getChildren().add(thumbnail);
 
         }
