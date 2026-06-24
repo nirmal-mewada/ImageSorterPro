@@ -28,12 +28,14 @@ public class ImageService {
 
     private final ImageCache imageCache;
     private final ThreadPoolExecutor executorService;
+    private final ThreadPoolExecutor thumbnailExecutor;
     private final java.util.Map<String, java.util.concurrent.Future<?>> pendingTasks = new java.util.concurrent.ConcurrentHashMap<>();
 
     public ImageService() {
         ConfigService configService = ConfigService.getInstance();
         this.imageCache = new ImageCache(configService.getConfig().getCacheSize());
         this.executorService = (ThreadPoolExecutor) Executors.newFixedThreadPool(configService.getConfig().getThreadPoolSize());
+        this.thumbnailExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(4);
     }
 
     /**
@@ -303,6 +305,10 @@ public class ImageService {
         executorService.submit(task);
     }
 
+    public void submitThumbnailTask(Runnable task) {
+        thumbnailExecutor.submit(task);
+    }
+
     /**
      * Creates a Task for loading image (for JavaFX background processing)
      */
@@ -335,6 +341,7 @@ public class ImageService {
      */
     public void shutdown() {
         executorService.shutdown();
+        thumbnailExecutor.shutdown();
         imageCache.clear();
     }
 }

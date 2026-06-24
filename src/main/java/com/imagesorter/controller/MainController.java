@@ -631,9 +631,6 @@ public class MainController implements Initializable {
 
                     if (!currentImages.isEmpty()) {
                         displayCurrentImage();
-                        updateThumbnails();
-                        // Pre-cache next 10 images
-                        imageService.preCacheImages(currentImages, currentImageIndex, configService.getConfig().getPrevCache(),configService.getConfig().getNextCache(), progressUpdaterCallback);
                     } else {
                         showAlert("No Images", "No supported image files found in the selected folder.");
                     }
@@ -811,7 +808,7 @@ public class MainController implements Initializable {
                 loadThumbTask.setOnFailed(e -> {
                     System.err.println("Failed to load thumbnail for: " + imageFile.getName());
                 });
-                imageService.submitTask(loadThumbTask);
+                imageService.submitThumbnailTask(loadThumbTask);
             }
         }
     }
