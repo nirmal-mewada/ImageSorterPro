@@ -767,7 +767,7 @@ public class MainController implements Initializable {
         if (height <= 0) {
             thumbSize = configService.getConfig().getThumbnailSize();
         } else {
-            thumbSize = Math.max(40.0, height - 15.0);
+            thumbSize = Math.max(40.0, height - 10.0);
         }
 
         if (width <= 0) {
