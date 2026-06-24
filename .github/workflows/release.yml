@@ -80,14 +80,36 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           native-image-job-reports: 'true'
 
-      - name: Install JavaFX JMODs (Windows)
+      # Cache Maven dependencies (graalvm/setup-graalvm doesn't have built-in Maven cache)
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-native-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-native-
+            ${{ runner.os }}-maven-
+
+      # Cache JavaFX JMODs download (~60MB, rarely changes)
+      - name: Cache JavaFX JMODs
+        id: cache-jfx-jmods
+        uses: actions/cache@v4
+        with:
+          path: javafx-jmods-extracted
+          key: javafx-jmods-windows-x64-21.0.2
+
+      - name: Download JavaFX JMODs (Windows)
+        if: steps.cache-jfx-jmods.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
-          # Download JavaFX jmods for Windows x64
           $jfxVersion = "21.0.2"
           Invoke-WebRequest -Uri "https://download2.gluonhq.com/openjfx/${jfxVersion}/openjfx-${jfxVersion}_windows-x64_bin-jmods.zip" -OutFile "javafx-jmods.zip"
           Expand-Archive -Path "javafx-jmods.zip" -DestinationPath "javafx-jmods-extracted"
-          # Copy jmods into GraalVM
+
+      - name: Install JavaFX JMODs into GraalVM
+        shell: pwsh
+        run: |
+          $jfxVersion = "21.0.2"
           $jmodsDir = Join-Path $env:GRAALVM_HOME "jmods"
           Get-ChildItem "javafx-jmods-extracted\javafx-jmods-${jfxVersion}\*.jmod" | Copy-Item -Destination $jmodsDir
 
