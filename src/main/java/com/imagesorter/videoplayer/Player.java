@@ -60,7 +60,8 @@ public class Player extends BorderPane {
     }
 
     public void setRotation() {
-        int rotation = ((currentImageFile.getExifRotate() % 360) + 360) % 360;
+        Integer exifRotateVal = currentImageFile.getExifRotate();
+        int rotation = ((exifRotateVal != null ? exifRotateVal : 0) % 360 + 360) % 360;
         switch (rotation) {
             case 90 -> {
                 view.setRotate(270);

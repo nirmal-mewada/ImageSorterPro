@@ -400,6 +400,7 @@ public class MainController implements Initializable {
                         "\n" +
                         "VIEW:\n" +
                         "  - F1: Show this help dialog.\n" +
+
                         "  - F11 or Enter: Toggle full screen mode.\n" +
                         "  - Spacebar: Play/Pause video.\n";
 
@@ -720,13 +721,14 @@ public class MainController implements Initializable {
         }
 
         ImageFile currentImageFile = currentImages.get(currentImageIndex);
-        clearVideo();
+
+        // Capture old player for deferred disposal — prevents blocking new content setup
+        Player oldPlayer = currentMediaPlayer;
+        currentMediaPlayer = null;
 
         if(currentImageFile.isVideoFile()){
-            System.out.println("Video file detected, skipping: "+ currentImageFile.getName());
-            mediaContainer.getChildren().clear();
+            System.out.println("Video file detected: "+ currentImageFile.getName());
             Player videoPlayer;
-            imageService.ensureExifRotation(currentImageFile);
             try {
                 videoPlayer = new Player(currentImageFile);
                 videoPlayer.setOnMouseClicked(this::handleVideoClick);
@@ -734,15 +736,29 @@ public class MainController implements Initializable {
                 throw  new RuntimeException(e);
             }
 
-
             mediaContainer.getChildren().clear();
-
-            // Use your Player class
             mediaContainer.getChildren().add(videoPlayer);
 
             // Keep reference for stopping later
             currentMediaPlayer = videoPlayer;
             currentMediaPlayer.play();
+
+            // Resolve EXIF rotation asynchronously if not already pre-cached
+            if (currentImageFile.getExifRotate() == null) {
+                final Player vp = videoPlayer;
+                final ImageFile imgFile = currentImageFile;
+                imageService.submitTask(() -> {
+                    imageService.ensureExifRotation(imgFile);
+                    if (imgFile.getExifRotate() != null && imgFile.getExifRotate() != 0) {
+                        Platform.runLater(() -> {
+                            // Only apply if this player is still the active one
+                            if (currentMediaPlayer == vp) {
+                                vp.setRotation();
+                            }
+                        });
+                    }
+                });
+            }
 
             // Refresh metadata details once the media player loads dimensions/duration
             currentMediaPlayer.player.statusProperty().addListener((obs, oldStatus, newStatus) -> {
@@ -788,6 +804,16 @@ public class MainController implements Initializable {
                 imageService.submitTask(currentImageLoadTask);
             }
         }
+
+        // Dispose old player on next FX pulse so new content renders first
+        if (oldPlayer != null) {
+            // Mute immediately to prevent audio overlap during deferred disposal
+            if (oldPlayer.player != null) {
+                oldPlayer.player.setMute(true);
+            }
+            Platform.runLater(() -> oldPlayer.dispose());
+        }
+
         updateStatusBar();
         updateThumbnails();
         updateMetadataPanel();
