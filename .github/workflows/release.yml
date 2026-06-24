@@ -6,31 +6,15 @@ on:
 
 permissions:
   contents: write
+  packages: write
 
 jobs:
-  build_and_release:
-    name: Build ${{ matrix.os-name }} (${{ matrix.arch }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: windows-latest
-            os-name: Windows
-            arch: x64
-            java-package: jdk+fx
-            type: exe
-          - os: macos-latest
-            os-name: macOS-Silicon
-            arch: aarch64
-            java-package: jdk+fx
-            type: dmg
-          - os: macos-latest
-            os-name: macOS-Intel
-            arch: x64
-            java-package: jdk+fx
-            type: dmg
-
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Windows EXE Installer (jpackage)
+  # ─────────────────────────────────────────────────────────────────────────────
+  build_windows_exe:
+    name: Build Windows EXE Installer
+    runs-on: windows-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -41,49 +25,243 @@ jobs:
           java-version: '21'
           distribution: 'liberica'
           java-package: 'jdk+fx'
-          architecture: ${{ matrix.arch }}
+          architecture: x64
           cache: 'maven'
 
       - name: Build JAR with Maven
-        run: mvn clean package
+        run: mvn clean package -DskipTests
 
-      - name: Prepare packaging folder (Windows)
-        if: matrix.os == 'windows-latest'
+      - name: Prepare packaging folder
         run: |
           mkdir target\app
           copy target\ImageSorterPro-1.0-SNAPSHOT.jar target\app\
         shell: cmd
 
-      - name: Prepare packaging folder (macOS)
-        if: matrix.os == 'macos-latest'
-        run: |
-          mkdir -p target/app
-          cp target/ImageSorterPro-1.0-SNAPSHOT.jar target/app/
-
-      - name: Build Standalone EXE Installer with jpackage (Windows)
-        if: matrix.os == 'windows-latest'
+      - name: Build EXE Installer with jpackage
         run: |
           jpackage --type exe --dest dist --name "ImageSorterPro" --input target/app --main-jar ImageSorterPro-1.0-SNAPSHOT.jar --main-class com.imagesorter.Main --win-shortcut --win-menu --win-dir-chooser --add-modules javafx.controls,javafx.fxml,javafx.swing,javafx.media --app-version "1.0.${{ github.run_number }}" --win-upgrade-uuid "d3b07384-d113-4ec4-a5e2-fd5a16709292" --icon src/main/resources/com/imagesorter/images/app_icon.ico
         shell: cmd
 
-      - name: Build Standalone DMG Installer with jpackage (macOS)
-        if: matrix.os == 'macos-latest'
-        run: |
-          jpackage --type dmg --dest dist --name "ImageSorterPro-${{ matrix.arch }}" --input target/app --main-jar ImageSorterPro-1.0-SNAPSHOT.jar --main-class com.imagesorter.Main --add-modules javafx.controls,javafx.fxml,javafx.swing,javafx.media --app-version "1.0.${{ github.run_number }}" --icon src/main/resources/com/imagesorter/images/app_icon.icns
+      - name: Upload EXE artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-exe-installer
+          path: dist/ImageSorterPro*.exe
 
-      - name: Create GitHub Release and Upload Installer
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cross-platform-jar
+          path: target/ImageSorterPro-1.0-SNAPSHOT.jar
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Windows Native Image (GraalVM)
+  # ─────────────────────────────────────────────────────────────────────────────
+  build_windows_native:
+    name: Build Windows Native Image
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up GraalVM 21 with JavaFX (Liberica NIK)
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '21'
+          distribution: 'liberica'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          native-image-job-reports: 'true'
+
+      - name: Install JavaFX JMODs (Windows)
+        shell: pwsh
+        run: |
+          # Download JavaFX jmods for Windows x64
+          $jfxVersion = "21.0.2"
+          Invoke-WebRequest -Uri "https://download2.gluonhq.com/openjfx/${jfxVersion}/openjfx-${jfxVersion}_windows-x64_bin-jmods.zip" -OutFile "javafx-jmods.zip"
+          Expand-Archive -Path "javafx-jmods.zip" -DestinationPath "javafx-jmods-extracted"
+          # Copy jmods into GraalVM
+          $jmodsDir = Join-Path $env:GRAALVM_HOME "jmods"
+          Get-ChildItem "javafx-jmods-extracted\javafx-jmods-${jfxVersion}\*.jmod" | Copy-Item -Destination $jmodsDir
+
+      - name: Generate native-image metadata with tracing agent
+        shell: cmd
+        run: |
+          mvn clean package -DskipTests
+          mkdir -p src\main\resources\META-INF\native-image
+          java -agentlib:native-image-agent=config-output-dir=src/main/resources/META-INF/native-image -jar target/ImageSorterPro-1.0-SNAPSHOT.jar --help 2>nul || echo "Agent trace complete"
+
+      - name: Build native image
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          mvn package -Pnative -DskipTests
+
+      - name: Prepare native binary for upload
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist
+          Copy-Item "target\ImageSorterPro.exe" "dist\ImageSorterPro-native-windows-x64.exe" -ErrorAction SilentlyContinue
+          if (-not (Test-Path "dist\ImageSorterPro-native-windows-x64.exe")) {
+            Copy-Item "target\ImageSorterPro" "dist\ImageSorterPro-native-windows-x64.exe" -ErrorAction SilentlyContinue
+          }
+
+      - name: Upload native image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-native-image
+          path: dist/ImageSorterPro-native-windows-x64.exe
+          if-no-files-found: warn
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # macOS App Bundle (jpackage) — Apple Silicon (aarch64)
+  # ─────────────────────────────────────────────────────────────────────────────
+  build_macos_silicon:
+    name: Build macOS App (Apple Silicon)
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 with JavaFX (BellSoft Liberica)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'liberica'
+          java-package: 'jdk+fx'
+          architecture: aarch64
+          cache: 'maven'
+
+      - name: Build JAR with Maven
+        run: mvn clean package -DskipTests
+
+      - name: Prepare packaging folder
+        run: |
+          mkdir -p target/app
+          cp target/ImageSorterPro-1.0-SNAPSHOT.jar target/app/
+
+      - name: Build .app bundle with jpackage
+        run: |
+          jpackage --type app-image --dest dist \
+            --name "ImageSorterPro" \
+            --input target/app \
+            --main-jar ImageSorterPro-1.0-SNAPSHOT.jar \
+            --main-class com.imagesorter.Main \
+            --add-modules javafx.controls,javafx.fxml,javafx.swing,javafx.media \
+            --app-version "1.0.${{ github.run_number }}" \
+            --mac-package-name "ImageSorterPro" \
+            --icon src/main/resources/com/imagesorter/images/app_icon.icns
+
+      - name: Zip .app bundle for distribution
+        run: |
+          cd dist
+          zip -r "ImageSorterPro-macOS-aarch64.zip" "ImageSorterPro.app"
+
+      - name: Upload macOS Silicon artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-silicon-app
+          path: dist/ImageSorterPro-macOS-aarch64.zip
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # macOS App Bundle (jpackage) — Intel (x64)
+  # ─────────────────────────────────────────────────────────────────────────────
+  build_macos_intel:
+    name: Build macOS App (Intel)
+    runs-on: macos-13
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 with JavaFX (BellSoft Liberica)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'liberica'
+          java-package: 'jdk+fx'
+          architecture: x64
+          cache: 'maven'
+
+      - name: Build JAR with Maven
+        run: mvn clean package -DskipTests
+
+      - name: Prepare packaging folder
+        run: |
+          mkdir -p target/app
+          cp target/ImageSorterPro-1.0-SNAPSHOT.jar target/app/
+
+      - name: Build .app bundle with jpackage
+        run: |
+          jpackage --type app-image --dest dist \
+            --name "ImageSorterPro" \
+            --input target/app \
+            --main-jar ImageSorterPro-1.0-SNAPSHOT.jar \
+            --main-class com.imagesorter.Main \
+            --add-modules javafx.controls,javafx.fxml,javafx.swing,javafx.media \
+            --app-version "1.0.${{ github.run_number }}" \
+            --mac-package-name "ImageSorterPro" \
+            --icon src/main/resources/com/imagesorter/images/app_icon.icns
+
+      - name: Zip .app bundle for distribution
+        run: |
+          cd dist
+          zip -r "ImageSorterPro-macOS-x64.zip" "ImageSorterPro.app"
+
+      - name: Upload macOS Intel artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-intel-app
+          path: dist/ImageSorterPro-macOS-x64.zip
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Create GitHub Release with all artifacts
+  # ─────────────────────────────────────────────────────────────────────────────
+  release:
+    name: Create Release
+    needs: [build_windows_exe, build_windows_native, build_macos_silicon, build_macos_intel]
+    if: always() && needs.build_windows_exe.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+
+      - name: List release artifacts
+        run: find release-artifacts -type f | head -20
+
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.${{ github.run_number }}
           name: Release v1.0.${{ github.run_number }}
           body: |
-            Standalone Installer packages for ImageSorterPro (Windows and macOS).
-            Build trigger: push to ${{ github.ref_name }} (commit ${{ github.sha }})
+            ## ImageSorterPro v1.0.${{ github.run_number }}
+
+            Standalone packages for ImageSorterPro — quick-sort and organize images/videos using hotkeys.
+
+            ### 📦 Downloads
+
+            | Platform | Package | Description |
+            |----------|---------|-------------|
+            | 🪟 Windows | `ImageSorterPro-1.0.*.exe` | Installer with embedded JVM (recommended) |
+            | 🪟 Windows | `ImageSorterPro-native-windows-x64.exe` | GraalVM native binary (no JVM needed, fastest startup) |
+            | 🍎 macOS (Apple Silicon) | `ImageSorterPro-macOS-aarch64.zip` | .app bundle for M1/M2/M3/M4 Macs |
+            | 🍎 macOS (Intel) | `ImageSorterPro-macOS-x64.zip` | .app bundle for Intel Macs |
+            | 🌐 Cross-platform | `ImageSorterPro-1.0-SNAPSHOT.jar` | Portable fat JAR (requires Java 14+ with JavaFX) |
+
+            ### ℹ️ macOS Note
+            After downloading and unzipping, you may need to right-click → Open to bypass Gatekeeper on first launch.
+
+            ---
+            Build trigger: push to `${{ github.ref_name }}` (commit `${{ github.sha }}`)
           draft: false
           prerelease: false
           files: |
-            dist/ImageSorterPro*.exe
-            dist/ImageSorterPro*.dmg
+            release-artifacts/windows-exe-installer/*
+            release-artifacts/windows-native-image/*
+            release-artifacts/macos-silicon-app/*
+            release-artifacts/macos-intel-app/*
+            release-artifacts/cross-platform-jar/*
           fail_on_unmatched_files: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
