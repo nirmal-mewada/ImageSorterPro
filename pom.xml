@@ -119,6 +119,7 @@
                                 <buildArg>--initialize-at-run-time=com.sun.glass,com.sun.prism,com.sun.javafx,javafx</buildArg>
                                 <buildArg>-H:+UnlockExperimentalVMOptions</buildArg>
                                 <buildArg>-H:+AddAllCharsets</buildArg>
+                                <buildArg>-J-Xmx8g</buildArg>
                             </buildArgs>
                         </configuration>
                     </plugin>

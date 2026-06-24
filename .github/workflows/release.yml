@@ -77,6 +77,7 @@ jobs:
         with:
           java-version: '21'
           distribution: 'liberica'
+          java-package: 'jdk+fx'
           github-token: ${{ secrets.GITHUB_TOKEN }}
           native-image-job-reports: 'true'
 
@@ -89,36 +90,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-native-
             ${{ runner.os }}-maven-
-
-      # Cache JavaFX JMODs download (~60MB, rarely changes)
-      - name: Cache JavaFX JMODs
-        id: cache-jfx-jmods
-        uses: actions/cache@v4
-        with:
-          path: javafx-jmods-extracted
-          key: javafx-jmods-windows-x64-21.0.2
-
-      - name: Download JavaFX JMODs (Windows)
-        if: steps.cache-jfx-jmods.outputs.cache-hit != 'true'
-        shell: pwsh
-        run: |
-          $jfxVersion = "21.0.2"
-          Invoke-WebRequest -Uri "https://download2.gluonhq.com/openjfx/${jfxVersion}/openjfx-${jfxVersion}_windows-x64_bin-jmods.zip" -OutFile "javafx-jmods.zip"
-          Expand-Archive -Path "javafx-jmods.zip" -DestinationPath "javafx-jmods-extracted"
-
-      - name: Install JavaFX JMODs into GraalVM
-        shell: pwsh
-        run: |
-          $jfxVersion = "21.0.2"
-          $jmodsDir = Join-Path $env:GRAALVM_HOME "jmods"
-          Get-ChildItem "javafx-jmods-extracted\javafx-jmods-${jfxVersion}\*.jmod" | Copy-Item -Destination $jmodsDir
-
-      - name: Generate native-image metadata with tracing agent
-        shell: cmd
-        run: |
-          mvn clean package -DskipTests
-          mkdir -p src\main\resources\META-INF\native-image
-          java -agentlib:native-image-agent=config-output-dir=src/main/resources/META-INF/native-image -jar target/ImageSorterPro-1.0-SNAPSHOT.jar --help 2>nul || echo "Agent trace complete"
 
       - name: Build native image
         shell: cmd

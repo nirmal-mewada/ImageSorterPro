@@ -1,0 +1,24 @@
+{
+  "resources": {
+    "includes": [
+      {
+        "pattern": "com/imagesorter/view/.*"
+      },
+      {
+        "pattern": "com/imagesorter/css/.*"
+      },
+      {
+        "pattern": "com/imagesorter/images/.*"
+      },
+      {
+        "pattern": "rotate\\.png"
+      },
+      {
+        "pattern": "video\\.png"
+      },
+      {
+        "pattern": "atlantafx/.*"
+      }
+    ]
+  }
+}
