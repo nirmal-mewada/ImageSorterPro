@@ -152,10 +152,14 @@ jobs:
             --mac-package-name "ImageSorterPro" \
             --icon src/main/resources/com/imagesorter/images/app_icon.icns
 
-      - name: Zip .app bundle for distribution
+      - name: Ad-hoc sign the .app bundle
+        run: |
+          codesign --force --deep --sign - dist/ImageSorterPro.app
+
+      - name: Zip .app bundle for distribution (preserving metadata)
         run: |
           cd dist
-          zip -r "ImageSorterPro-macOS-aarch64.zip" "ImageSorterPro.app"
+          ditto -c -k --sequesterRsrc --keepParent "ImageSorterPro.app" "ImageSorterPro-macOS-aarch64.zip"
 
       - name: Upload macOS Silicon artifact
         uses: actions/upload-artifact@v4
