@@ -109,6 +109,21 @@ public class ConfigService {
     }
 
     /**
+     * Loads a configuration from a specific path without setting it as active
+     */
+    public ConfigSettings loadConfigFromPath(String path) {
+        File configFile = new File(path);
+        if (configFile.exists()) {
+            try {
+                return objectMapper.readValue(configFile, ConfigSettings.class);
+            } catch (IOException e) {
+                System.err.println("Failed to load configuration from path: " + e.getMessage());
+            }
+        }
+        return null;
+    }
+
+    /**
      * Saves configuration to file
      */
     public void saveConfig() {

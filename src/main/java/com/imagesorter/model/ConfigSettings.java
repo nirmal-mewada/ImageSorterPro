@@ -214,6 +214,10 @@ public class ConfigSettings {
         return supportedVideoExtensions;
     }
 
+    public void setSupportedVideoExtensions(HashSet<String> supportedVideoExtensions) {
+        this.supportedVideoExtensions = supportedVideoExtensions;
+    }
+
     public java.util.List<String> getBookmarkedFolders() {
         if (bookmarkedFolders == null) {
             bookmarkedFolders = new java.util.ArrayList<>();

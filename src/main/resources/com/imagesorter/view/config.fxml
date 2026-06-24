@@ -23,52 +23,117 @@
 
     <!-- Main Content -->
     <center>
-        <ScrollPane fitToWidth="true" hbarPolicy="NEVER">
-            <VBox spacing="15.0">
-                <padding>
-                    <Insets bottom="20.0" left="20.0" right="20.0" top="10.0" />
-                </padding>
+        <TabPane tabClosingPolicy="UNAVAILABLE">
+            <tabs>
+                <Tab text="Destination Folders">
+                    <content>
+                        <ScrollPane fitToWidth="true" hbarPolicy="NEVER">
+                            <VBox spacing="15.0">
+                                <padding>
+                                    <Insets bottom="20.0" left="20.0" right="20.0" top="10.0" />
+                                </padding>
 
-                <!-- Folder Configuration Rows -->
-                <GridPane fx:id="gridPane" hgap="10.0" vgap="15.0">
-                    <columnConstraints>
-                        <ColumnConstraints minWidth="80.0" prefWidth="80.0" />
-                        <ColumnConstraints hgrow="ALWAYS" minWidth="300.0" />
-                        <ColumnConstraints minWidth="80.0" prefWidth="80.0" />
-                    </columnConstraints>
+                                <!-- Folder Configuration Rows -->
+                                <GridPane fx:id="gridPane" hgap="10.0" vgap="15.0">
+                                    <columnConstraints>
+                                        <ColumnConstraints minWidth="80.0" prefWidth="80.0" />
+                                        <ColumnConstraints hgrow="ALWAYS" minWidth="300.0" />
+                                        <ColumnConstraints minWidth="80.0" prefWidth="80.0" />
+                                    </columnConstraints>
 
-                    <!-- Rows 1-9 will be dynamically added -->
-                    <!-- Rows a-z will be dynamically added -->
-                </GridPane>
+                                    <!-- Rows 1-9 will be dynamically added -->
+                                    <!-- Rows a-z will be dynamically added -->
+                                </GridPane>
 
-                <Separator />
+                                <Separator />
 
-                <HBox spacing="10.0" alignment="CENTER_LEFT">
-                    <Label text="Trash Folder:" styleClass="hotkey-label" />
-                    <TextField fx:id="trashFolderTextField" promptText="Select a folder for deleted images..." HBox.hgrow="ALWAYS" />
-                    <Button fx:id="browseTrashFolderButton" text="Browse..." styleClass="browse-button" />
-                </HBox>
+                                <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                    <Label text="Trash Folder:" styleClass="hotkey-label" />
+                                    <TextField fx:id="trashFolderTextField" promptText="Select a folder for deleted images..." HBox.hgrow="ALWAYS" />
+                                    <Button fx:id="browseTrashFolderButton" text="Browse..." styleClass="browse-button" />
+                                </HBox>
 
-                <HBox spacing="10.0" alignment="CENTER_LEFT">
-                    <Label text="Config File:" styleClass="hotkey-label" />
-                    <TextField fx:id="configFileTextField" promptText="Configuration file location..." HBox.hgrow="ALWAYS" />
-                    <Button fx:id="browseConfigFileButton" text="Browse..." styleClass="browse-button" />
-                </HBox>
+                                <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                    <Label text="Config File:" styleClass="hotkey-label" />
+                                    <TextField fx:id="configFileTextField" promptText="Configuration file location..." HBox.hgrow="ALWAYS" />
+                                    <Button fx:id="browseConfigFileButton" text="Browse..." styleClass="browse-button" />
+                                </HBox>
 
-                <Separator />
+                                <Separator />
 
-                <!-- Additional Information -->
-                <VBox spacing="5.0">
-                    <Label text="Notes:" styleClass="notes-title" />
-                    <Label text="• Folders will be created automatically if they don't exist"
-                           styleClass="notes-text" />
-                    <Label text="• You can leave fields empty for unused hotkeys"
-                           styleClass="notes-text" />
-                    <Label text="• Use hotkey 0 to move images to an 'Archive' folder in the source directory"
-                           styleClass="notes-text" />
-                </VBox>
-            </VBox>
-        </ScrollPane>
+                                <!-- Additional Information -->
+                                <VBox spacing="5.0">
+                                    <Label text="Notes:" styleClass="notes-title" />
+                                    <Label text="• Folders will be created automatically if they don't exist"
+                                           styleClass="notes-text" />
+                                    <Label text="• You can leave fields empty for unused hotkeys"
+                                           styleClass="notes-text" />
+                                    <Label text="• Use hotkey 0 to move images to an 'Archive' folder in the source directory"
+                                           styleClass="notes-text" />
+                                </VBox>
+                            </VBox>
+                        </ScrollPane>
+                    </content>
+                </Tab>
+                <Tab text="Advanced Settings">
+                    <content>
+                        <ScrollPane fitToWidth="true" hbarPolicy="NEVER">
+                            <VBox spacing="15.0">
+                                <padding>
+                                    <Insets bottom="20.0" left="20.0" right="20.0" top="15.0" />
+                                </padding>
+
+                                <Label text="Application Properties (JSON Config)" styleClass="section-title" />
+                                
+                                <GridPane hgap="10.0" vgap="12.0">
+                                    <columnConstraints>
+                                        <ColumnConstraints minWidth="185.0" prefWidth="185.0" />
+                                        <ColumnConstraints hgrow="ALWAYS" minWidth="250.0" />
+                                    </columnConstraints>
+                                    
+                                    <!-- Safety -->
+                                    <Label text="Confirm Delete:" styleClass="hotkey-label" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                                    <CheckBox fx:id="confirmDeleteCheckBox" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                    
+                                    <!-- Cache & Performance -->
+                                    <Label text="Cache Size:" styleClass="hotkey-label" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                                    <TextField fx:id="cacheSizeField" promptText="e.g. 20" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                    
+                                    <Label text="Prev Cache Size:" styleClass="hotkey-label" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                                    <TextField fx:id="prevCacheField" promptText="e.g. 5" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                    
+                                    <Label text="Next Cache Size:" styleClass="hotkey-label" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                                    <TextField fx:id="nextCacheField" promptText="e.g. 8" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                    
+                                    <Label text="Undo History Size:" styleClass="hotkey-label" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+                                    <TextField fx:id="undoSizeField" promptText="e.g. 50" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                    
+                                    <Label text="Thread Pool Size:" styleClass="hotkey-label" GridPane.columnIndex="0" GridPane.rowIndex="5" />
+                                    <TextField fx:id="threadPoolSizeField" promptText="e.g. 4" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                                    
+                                    <!-- UI & Thumbnails -->
+                                    <Label text="Thumbnail Size (px):" styleClass="hotkey-label" GridPane.columnIndex="0" GridPane.rowIndex="6" />
+                                    <TextField fx:id="thumbnailSizeField" promptText="e.g. 150" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                                    
+                                    <Label text="Thumbnail Count:" styleClass="hotkey-label" GridPane.columnIndex="0" GridPane.rowIndex="7" />
+                                    <TextField fx:id="thumbnailCountField" promptText="e.g. 9" GridPane.columnIndex="1" GridPane.rowIndex="7" />
+                                    
+                                    <Label text="Image Quality Limit (px):" styleClass="hotkey-label" GridPane.columnIndex="0" GridPane.rowIndex="8" />
+                                    <TextField fx:id="imageQualityPxField" promptText="e.g. 1024" GridPane.columnIndex="1" GridPane.rowIndex="8" />
+                                    
+                                    <!-- Extensions -->
+                                    <Label text="Supported Extensions:" styleClass="hotkey-label" GridPane.columnIndex="0" GridPane.rowIndex="9" />
+                                    <TextField fx:id="supportedExtensionsField" promptText="e.g. jpg, png, gif, mp4" GridPane.columnIndex="1" GridPane.rowIndex="9" />
+                                    
+                                    <Label text="Video Extensions:" styleClass="hotkey-label" GridPane.columnIndex="0" GridPane.rowIndex="10" />
+                                    <TextField fx:id="supportedVideoExtensionsField" promptText="e.g. mp4" GridPane.columnIndex="1" GridPane.rowIndex="10" />
+                                </GridPane>
+                            </VBox>
+                        </ScrollPane>
+                    </content>
+                </Tab>
+            </tabs>
+        </TabPane>
     </center>
 
     <!-- Action Buttons -->

@@ -37,6 +37,19 @@ public class ConfigController implements Initializable {
     @FXML private TextField configFileTextField;
     @FXML private Button browseConfigFileButton;
 
+    // Advanced configuration fields
+    @FXML private javafx.scene.control.CheckBox confirmDeleteCheckBox;
+    @FXML private TextField cacheSizeField;
+    @FXML private TextField prevCacheField;
+    @FXML private TextField nextCacheField;
+    @FXML private TextField undoSizeField;
+    @FXML private TextField threadPoolSizeField;
+    @FXML private TextField thumbnailSizeField;
+    @FXML private TextField thumbnailCountField;
+    @FXML private TextField imageQualityPxField;
+    @FXML private TextField supportedExtensionsField;
+    @FXML private TextField supportedVideoExtensionsField;
+
     // Services
     private ConfigService configService;
 
@@ -134,6 +147,19 @@ public class ConfigController implements Initializable {
         configFileTextField.textProperty().addListener((observable, oldValue, newValue) -> {
             validateConfigFileField();
         });
+
+        // Advanced settings numeric field validation
+        TextField[] numericFields = {
+            cacheSizeField, prevCacheField, nextCacheField, undoSizeField,
+            threadPoolSizeField, thumbnailSizeField, thumbnailCountField, imageQualityPxField
+        };
+        for (TextField f : numericFields) {
+            if (f != null) {
+                f.textProperty().addListener((observable, oldValue, newValue) -> {
+                    validateNumericField(f);
+                });
+            }
+        }
     }
 
     private void validateConfigFileField() {
@@ -166,6 +192,20 @@ public class ConfigController implements Initializable {
             } else {
                 textField.setStyle("-fx-border-color: red; -fx-border-width: 1px;");
             }
+        }
+    }
+
+    private void validateNumericField(TextField textField) {
+        String val = textField.getText().trim();
+        try {
+            int num = Integer.parseInt(val);
+            if (num >= 0) {
+                textField.setStyle("-fx-border-color: green; -fx-border-width: 1px;");
+            } else {
+                textField.setStyle("-fx-border-color: red; -fx-border-width: 1px;");
+            }
+        } catch (NumberFormatException e) {
+            textField.setStyle("-fx-border-color: red; -fx-border-width: 1px;");
         }
     }
 
@@ -210,14 +250,28 @@ public class ConfigController implements Initializable {
         }
         
         Stage stage = (Stage) configFileTextField.getScene().getWindow();
-        File selectedFile = fileChooser.showSaveDialog(stage);
+        File selectedFile = fileChooser.showOpenDialog(stage);
         if (selectedFile != null) {
             configFileTextField.setText(selectedFile.getAbsolutePath());
+            if (selectedFile.exists()) {
+                ConfigSettings loadedSettings = configService.loadConfigFromPath(selectedFile.getAbsolutePath());
+                if (loadedSettings != null) {
+                    loadConfigIntoUI(loadedSettings);
+                    showAlert(Alert.AlertType.INFORMATION, "Config Loaded", "Configuration loaded from existing file:\n" + selectedFile.getName());
+                } else {
+                    showAlert(Alert.AlertType.ERROR, "Error", "Failed to load configuration from:\n" + selectedFile.getName());
+                }
+            }
         }
     }
 
     private void loadCurrentConfig() {
-        ConfigSettings config = configService.getConfig();
+        configFileTextField.setText(configService.getConfigPath() != null ? configService.getConfigPath() : "");
+        loadConfigIntoUI(configService.getConfig());
+    }
+
+    private void loadConfigIntoUI(ConfigSettings config) {
+        if (config == null) return;
 
         for (int i = 0; i < hotkeys.size(); i++) {
             String hotkey = hotkeys.get(i);
@@ -226,7 +280,28 @@ public class ConfigController implements Initializable {
         }
 
         trashFolderTextField.setText(config.getTrashFolderPath() != null ? config.getTrashFolderPath() : "");
-        configFileTextField.setText(configService.getConfigPath() != null ? configService.getConfigPath() : "");
+
+        confirmDeleteCheckBox.setSelected(config.isConfirmDelete());
+        cacheSizeField.setText(String.valueOf(config.getCacheSize()));
+        prevCacheField.setText(String.valueOf(config.getPrevCache()));
+        nextCacheField.setText(String.valueOf(config.getNextCache()));
+        undoSizeField.setText(String.valueOf(config.getUndoSize()));
+        threadPoolSizeField.setText(String.valueOf(config.getThreadPoolSize()));
+        thumbnailSizeField.setText(String.valueOf(config.getThumbnailSize()));
+        thumbnailCountField.setText(String.valueOf(config.getThumbnailCount()));
+        imageQualityPxField.setText(String.valueOf(config.getImageQualityPx()));
+
+        if (config.getSupportedExtensions() != null) {
+            supportedExtensionsField.setText(String.join(", ", config.getSupportedExtensions()));
+        } else {
+            supportedExtensionsField.setText("");
+        }
+
+        if (config.getSupportedVideoExtensions() != null) {
+            supportedVideoExtensionsField.setText(String.join(", ", config.getSupportedVideoExtensions()));
+        } else {
+            supportedVideoExtensionsField.setText("");
+        }
 
         // Validate all fields after loading
         for (TextField textField : textFields) {
@@ -234,11 +309,19 @@ public class ConfigController implements Initializable {
         }
         validateTextField(trashFolderTextField);
         validateConfigFileField();
+        
+        // Validate advanced fields
+        validateNumericField(cacheSizeField);
+        validateNumericField(prevCacheField);
+        validateNumericField(nextCacheField);
+        validateNumericField(undoSizeField);
+        validateNumericField(threadPoolSizeField);
+        validateNumericField(thumbnailSizeField);
+        validateNumericField(thumbnailCountField);
+        validateNumericField(imageQualityPxField);
     }
 
-    private void saveConfiguration() {
-        ConfigSettings config = configService.getConfig();
-
+    private void applyFieldsToConfig(ConfigSettings config) {
         // Collect all folder paths
         for (int i = 0; i < hotkeys.size(); i++) {
             String hotkey = hotkeys.get(i);
@@ -248,6 +331,50 @@ public class ConfigController implements Initializable {
 
         config.setTrashFolderPath(trashFolderTextField.getText().trim().isEmpty() ? null : trashFolderTextField.getText().trim());
 
+        // Advanced settings
+        config.setConfirmDelete(confirmDeleteCheckBox.isSelected());
+        config.setCacheSize(parseInteger(cacheSizeField.getText(), config.getCacheSize()));
+        config.setPrevCache(parseInteger(prevCacheField.getText(), config.getPrevCache()));
+        config.setNextCache(parseInteger(nextCacheField.getText(), config.getNextCache()));
+        config.setUndoSize(parseInteger(undoSizeField.getText(), config.getUndoSize()));
+        config.setThreadPoolSize(parseInteger(threadPoolSizeField.getText(), config.getThreadPoolSize()));
+        config.setThumbnailSize(parseInteger(thumbnailSizeField.getText(), config.getThumbnailSize()));
+        config.setThumbnailCount(parseInteger(thumbnailCountField.getText(), config.getThumbnailCount()));
+        config.setImageQualityPx(parseInteger(imageQualityPxField.getText(), config.getImageQualityPx()));
+
+        config.setSupportedExtensions(parseExtensions(supportedExtensionsField.getText()));
+        config.setSupportedVideoExtensions(parseExtensions(supportedVideoExtensionsField.getText()));
+    }
+
+    private int parseInteger(String value, int defaultValue) {
+        try {
+            return Integer.parseInt(value.trim());
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
+    private java.util.HashSet<String> parseExtensions(String text) {
+        java.util.HashSet<String> set = new java.util.HashSet<>();
+        if (text == null || text.trim().isEmpty()) {
+            return set;
+        }
+        String[] parts = text.split(",");
+        for (String part : parts) {
+            String clean = part.trim().toLowerCase();
+            if (clean.startsWith(".")) {
+                clean = clean.substring(1);
+            }
+            if (!clean.isEmpty()) {
+                set.add(clean);
+            }
+        }
+        return set;
+    }
+
+    private void saveConfiguration() {
+        ConfigSettings config = configService.getConfig();
+
         // Validate configuration
         if (validateConfiguration()) {
             // Check if config file path changed
@@ -255,25 +382,25 @@ public class ConfigController implements Initializable {
             if (!newConfigPath.isEmpty() && !newConfigPath.equals(configService.getConfigPath())) {
                 File targetFile = new File(newConfigPath);
                 if (targetFile.exists()) {
-                    Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
-                    confirmAlert.setTitle("Config File Exists");
-                    confirmAlert.setHeaderText("Configuration File Already Exists");
-                    confirmAlert.setContentText("The configuration file at:\n" + newConfigPath + 
-                                               "\nalready exists.\n\n" +
-                                               "Choose 'OK' to save current settings to this file (overwrite).\n" +
-                                               "Choose 'Cancel' to load settings from this file instead.");
-                                               
-                    if (confirmAlert.showAndWait().orElse(javafx.scene.control.ButtonType.CANCEL) == javafx.scene.control.ButtonType.OK) {
-                        configService.setConfigPath(newConfigPath);
-                    } else {
-                        // Switch path and load
+                    // Switch path and reload instead of overwriting
+                    ConfigSettings loadedSettings = configService.loadConfigFromPath(newConfigPath);
+                    if (loadedSettings != null) {
                         configService.setConfigPath(newConfigPath);
                         configService.loadConfig();
+                        loadCurrentConfig();
+                        showAlert(Alert.AlertType.INFORMATION, "Config Loaded", "Configuration loaded from existing file:\n" + targetFile.getName());
+                        return; // Return so user can inspect and modify
+                    } else {
+                        showAlert(Alert.AlertType.ERROR, "Error", "Failed to load configuration from:\n" + targetFile.getName());
+                        return;
                     }
                 } else {
+                    applyFieldsToConfig(config);
                     configService.setConfigPath(newConfigPath);
+                    configService.saveConfig();
                 }
             } else {
+                applyFieldsToConfig(config);
                 // Save configuration to current path
                 configService.saveConfig();
             }
