@@ -399,7 +399,8 @@ public class MainController implements Initializable {
                         "  - Ctrl + P: Open configuration dialog.\n" +
                         "\n" +
                         "VIEW:\n" +
-                        "  - F1: Show this help dialog.\n";
+                        "  - F1: Show this help dialog.\n" +
+                        "  - F11 or Enter: Toggle full screen mode.\n";
 
         alert.setContentText(shortcuts);
         alert.showAndWait();
@@ -470,15 +471,18 @@ public class MainController implements Initializable {
             if (focusOwner instanceof javafx.scene.control.TextInputControl) {
                 return; // Let the text field handle typing and keyboard shortcuts
             }
+            if (focusOwner instanceof javafx.scene.control.ButtonBase && event.getCode() == KeyCode.ENTER) {
+                return; // Let focused buttons/toggle-buttons handle Enter
+            }
         }
 
         KeyCode code = event.getCode();
         String keyText = code.getName().toLowerCase();
         boolean handled = true;
 
-
-
-        if (event.isControlDown() && code == KeyCode.Z) {
+        if (code == KeyCode.ENTER) {
+            toggleFullScreen();
+        } else if (event.isControlDown() && code == KeyCode.Z) {
             undoLastAction();
         } else if (event.isControlDown() && event.isShiftDown() && keyText.matches("[1-9a-z]")) {
             chooseOnDemandFolder(event, keyText);

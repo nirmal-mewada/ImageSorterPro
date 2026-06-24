@@ -53,7 +53,7 @@ This workspace contains **ImageSorterPro**, a lightweight, Maven-based JavaFX de
 - **Action Modes**: Options include `Move Directly`, `Copy Directly`, `Stage Move (Batch)`, and `Stage Copy (Batch)` set as mutually exclusive `RadioMenuItem` toggles in the **View > Action Mode** submenu.
 - **Batch Staging**: When in Staged modes, hotkeys queue files in `stagedActions` without disk I/O. Staged counts and execution buttons (`Commit Staged`, `Clear Batch`) appear in the bottom status bar (`batchControlsBox`) dynamically when staging modes are active. Undo (`Ctrl+Z`) pops the last staged item instantly from the queue.
 - **Slideshow Mode**: Toggled via F5 or **View > Slideshow > Play Slideshow**. Speed intervals are selected via **View > Slideshow > Interval** presets (1s, 2s, 3s, 5s, 10s) or set as a custom duration using `TextInputDialog`.
-- **Full Screen Mode**: F11 toggles full screen. When active, the left panel automatically hides and reveals itself when the mouse moves to the left edge of the screen (< 15px), sliding back out of view when the mouse exits its bounds.
+- **Full Screen Mode**: F11 or Enter toggles full screen. When active, the left panel automatically hides and reveals itself when the mouse moves to the left edge of the screen (< 15px), sliding back out of view when the mouse exits its bounds.
 - **GraalVM Windows Native Image compilation**:
   - The `native` profile in `pom.xml` compiles raw native binaries on Windows using the `native-maven-plugin`.
   - Builds require the Liberica NIK Full JDK distribution (`java-package: 'jdk+fx'` parameter in the setup-graalvm action) so JavaFX dynamic libraries/headers (`.dll`/`.lib`) are present in the compiler environment.
