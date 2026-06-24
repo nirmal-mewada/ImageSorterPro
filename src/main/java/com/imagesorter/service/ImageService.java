@@ -243,7 +243,7 @@ public class ImageService {
                 }
             }
             if (!inWindow) {
-                future.cancel(false); // Cancel task softly
+                future.cancel(true); // Cancel task immediately
                 pendingTasks.remove(path);
             }
         });

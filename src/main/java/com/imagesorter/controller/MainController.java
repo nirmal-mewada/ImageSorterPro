@@ -771,7 +771,7 @@ public class MainController implements Initializable {
                     Throwable ex = currentImageLoadTask.getException();
                     System.err.println("Failed to load image: " + currentImageFile.getName() + " - " + (ex != null ? ex.getMessage() : ""));
                 });
-                imageService.submitTask(currentImageLoadTask);
+                new Thread(currentImageLoadTask).start();
             }
         }
         updateStatusBar();
