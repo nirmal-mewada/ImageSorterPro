@@ -132,8 +132,13 @@ public class MainController implements Initializable {
     @FXML private RadioMenuItem sortByCreatedMenuItem;
     @FXML private RadioMenuItem sortByModifiedMenuItem;
     @FXML private RadioMenuItem sortBySizeMenuItem;
+    @FXML private RadioMenuItem sortByRatingMenuItem;
+    @FXML private RadioMenuItem sortByColorLabelMenuItem;
     @FXML private RadioMenuItem sortOrderAscMenuItem;
     @FXML private RadioMenuItem sortOrderDescMenuItem;
+
+    @FXML private ComboBox<String> sortFieldComboBox;
+    @FXML private Button sortOrderDirectionButton;
 
     @FXML private HBox starRatingBox;
     @FXML private Button star1;
@@ -167,6 +172,7 @@ public class MainController implements Initializable {
     private boolean wasLeftVisibleBeforeFS = true;
     private boolean wasRightVisibleBeforeFS = true;
     private boolean wasThumbnailVisibleBeforeFS = true;
+    private boolean isUpdatingSortingUI = false;
 
     // Services
     private ImageService imageService;
@@ -1408,70 +1414,145 @@ public class MainController implements Initializable {
             }
         });
 
-        // 5. Setup Sorting Menu Items
+        // 5. Setup Sorting Menu Items and Controls
         ToggleGroup sortFieldGroup = new ToggleGroup();
         sortByNameMenuItem.setToggleGroup(sortFieldGroup);
         sortByCreatedMenuItem.setToggleGroup(sortFieldGroup);
         sortByModifiedMenuItem.setToggleGroup(sortFieldGroup);
         sortBySizeMenuItem.setToggleGroup(sortFieldGroup);
-
-        String activeField = config.getSortField();
-        switch (activeField) {
-            case "Date Created":
-                sortByCreatedMenuItem.setSelected(true);
-                break;
-            case "Date Modified":
-                sortByModifiedMenuItem.setSelected(true);
-                break;
-            case "Size":
-                sortBySizeMenuItem.setSelected(true);
-                break;
-            case "Name":
-            default:
-                sortByNameMenuItem.setSelected(true);
-                break;
-        }
+        sortByRatingMenuItem.setToggleGroup(sortFieldGroup);
+        sortByColorLabelMenuItem.setToggleGroup(sortFieldGroup);
 
         ToggleGroup sortOrderGroup = new ToggleGroup();
         sortOrderAscMenuItem.setToggleGroup(sortOrderGroup);
         sortOrderDescMenuItem.setToggleGroup(sortOrderGroup);
 
-        String activeOrder = config.getSortOrder();
-        if ("Descending".equals(activeOrder)) {
-            sortOrderDescMenuItem.setSelected(true);
-        } else {
-            sortOrderAscMenuItem.setSelected(true);
-        }
+        // Setup ComboBox items
+        sortFieldComboBox.getItems().addAll(
+            "Name",
+            "Date Created",
+            "Date Modified",
+            "File Size",
+            "Rating",
+            "Color Label"
+        );
 
+        // Initialize UI from config
+        syncSortingUI();
+
+        // Listeners for Menu Items
         sortFieldGroup.selectedToggleProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null) {
-                String field = "Name";
-                if (newVal == sortByCreatedMenuItem) {
-                    field = "Date Created";
-                } else if (newVal == sortByModifiedMenuItem) {
-                    field = "Date Modified";
-                } else if (newVal == sortBySizeMenuItem) {
-                    field = "Size";
-                }
-                config.setSortField(field);
-                configService.saveConfig();
-                sortCurrentImages();
-                lastAction.setText("Sorting changed to: " + field);
+            if (isUpdatingSortingUI || newVal == null) return;
+            String field = "Name";
+            if (newVal == sortByCreatedMenuItem) {
+                field = "Date Created";
+            } else if (newVal == sortByModifiedMenuItem) {
+                field = "Date Modified";
+            } else if (newVal == sortBySizeMenuItem) {
+                field = "Size";
+            } else if (newVal == sortByRatingMenuItem) {
+                field = "Rating";
+            } else if (newVal == sortByColorLabelMenuItem) {
+                field = "Color Label";
             }
+            config.setSortField(field);
+            configService.saveConfig();
+            syncSortingUI();
+            sortCurrentImages();
+            lastAction.setText("Sorting changed to: " + field);
         });
 
         sortOrderGroup.selectedToggleProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null) {
-                String order = "Ascending";
-                if (newVal == sortOrderDescMenuItem) {
-                    order = "Descending";
-                }
-                config.setSortOrder(order);
-                configService.saveConfig();
-                sortCurrentImages();
-                lastAction.setText("Sort order changed to: " + order);
+            if (isUpdatingSortingUI || newVal == null) return;
+            String order = "Ascending";
+            if (newVal == sortOrderDescMenuItem) {
+                order = "Descending";
             }
+            config.setSortOrder(order);
+            configService.saveConfig();
+            syncSortingUI();
+            sortCurrentImages();
+            lastAction.setText("Sort order changed to: " + order);
         });
+
+        // Listeners for ComboBox and Button
+        sortFieldComboBox.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            if (isUpdatingSortingUI || newVal == null) return;
+            String field = newVal;
+            if ("File Size".equals(field)) {
+                field = "Size";
+            }
+            config.setSortField(field);
+            configService.saveConfig();
+            syncSortingUI();
+            sortCurrentImages();
+            lastAction.setText("Sorting changed to: " + newVal);
+        });
+
+        sortOrderDirectionButton.setOnAction(e -> {
+            if (isUpdatingSortingUI) return;
+            String currentOrder = config.getSortOrder();
+            String newOrder = "Descending".equals(currentOrder) ? "Ascending" : "Descending";
+            config.setSortOrder(newOrder);
+            configService.saveConfig();
+            syncSortingUI();
+            sortCurrentImages();
+            lastAction.setText("Sort order changed to: " + newOrder);
+        });
+    }
+
+    private void syncSortingUI() {
+        if (isUpdatingSortingUI) return;
+        isUpdatingSortingUI = true;
+        try {
+            String activeField = configService.getConfig().getSortField();
+            String activeOrder = configService.getConfig().getSortOrder();
+
+            // Sync menu items
+            switch (activeField) {
+                case "Date Created":
+                    sortByCreatedMenuItem.setSelected(true);
+                    break;
+                case "Date Modified":
+                    sortByModifiedMenuItem.setSelected(true);
+                    break;
+                case "Size":
+                    sortBySizeMenuItem.setSelected(true);
+                    break;
+                case "Rating":
+                    sortByRatingMenuItem.setSelected(true);
+                    break;
+                case "Color Label":
+                    sortByColorLabelMenuItem.setSelected(true);
+                    break;
+                case "Name":
+                default:
+                    sortByNameMenuItem.setSelected(true);
+                    break;
+            }
+
+            if ("Descending".equals(activeOrder)) {
+                sortOrderDescMenuItem.setSelected(true);
+            } else {
+                sortOrderAscMenuItem.setSelected(true);
+            }
+
+            // Sync combobox
+            if ("Size".equals(activeField)) {
+                sortFieldComboBox.getSelectionModel().select("File Size");
+            } else {
+                sortFieldComboBox.getSelectionModel().select(activeField);
+            }
+
+            // Sync order button text/icon
+            if ("Descending".equals(activeOrder)) {
+                sortOrderDirectionButton.setText("▼ DESC");
+            } else {
+                sortOrderDirectionButton.setText("▲ ASC");
+            }
+        } finally {
+            isUpdatingSortingUI = false;
+        }
     }
 
     private void refreshBookmarksMenu() {
@@ -1886,6 +1967,11 @@ public class MainController implements Initializable {
         configService.saveConfig();
         updateRatingUI(rating);
         lastAction.setText("Rated " + rating + " stars: " + currentImageFile.getFile().getName());
+        
+        String sortField = configService.getConfig().getSortField();
+        if ("Rating".equals(sortField)) {
+            sortCurrentImages();
+        }
     }
 
     private void setColorLabel(String label) {
@@ -1902,6 +1988,11 @@ public class MainController implements Initializable {
         configService.saveConfig();
         updateColorLabelUI(label);
         lastAction.setText("Labeled '" + (label.isEmpty() ? "None" : label) + "': " + currentImageFile.getFile().getName());
+        
+        String sortField = configService.getConfig().getSortField();
+        if ("Color Label".equals(sortField)) {
+            sortCurrentImages();
+        }
     }
 
     private void saveCustomMetadata() {
@@ -2001,6 +2092,22 @@ public class MainController implements Initializable {
                     break;
                 case "Size":
                     cmp = Long.compare(a.getFile().length(), b.getFile().length());
+                    break;
+                case "Rating":
+                    int ratingA = configService.getConfig().getRatings().getOrDefault(a.getFile().getAbsolutePath(), 0);
+                    int ratingB = configService.getConfig().getRatings().getOrDefault(b.getFile().getAbsolutePath(), 0);
+                    cmp = Integer.compare(ratingA, ratingB);
+                    if (cmp == 0) {
+                        cmp = a.getName().compareToIgnoreCase(b.getName());
+                    }
+                    break;
+                case "Color Label":
+                    String colorA = configService.getConfig().getColorLabels().getOrDefault(a.getFile().getAbsolutePath(), "");
+                    String colorB = configService.getConfig().getColorLabels().getOrDefault(b.getFile().getAbsolutePath(), "");
+                    cmp = colorA.compareToIgnoreCase(colorB);
+                    if (cmp == 0) {
+                        cmp = a.getName().compareToIgnoreCase(b.getName());
+                    }
                     break;
                 case "Name":
                 default:

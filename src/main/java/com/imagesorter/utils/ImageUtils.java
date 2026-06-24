@@ -231,6 +231,9 @@ public class ImageUtils {
 
         metadataMap.put("File Name", file.getName());
         metadataMap.put("File Size", humanReadableByteCountSI(file.length()));
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        metadataMap.put("Date Created", sdf.format(new java.util.Date(getCreationTime(file))));
+        metadataMap.put("Date Modified", sdf.format(new java.util.Date(file.lastModified())));
 
         try {
             Metadata metadata = ImageMetadataReader.readMetadata(file);
