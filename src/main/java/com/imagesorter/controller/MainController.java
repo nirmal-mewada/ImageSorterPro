@@ -225,6 +225,13 @@ public class MainController implements Initializable {
             }
         });
 
+        // Listen to height changes to dynamically resize thumbnails when separator is adjusted
+        thumbnailBox.heightProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal.doubleValue() > 0) {
+                updateThumbnails();
+            }
+        });
+
         updateThumbnails();
     }
 
@@ -753,13 +760,20 @@ public class MainController implements Initializable {
         }
 
         double width = thumbnailBox.getWidth();
+        double height = thumbnailBox.getHeight();
         int halfThumbnails;
+        double thumbSize;
+
+        if (height <= 0) {
+            thumbSize = configService.getConfig().getThumbnailSize();
+        } else {
+            thumbSize = Math.max(40.0, height - 15.0);
+        }
 
         if (width <= 0) {
             int thumbnailCount = configService.getConfig().getThumbnailCount();
             halfThumbnails = thumbnailCount / 2;
         } else {
-            double thumbSize = configService.getConfig().getThumbnailSize();
             double spacing = 5.0; // Spacing configured in main.fxml HBox spacing="5.0"
             double selectedSize = thumbSize;
             double otherSize = thumbSize * 0.7;
@@ -771,7 +785,7 @@ public class MainController implements Initializable {
         }
 
         // De-duplicate layout updates to prevent flickering and performance overhead
-        String stateKey = currentSourceFolder + "_" + currentImageIndex + "_" + halfThumbnails + "_" + currentImages.size();
+        String stateKey = currentSourceFolder + "_" + currentImageIndex + "_" + halfThumbnails + "_" + (int) thumbSize + "_" + currentImages.size();
         if (stateKey.equals(lastThumbnailStateKey)) {
             return;
         }
@@ -788,7 +802,7 @@ public class MainController implements Initializable {
             ImageView thumbnail = new ImageView();
             thumbnail.setPreserveRatio(true);
             thumbnail.getStyleClass().add("thumbnail-image");
-            double thumbBoxheight = configService.getConfig().getThumbnailSize();
+            double thumbBoxheight = thumbSize;
             if (i == currentImageIndex) {
                 thumbnail.getStyleClass().add("thumbnail-selected");
             } else {
