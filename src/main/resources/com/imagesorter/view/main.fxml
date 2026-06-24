@@ -156,7 +156,7 @@
                     <Label text="Interactive Metadata" style="-fx-font-weight: bold;" />
                     
                     <HBox alignment="CENTER_LEFT" spacing="5.0">
-                        <Label text="Rating:" minWidth="55.0" halignment="RIGHT"/>
+                        <Label text="Rating:" minWidth="55.0" alignment="CENTER_RIGHT"/>
                         <HBox fx:id="starRatingBox" spacing="2.0">
                             <Button fx:id="star1" text="☆" style="-fx-padding: 2 4; -fx-background-color: transparent; -fx-font-size: 14px; -fx-text-fill: -color-warning-fg;"/>
                             <Button fx:id="star2" text="☆" style="-fx-padding: 2 4; -fx-background-color: transparent; -fx-font-size: 14px; -fx-text-fill: -color-warning-fg;"/>
@@ -167,7 +167,7 @@
                     </HBox>
                     
                     <HBox alignment="CENTER_LEFT" spacing="5.0">
-                        <Label text="Label:" minWidth="55.0" halignment="RIGHT"/>
+                        <Label text="Label:" minWidth="55.0" alignment="CENTER_RIGHT"/>
                         <HBox fx:id="colorLabelBox" spacing="5.0" alignment="CENTER_LEFT">
                             <Button fx:id="colorRed" style="-fx-background-color: #ff5555; -fx-min-width: 16px; -fx-min-height: 16px; -fx-max-width: 16px; -fx-max-height: 16px; -fx-background-radius: 8; -fx-cursor: hand;"/>
                             <Button fx:id="colorYellow" style="-fx-background-color: #ffaa00; -fx-min-width: 16px; -fx-min-height: 16px; -fx-max-width: 16px; -fx-max-height: 16px; -fx-background-radius: 8; -fx-cursor: hand;"/>
