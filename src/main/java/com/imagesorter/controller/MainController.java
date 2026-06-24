@@ -1901,7 +1901,9 @@ public class MainController implements Initializable {
             Stage stage = new Stage();
             stage.setTitle("Configure Rules");
             stage.initModality(Modality.WINDOW_MODAL);
-            stage.initOwner(mediaContainer.getScene().getWindow());
+            if (mediaContainer.getScene() != null && mediaContainer.getScene().getWindow() != null) {
+                stage.initOwner(mediaContainer.getScene().getWindow());
+            }
             stage.setScene(new Scene(root));
             stage.showAndWait();
             setupKeyboardFocus();
