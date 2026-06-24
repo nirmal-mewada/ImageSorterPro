@@ -400,7 +400,8 @@ public class MainController implements Initializable {
                         "\n" +
                         "VIEW:\n" +
                         "  - F1: Show this help dialog.\n" +
-                        "  - F11 or Enter: Toggle full screen mode.\n";
+                        "  - F11 or Enter: Toggle full screen mode.\n" +
+                        "  - Spacebar: Play/Pause video.\n";
 
         alert.setContentText(shortcuts);
         alert.showAndWait();
@@ -471,8 +472,9 @@ public class MainController implements Initializable {
             if (focusOwner instanceof javafx.scene.control.TextInputControl) {
                 return; // Let the text field handle typing and keyboard shortcuts
             }
-            if (focusOwner instanceof javafx.scene.control.ButtonBase && event.getCode() == KeyCode.ENTER) {
-                return; // Let focused buttons/toggle-buttons handle Enter
+            if (focusOwner instanceof javafx.scene.control.ButtonBase && 
+                (event.getCode() == KeyCode.ENTER || event.getCode() == KeyCode.SPACE)) {
+                return; // Let focused buttons/toggle-buttons handle Enter/Space
             }
         }
 
@@ -519,6 +521,18 @@ public class MainController implements Initializable {
                         openConfigDialog();
                     else
                         handled = false;
+                    break;
+                case SPACE:
+                    if (currentMediaPlayer != null && currentMediaPlayer.player != null) {
+                        javafx.scene.media.MediaPlayer.Status status = currentMediaPlayer.player.getStatus();
+                        if (status == javafx.scene.media.MediaPlayer.Status.PLAYING) {
+                            currentMediaPlayer.player.pause();
+                        } else {
+                            currentMediaPlayer.player.play();
+                        }
+                    } else {
+                        handled = false;
+                    }
                     break;
                 default:
                     handled = false;
