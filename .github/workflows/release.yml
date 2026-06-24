@@ -1,4 +1,4 @@
-name: Build Standalone Windows Installer and Release
+name: Build Standalone Installers and Release
 
 on:
   push:
@@ -9,8 +9,27 @@ permissions:
 
 jobs:
   build_and_release:
-    name: Build Windows EXE Installer & Release
-    runs-on: windows-latest
+    name: Build ${{ matrix.os-name }} (${{ matrix.arch }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            os-name: Windows
+            arch: x64
+            java-package: jdk+fx
+            type: exe
+          - os: macos-latest
+            os-name: macOS-Silicon
+            arch: aarch64
+            java-package: jdk+fx
+            type: dmg
+          - os: macos-latest
+            os-name: macOS-Intel
+            arch: x64
+            java-package: jdk+fx
+            type: dmg
 
     steps:
       - name: Checkout repository
@@ -22,21 +41,35 @@ jobs:
           java-version: '21'
           distribution: 'liberica'
           java-package: 'jdk+fx'
+          architecture: ${{ matrix.arch }}
           cache: 'maven'
 
       - name: Build JAR with Maven
         run: mvn clean package
 
-      - name: Prepare packaging folder
+      - name: Prepare packaging folder (Windows)
+        if: matrix.os == 'windows-latest'
         run: |
           mkdir target\app
           copy target\ImageSorterPro-1.0-SNAPSHOT.jar target\app\
         shell: cmd
 
-      - name: Build Standalone EXE Installer with jpackage
+      - name: Prepare packaging folder (macOS)
+        if: matrix.os == 'macos-latest'
         run: |
-          jpackage --type exe --dest dist --name "ImageSorterPro" --input target/app --main-jar ImageSorterPro-1.0-SNAPSHOT.jar --main-class com.imagesorter.Main --win-shortcut --win-menu --win-dir-chooser --add-modules javafx.controls,javafx.fxml,javafx.swing,javafx.media --app-version "1.0.${{ github.run_number }}" --win-upgrade-uuid "d3b07384-d113-4ec4-a5e2-fd5a16709292"
+          mkdir -p target/app
+          cp target/ImageSorterPro-1.0-SNAPSHOT.jar target/app/
+
+      - name: Build Standalone EXE Installer with jpackage (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          jpackage --type exe --dest dist --name "ImageSorterPro" --input target/app --main-jar ImageSorterPro-1.0-SNAPSHOT.jar --main-class com.imagesorter.Main --win-shortcut --win-menu --win-dir-chooser --add-modules javafx.controls,javafx.fxml,javafx.swing,javafx.media --app-version "1.0.${{ github.run_number }}" --win-upgrade-uuid "d3b07384-d113-4ec4-a5e2-fd5a16709292" --icon src/main/resources/com/imagesorter/images/app_icon.ico
         shell: cmd
+
+      - name: Build Standalone DMG Installer with jpackage (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          jpackage --type dmg --dest dist --name "ImageSorterPro-${{ matrix.arch }}" --input target/app --main-jar ImageSorterPro-1.0-SNAPSHOT.jar --main-class com.imagesorter.Main --add-modules javafx.controls,javafx.fxml,javafx.swing,javafx.media --app-version "1.0.${{ github.run_number }}" --icon src/main/resources/com/imagesorter/images/app_icon.icns
 
       - name: Create GitHub Release and Upload Installer
         uses: softprops/action-gh-release@v2
@@ -44,10 +77,13 @@ jobs:
           tag_name: v1.0.${{ github.run_number }}
           name: Release v1.0.${{ github.run_number }}
           body: |
-            Standalone Windows Installer package for ImageSorterPro.
+            Standalone Installer packages for ImageSorterPro (Windows and macOS).
             Build trigger: push to ${{ github.ref_name }} (commit ${{ github.sha }})
           draft: false
           prerelease: false
-          files: dist/ImageSorterPro-*.exe
+          files: |
+            dist/ImageSorterPro*.exe
+            dist/ImageSorterPro*.dmg
+          fail_on_unmatched_files: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

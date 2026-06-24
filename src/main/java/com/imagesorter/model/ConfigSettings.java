@@ -32,6 +32,7 @@ public class ConfigSettings {
     ));
     private java.util.List<String> bookmarkedFolders = new java.util.ArrayList<>();
     private String actionMode = "MOVE";
+    private String theme = "Primer Light";
     
     public ConfigSettings() {
         this.allFolderPaths = new HashMap<>();
@@ -47,6 +48,7 @@ public class ConfigSettings {
         this.imageQualityPx = 1024;
         this.bookmarkedFolders = new java.util.ArrayList<>();
         this.actionMode = "MOVE";
+        this.theme = "Primer Light";
     }
     
     public String getFolderPath(String hotkey) {
@@ -216,5 +218,16 @@ public class ConfigSettings {
 
     public void setActionMode(String actionMode) {
         this.actionMode = actionMode;
+    }
+
+    public String getTheme() {
+        if (theme == null || theme.trim().isEmpty()) {
+            theme = "Primer Light";
+        }
+        return theme;
+    }
+
+    public void setTheme(String theme) {
+        this.theme = theme;
     }
 }
