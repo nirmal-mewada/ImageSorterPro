@@ -249,7 +249,7 @@ public class MainController implements Initializable {
         // Configure image view properties
         imageView.setPreserveRatio(true);
         imageView.setSmooth(true);
-        imageView.setCache(true);
+        imageView.setCache(false);
         imageView.setPickOnBounds(true); // Important for mouse events
 
 
@@ -717,6 +717,8 @@ public class MainController implements Initializable {
                     if (img != null) {
                         imageView.setImage(img);
                         updateMetadataPanel();
+                        mediaContainer.requestLayout();
+                        imageScrollPane.requestLayout();
                     }
                 });
                 currentImageLoadTask.setOnFailed(e -> {
@@ -803,6 +805,7 @@ public class MainController implements Initializable {
                     Image thumbImg = loadThumbTask.getValue();
                     if (thumbImg != null) {
                         finalThumbnail.setImage(thumbImg);
+                        thumbnailBox.requestLayout();
                     }
                 });
                 loadThumbTask.setOnFailed(e -> {
