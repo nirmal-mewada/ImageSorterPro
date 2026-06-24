@@ -208,6 +208,7 @@ public class MainController implements Initializable {
         setupMenuItems();
         setupNewFeatures();
         setupMetadataEditor();
+        applyLayoutVisibilityFromConfig();
 
         // Update UI with current config
         updateHotkeyList();
@@ -427,34 +428,61 @@ public class MainController implements Initializable {
         alert.showAndWait();
     }
 
+    private void applyLayoutVisibilityFromConfig() {
+        ConfigSettings config = configService.getConfig();
+        if (!config.isShowLeftPane()) {
+            if (horizontalSplitPane != null && horizontalSplitPane.getItems().contains(leftVBox)) {
+                horizontalSplitPane.getItems().remove(leftVBox);
+            }
+        }
+        if (!config.isShowRightPane()) {
+            if (horizontalSplitPane != null && horizontalSplitPane.getItems().contains(rightVBox)) {
+                horizontalSplitPane.getItems().remove(rightVBox);
+            }
+        }
+        if (!config.isShowThumbnailBox()) {
+            if (verticalSplitPane != null && verticalSplitPane.getItems().contains(thumbnailContainer)) {
+                verticalSplitPane.getItems().remove(thumbnailContainer);
+            }
+        }
+    }
+
     private void toggleNodeVisibility(Node node) {
+        ConfigSettings config = configService.getConfig();
         if (node == leftVBox) {
             if (horizontalSplitPane != null) {
                 if (horizontalSplitPane.getItems().contains(leftVBox)) {
                     horizontalSplitPane.getItems().remove(leftVBox);
+                    config.setShowLeftPane(false);
                 } else {
                     horizontalSplitPane.getItems().add(0, leftVBox);
                     horizontalSplitPane.setDividerPositions(0.2);
+                    config.setShowLeftPane(true);
                 }
             }
         } else if (node == rightVBox) {
             if (horizontalSplitPane != null) {
                 if (horizontalSplitPane.getItems().contains(rightVBox)) {
                     horizontalSplitPane.getItems().remove(rightVBox);
+                    config.setShowRightPane(false);
                 } else {
                     horizontalSplitPane.getItems().add(rightVBox);
+                    config.setShowRightPane(true);
                 }
             }
         } else if (node == thumbnailContainer || node == thumbnailBox) {
             if (verticalSplitPane != null) {
                 if (verticalSplitPane.getItems().contains(thumbnailContainer)) {
                     verticalSplitPane.getItems().remove(thumbnailContainer);
+                    config.setShowThumbnailBox(false);
                 } else {
                     verticalSplitPane.getItems().add(0, thumbnailContainer);
                     verticalSplitPane.setDividerPositions(0.1);
+                    config.setShowThumbnailBox(true);
                 }
             }
         }
+        configService.saveConfig();
     }
 
     @FXML

@@ -16,6 +16,9 @@ public class ConfigSettings {
     private String defaultFileChooseLocation;
     private boolean confirmDelete;
     private boolean smooth = true;
+    private boolean showLeftPane = true;
+    private boolean showRightPane = true;
+    private boolean showThumbnailBox = true;
     private int cacheSize;
     private int prevCache;
     private int nextCache;
@@ -48,6 +51,9 @@ public class ConfigSettings {
         this.allFolderPaths = new HashMap<>();
         this.confirmDelete = true;
         this.smooth = true;
+        this.showLeftPane = true;
+        this.showRightPane = true;
+        this.showThumbnailBox = true;
         this.cacheSize = 20;
         this.prevCache = 5;
         this.nextCache= 8;
@@ -120,6 +126,15 @@ public class ConfigSettings {
     
     public boolean isSmooth() { return smooth; }
     public void setSmooth(boolean smooth) { this.smooth = smooth; }
+
+    public boolean isShowLeftPane() { return showLeftPane; }
+    public void setShowLeftPane(boolean showLeftPane) { this.showLeftPane = showLeftPane; }
+
+    public boolean isShowRightPane() { return showRightPane; }
+    public void setShowRightPane(boolean showRightPane) { this.showRightPane = showRightPane; }
+
+    public boolean isShowThumbnailBox() { return showThumbnailBox; }
+    public void setShowThumbnailBox(boolean showThumbnailBox) { this.showThumbnailBox = showThumbnailBox; }
     
     public int getCacheSize() { return cacheSize; }
     public void setCacheSize(int cacheSize) { 
@@ -206,6 +221,9 @@ public class ConfigSettings {
                 ", defaultFileChooseLocation='" + defaultFileChooseLocation + '\'' +
                 ", confirmDelete=" + confirmDelete +
                 ", smooth=" + smooth +
+                ", showLeftPane=" + showLeftPane +
+                ", showRightPane=" + showRightPane +
+                ", showThumbnailBox=" + showThumbnailBox +
                 ", cacheSize=" + cacheSize +
                 ", prevCache=" + prevCache +
                 ", nextCache=" + nextCache +
