@@ -111,22 +111,25 @@
                                     <Label text="Thread Pool Size:" styleClass="hotkey-label" GridPane.columnIndex="0" GridPane.rowIndex="5" />
                                     <TextField fx:id="threadPoolSizeField" promptText="e.g. 4" GridPane.columnIndex="1" GridPane.rowIndex="5" />
                                     
+                                    <Label text="Metadata Cache Size:" styleClass="hotkey-label" GridPane.columnIndex="0" GridPane.rowIndex="6" />
+                                    <TextField fx:id="metadataCacheSizeField" promptText="e.g. 5000" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                                    
                                     <!-- UI & Thumbnails -->
-                                    <Label text="Thumbnail Size (px):" styleClass="hotkey-label" GridPane.columnIndex="0" GridPane.rowIndex="6" />
-                                    <TextField fx:id="thumbnailSizeField" promptText="e.g. 150" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                                    <Label text="Thumbnail Size (px):" styleClass="hotkey-label" GridPane.columnIndex="0" GridPane.rowIndex="7" />
+                                    <TextField fx:id="thumbnailSizeField" promptText="e.g. 150" GridPane.columnIndex="1" GridPane.rowIndex="7" />
                                     
-                                    <Label text="Thumbnail Count:" styleClass="hotkey-label" GridPane.columnIndex="0" GridPane.rowIndex="7" />
-                                    <TextField fx:id="thumbnailCountField" promptText="e.g. 9" GridPane.columnIndex="1" GridPane.rowIndex="7" />
+                                    <Label text="Thumbnail Count:" styleClass="hotkey-label" GridPane.columnIndex="0" GridPane.rowIndex="8" />
+                                    <TextField fx:id="thumbnailCountField" promptText="e.g. 9" GridPane.columnIndex="1" GridPane.rowIndex="8" />
                                     
-                                    <Label text="Image Quality Limit (px):" styleClass="hotkey-label" GridPane.columnIndex="0" GridPane.rowIndex="8" />
-                                    <TextField fx:id="imageQualityPxField" promptText="e.g. 1024" GridPane.columnIndex="1" GridPane.rowIndex="8" />
+                                    <Label text="Image Quality Limit (px):" styleClass="hotkey-label" GridPane.columnIndex="0" GridPane.rowIndex="9" />
+                                    <TextField fx:id="imageQualityPxField" promptText="e.g. 1024" GridPane.columnIndex="1" GridPane.rowIndex="9" />
                                     
                                     <!-- Extensions -->
-                                    <Label text="Supported Extensions:" styleClass="hotkey-label" GridPane.columnIndex="0" GridPane.rowIndex="9" />
-                                    <TextField fx:id="supportedExtensionsField" promptText="e.g. jpg, png, gif, mp4" GridPane.columnIndex="1" GridPane.rowIndex="9" />
+                                    <Label text="Supported Extensions:" styleClass="hotkey-label" GridPane.columnIndex="0" GridPane.rowIndex="10" />
+                                    <TextField fx:id="supportedExtensionsField" promptText="e.g. jpg, png, gif, mp4" GridPane.columnIndex="1" GridPane.rowIndex="10" />
                                     
-                                    <Label text="Video Extensions:" styleClass="hotkey-label" GridPane.columnIndex="0" GridPane.rowIndex="10" />
-                                    <TextField fx:id="supportedVideoExtensionsField" promptText="e.g. mp4" GridPane.columnIndex="1" GridPane.rowIndex="10" />
+                                    <Label text="Video Extensions:" styleClass="hotkey-label" GridPane.columnIndex="0" GridPane.rowIndex="11" />
+                                    <TextField fx:id="supportedVideoExtensionsField" promptText="e.g. mp4" GridPane.columnIndex="1" GridPane.rowIndex="11" />
                                 </GridPane>
                             </VBox>
                         </ScrollPane>

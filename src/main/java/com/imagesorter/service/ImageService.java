@@ -31,6 +31,7 @@ public class ImageService {
     private final ThreadPoolExecutor thumbnailExecutor;
     private final java.util.Map<String, java.util.concurrent.Future<?>> pendingTasks = new java.util.concurrent.ConcurrentHashMap<>();
     private final java.util.concurrent.atomic.AtomicLong seqGenerator = new java.util.concurrent.atomic.AtomicLong(0);
+    private final java.util.Map<String, java.util.Map<String, String>> metadataCache;
 
     public ImageService() {
         ConfigService configService = ConfigService.getInstance();
@@ -42,6 +43,16 @@ public class ImageService {
             new java.util.concurrent.PriorityBlockingQueue<Runnable>()
         );
         this.thumbnailExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(4);
+        
+        int metaCacheSize = configService.getConfig().getMetadataCacheSize();
+        this.metadataCache = java.util.Collections.synchronizedMap(
+            new java.util.LinkedHashMap<String, java.util.Map<String, String>>(metaCacheSize + 1, 0.75f, true) {
+                @Override
+                protected boolean removeEldestEntry(java.util.Map.Entry<String, java.util.Map<String, String>> eldest) {
+                    return size() > metaCacheSize;
+                }
+            }
+        );
     }
 
     /**
@@ -161,45 +172,10 @@ public class ImageService {
     }
 
     /**
-     * Loads a small thumbnail version of an image file to save memory and CPU
+     * Loads thumbnail version of an image file (always uses main image cache)
      */
     public Image loadThumbnail(ImageFile imageFile) throws IOException {
-        String filePath = imageFile.getPath() + "_thumb";
-
-        // Return cached image if available
-        Image cachedImage = imageCache.get(filePath);
-        if (cachedImage != null) {
-            return cachedImage;
-        }
-
-        Image image;
-        if (imageFile.isVideoFile()) {
-            image = FastVideoThumbnailUtil.createVideoThumbnail(imageFile.getFile());
-        } else {
-            try (InputStream fis = Files.newInputStream(imageFile.getFile().toPath())) {
-                // Smaller size (200px) specifically for thumbnails to reduce memory and load time
-                image = new Image(fis, 200, 0, true, false);
-            }
-
-            ensureExifRotation(imageFile);
-
-            // Apply rotation if needed
-            if (imageFile.getExifRotate() != 0) {
-                BufferedImage bufferedImage = SwingFXUtils.fromFXImage(image, null);
-                bufferedImage = ImageUtils.rotateImage(bufferedImage, imageFile.getExifRotate());
-                image = SwingFXUtils.toFXImage(bufferedImage, null);
-            }
-
-            // Throw exception if image loading failed
-            if (image.isError()) {
-                throw new RuntimeException(image.getException());
-            }
-        }
-
-        // Cache the loaded thumbnail (estimate memory usage as 1/10th of original)
-        imageCache.put(filePath, image, imageFile.getSize() / 10);
-
-        return image;
+        return loadImage(imageFile);
     }
 
     public void ensureExifRotation(ImageFile imageFile) {
@@ -221,7 +197,7 @@ public class ImageService {
 
     public Image getCachedThumbnail(ImageFile imageFile) {
         if (imageFile == null) return null;
-        return imageCache.get(imageFile.getPath() + "_thumb");
+        return getCachedImage(imageFile);
     }
 
     public List<Image> getRecentImages(int count) {
@@ -269,25 +245,15 @@ public class ImageService {
             java.util.concurrent.FutureTask<Void> futureTask = new java.util.concurrent.FutureTask<>(() -> {
                 try {
                     if (Thread.currentThread().isInterrupted()) return null;
-                    // 1. Pre-cache full image
+                    // 1. Pre-cache full image (also used as thumbnail)
                     loadImage(imageFile);
 
                     if (Thread.currentThread().isInterrupted()) return null;
-                    // 2. Pre-cache thumbnail
+                    // 2. Pre-cache metadata
                     try {
-                        loadThumbnail(imageFile);
+                        getOrLoadMetadata(imageFile);
                     } catch (Exception e) {
-                        System.err.println("Failed to pre-cache thumbnail: " + imageFile.getName() + " - " + e.getMessage());
-                    }
-
-                    if (Thread.currentThread().isInterrupted()) return null;
-                    // 3. Pre-cache metadata
-                    if (imageFile.getMetadataMap() == null) {
-                        try {
-                            imageFile.setMetadataMap(ImageUtils.getMetadataMap(imageFile.getFile()));
-                        } catch (Exception e) {
-                            System.err.println("Failed to pre-cache metadata: " + imageFile.getName() + " - " + e.getMessage());
-                        }
+                        System.err.println("Failed to pre-cache metadata: " + imageFile.getName() + " - " + e.getMessage());
                     }
 
                     if (progress != null)
@@ -352,10 +318,43 @@ public class ImageService {
 
 
     /**
-     * Clears the image cache
+     * Clears the image and metadata cache for the specified file
      */
     public void clearCache(ImageFile currentImageFile) {
-        imageCache.remove(currentImageFile.getPath());
+        if (currentImageFile != null) {
+            imageCache.remove(currentImageFile.getPath());
+            metadataCache.remove(currentImageFile.getPath());
+        }
+    }
+
+    /**
+     * Gets cached metadata if available
+     */
+    public java.util.Map<String, String> getMetadata(ImageFile imageFile) {
+        if (imageFile == null) return null;
+        return metadataCache.get(imageFile.getPath());
+    }
+
+    /**
+     * Puts metadata in the cache
+     */
+    public void putMetadata(ImageFile imageFile, java.util.Map<String, String> metadata) {
+        if (imageFile == null || metadata == null) return;
+        metadataCache.put(imageFile.getPath(), metadata);
+    }
+
+    /**
+     * Gets metadata from the cache, or loads it if not present
+     */
+    public java.util.Map<String, String> getOrLoadMetadata(ImageFile imageFile) {
+        if (imageFile == null) return null;
+        String path = imageFile.getPath();
+        java.util.Map<String, String> cached = metadataCache.get(path);
+        if (cached == null) {
+            cached = ImageUtils.getMetadataMap(imageFile.getFile());
+            metadataCache.put(path, cached);
+        }
+        return cached;
     }
 
     /**
@@ -372,6 +371,7 @@ public class ImageService {
         executorService.shutdown();
         thumbnailExecutor.shutdown();
         imageCache.clear();
+        metadataCache.clear();
     }
 
     /**

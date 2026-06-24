@@ -701,7 +701,7 @@ public class MainController implements Initializable {
 
     private synchronized void displayCurrentImage() throws RuntimeException {
         // Cancel all pending pre-cache tasks immediately to avoid executor pool starvation
-        imageService.cancelAllPendingPreCacheTasks();
+//        imageService.cancelAllPendingPreCacheTasks();
 
         if (currentImages == null || currentImageIndex < 0 || currentImageIndex >= currentImages.size()) {
             imageView.setImage(null);
@@ -918,15 +918,8 @@ public class MainController implements Initializable {
         File file = currentImageFile.getFile();
 
         // Get metadata map from cache or load it
-        Map<String, String> cachedMetadata = currentImageFile.getMetadataMap();
-        Map<String, String> metadata;
-        if (cachedMetadata != null) {
-            metadata = new LinkedHashMap<>(cachedMetadata);
-        } else {
-            cachedMetadata = ImageUtils.getMetadataMap(file);
-            currentImageFile.setMetadataMap(cachedMetadata);
-            metadata = new LinkedHashMap<>(cachedMetadata);
-        }
+        Map<String, String> cachedMetadata = imageService.getOrLoadMetadata(currentImageFile);
+        Map<String, String> metadata = new LinkedHashMap<>(cachedMetadata);
 
         // Add dimensions if we have loaded the image/video
         if (!currentImageFile.isVideoFile()) {

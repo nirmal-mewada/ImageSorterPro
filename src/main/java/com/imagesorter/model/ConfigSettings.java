@@ -23,7 +23,8 @@ public class ConfigSettings {
     private String trashFolderPath;
     private int thumbnailSize;
     private int thumbnailCount;
-     private int imageQualityPx;
+    private int imageQualityPx;
+    private int metadataCacheSize;
     private HashSet<String> supportedExtensions = new HashSet<>(Arrays.asList(
             "jpg", "jpeg", "png", "gif", "bmp", "tiff", "tif","mp4"
             ));
@@ -54,6 +55,7 @@ public class ConfigSettings {
         this.thumbnailSize = 150;
         this.thumbnailCount = 9;
         this.imageQualityPx = 1024;
+        this.metadataCacheSize = 5000;
         this.bookmarkedFolders = new java.util.ArrayList<>();
         this.actionMode = "MOVE";
         this.theme = "Primer Light";
@@ -183,6 +185,14 @@ public class ConfigSettings {
         this.imageQualityPx = imageQualityPx;
     }
 
+    public int getMetadataCacheSize() {
+        return metadataCacheSize;
+    }
+
+    public void setMetadataCacheSize(int metadataCacheSize) {
+        this.metadataCacheSize = Math.max(10, Math.min(100000, metadataCacheSize));
+    }
+
     @Override
     public String toString() {
         return "ConfigSettings{" +
@@ -199,6 +209,7 @@ public class ConfigSettings {
                 ", thumbnailSize=" + thumbnailSize +
                 ", thumbnailCount=" + thumbnailCount +
                 ", imageQualityPx=" + imageQualityPx +
+                ", metadataCacheSize=" + metadataCacheSize +
                 ", supportedExtensions=" + supportedExtensions +
                 '}';
     }

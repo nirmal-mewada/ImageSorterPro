@@ -47,6 +47,7 @@ public class ConfigController implements Initializable {
     @FXML private TextField thumbnailSizeField;
     @FXML private TextField thumbnailCountField;
     @FXML private TextField imageQualityPxField;
+    @FXML private TextField metadataCacheSizeField;
     @FXML private TextField supportedExtensionsField;
     @FXML private TextField supportedVideoExtensionsField;
 
@@ -151,7 +152,7 @@ public class ConfigController implements Initializable {
         // Advanced settings numeric field validation
         TextField[] numericFields = {
             cacheSizeField, prevCacheField, nextCacheField, undoSizeField,
-            threadPoolSizeField, thumbnailSizeField, thumbnailCountField, imageQualityPxField
+            threadPoolSizeField, metadataCacheSizeField, thumbnailSizeField, thumbnailCountField, imageQualityPxField
         };
         for (TextField f : numericFields) {
             if (f != null) {
@@ -287,6 +288,7 @@ public class ConfigController implements Initializable {
         nextCacheField.setText(String.valueOf(config.getNextCache()));
         undoSizeField.setText(String.valueOf(config.getUndoSize()));
         threadPoolSizeField.setText(String.valueOf(config.getThreadPoolSize()));
+        metadataCacheSizeField.setText(String.valueOf(config.getMetadataCacheSize()));
         thumbnailSizeField.setText(String.valueOf(config.getThumbnailSize()));
         thumbnailCountField.setText(String.valueOf(config.getThumbnailCount()));
         imageQualityPxField.setText(String.valueOf(config.getImageQualityPx()));
@@ -316,6 +318,7 @@ public class ConfigController implements Initializable {
         validateNumericField(nextCacheField);
         validateNumericField(undoSizeField);
         validateNumericField(threadPoolSizeField);
+        validateNumericField(metadataCacheSizeField);
         validateNumericField(thumbnailSizeField);
         validateNumericField(thumbnailCountField);
         validateNumericField(imageQualityPxField);
@@ -338,6 +341,7 @@ public class ConfigController implements Initializable {
         config.setNextCache(parseInteger(nextCacheField.getText(), config.getNextCache()));
         config.setUndoSize(parseInteger(undoSizeField.getText(), config.getUndoSize()));
         config.setThreadPoolSize(parseInteger(threadPoolSizeField.getText(), config.getThreadPoolSize()));
+        config.setMetadataCacheSize(parseInteger(metadataCacheSizeField.getText(), config.getMetadataCacheSize()));
         config.setThumbnailSize(parseInteger(thumbnailSizeField.getText(), config.getThumbnailSize()));
         config.setThumbnailCount(parseInteger(thumbnailCountField.getText(), config.getThumbnailCount()));
         config.setImageQualityPx(parseInteger(imageQualityPxField.getText(), config.getImageQualityPx()));
