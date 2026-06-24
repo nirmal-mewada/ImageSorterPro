@@ -30,11 +30,17 @@ public class ImageService {
     private final ThreadPoolExecutor executorService;
     private final ThreadPoolExecutor thumbnailExecutor;
     private final java.util.Map<String, java.util.concurrent.Future<?>> pendingTasks = new java.util.concurrent.ConcurrentHashMap<>();
+    private final java.util.concurrent.atomic.AtomicLong seqGenerator = new java.util.concurrent.atomic.AtomicLong(0);
 
     public ImageService() {
         ConfigService configService = ConfigService.getInstance();
         this.imageCache = new ImageCache(configService.getConfig().getCacheSize());
-        this.executorService = (ThreadPoolExecutor) Executors.newFixedThreadPool(configService.getConfig().getThreadPoolSize());
+        this.executorService = new ThreadPoolExecutor(
+            configService.getConfig().getThreadPoolSize(),
+            configService.getConfig().getThreadPoolSize(),
+            0L, java.util.concurrent.TimeUnit.MILLISECONDS,
+            new java.util.concurrent.PriorityBlockingQueue<Runnable>()
+        );
         this.thumbnailExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(4);
     }
 
@@ -259,12 +265,14 @@ public class ImageService {
                 continue;
             }
 
-            // Submit loading task
-            java.util.concurrent.Future<?> future = executorService.submit(() -> {
+            // Submit loading task as a FutureTask with PriorityRunnable
+            java.util.concurrent.FutureTask<Void> futureTask = new java.util.concurrent.FutureTask<>(() -> {
                 try {
+                    if (Thread.currentThread().isInterrupted()) return null;
                     // 1. Pre-cache full image
                     loadImage(imageFile);
 
+                    if (Thread.currentThread().isInterrupted()) return null;
                     // 2. Pre-cache thumbnail
                     try {
                         loadThumbnail(imageFile);
@@ -272,6 +280,7 @@ public class ImageService {
                         System.err.println("Failed to pre-cache thumbnail: " + imageFile.getName() + " - " + e.getMessage());
                     }
 
+                    if (Thread.currentThread().isInterrupted()) return null;
                     // 3. Pre-cache metadata
                     if (imageFile.getMetadataMap() == null) {
                         try {
@@ -281,28 +290,48 @@ public class ImageService {
                         }
                     }
 
-                    if(progress!=null)
-                        progress.accept(executorService.getActiveCount()-1);
+                    if (progress != null)
+                        progress.accept(executorService.getActiveCount() - 1);
                 } catch (IOException e) {
                     System.err.println("Failed to pre-cache image: " + imageFile.getName() +
                             " - " + e.getMessage());
                 } finally {
                     pendingTasks.remove(path);
                 }
+                return null;
             });
-            pendingTasks.put(path, future);
+
+            PriorityRunnable priorityRunnable = new PriorityRunnable(futureTask, 0, seqGenerator.getAndIncrement());
+            executorService.execute(priorityRunnable);
+            pendingTasks.put(path, futureTask);
         }
+    }
+
+    /**
+     * Cancels all currently pending pre-cache tasks
+     */
+    public void cancelAllPendingPreCacheTasks() {
+        pendingTasks.forEach((path, future) -> {
+            if (future != null) {
+                future.cancel(true);
+            }
+        });
+        pendingTasks.clear();
     }
 
     /**
      * Loads image asynchronously and returns a Future
      */
     public Future<Image> loadImageAsync(ImageFile imageFile) {
-        return executorService.submit(() -> loadImage(imageFile));
+        java.util.concurrent.FutureTask<Image> futureTask = new java.util.concurrent.FutureTask<>(() -> loadImage(imageFile));
+        PriorityRunnable priorityRunnable = new PriorityRunnable(futureTask, 10, seqGenerator.getAndIncrement());
+        executorService.execute(priorityRunnable);
+        return futureTask;
     }
 
     public void submitTask(Runnable task) {
-        executorService.submit(task);
+        PriorityRunnable priorityRunnable = new PriorityRunnable(task, 10, seqGenerator.getAndIncrement());
+        executorService.execute(priorityRunnable);
     }
 
     public void submitThumbnailTask(Runnable task) {
@@ -343,5 +372,34 @@ public class ImageService {
         executorService.shutdown();
         thumbnailExecutor.shutdown();
         imageCache.clear();
+    }
+
+    /**
+     * Priority Runnable wrapper for the priority thread pool executor
+     */
+    public static class PriorityRunnable implements Runnable, Comparable<PriorityRunnable> {
+        private final Runnable runnable;
+        private final int priority;
+        private final long seq;
+
+        public PriorityRunnable(Runnable runnable, int priority, long seq) {
+            this.runnable = runnable;
+            this.priority = priority;
+            this.seq = seq;
+        }
+
+        @Override
+        public void run() {
+            runnable.run();
+        }
+
+        @Override
+        public int compareTo(PriorityRunnable other) {
+            int diff = Integer.compare(other.priority, this.priority); // High priority first
+            if (diff != 0) {
+                return diff;
+            }
+            return Long.compare(this.seq, other.seq); // FIFO order for equal priority
+        }
     }
 }

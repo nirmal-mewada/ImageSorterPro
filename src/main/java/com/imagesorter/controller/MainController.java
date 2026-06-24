@@ -700,6 +700,9 @@ public class MainController implements Initializable {
     }
 
     private synchronized void displayCurrentImage() throws RuntimeException {
+        // Cancel all pending pre-cache tasks immediately to avoid executor pool starvation
+        imageService.cancelAllPendingPreCacheTasks();
+
         if (currentImages == null || currentImageIndex < 0 || currentImageIndex >= currentImages.size()) {
             imageView.setImage(null);
             return;
@@ -771,7 +774,7 @@ public class MainController implements Initializable {
                     Throwable ex = currentImageLoadTask.getException();
                     System.err.println("Failed to load image: " + currentImageFile.getName() + " - " + (ex != null ? ex.getMessage() : ""));
                 });
-                new Thread(currentImageLoadTask).start();
+                imageService.submitTask(currentImageLoadTask);
             }
         }
         updateStatusBar();
