@@ -25,10 +25,11 @@ public class ImageSorterApp extends Application {
     @Override
     public void start(Stage primaryStage) {
         try {
-            Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
-//            Application.setUserAgentStylesheet(new Dracula().getUserAgentStylesheet());
             // Initialize configuration service
             ConfigService configService = ConfigService.getInstance();
+            
+            // Set saved theme
+            setAppTheme(configService.getConfig().getTheme());
 
             // Load main FXML
             FXMLLoader loader = new FXMLLoader(getClass().getResource(MAIN_FXML));
@@ -84,5 +85,38 @@ public class ImageSorterApp extends Application {
             }
         }
         launch(args);
+    }
+
+    /**
+     * Applies the selected AtlantaFX theme stylesheet
+     */
+    public static void setAppTheme(String themeName) {
+        if (themeName == null) {
+            themeName = "Primer Light";
+        }
+        switch (themeName) {
+            case "Primer Dark":
+                Application.setUserAgentStylesheet(new PrimerDark().getUserAgentStylesheet());
+                break;
+            case "Nord Light":
+                Application.setUserAgentStylesheet(new NordLight().getUserAgentStylesheet());
+                break;
+            case "Nord Dark":
+                Application.setUserAgentStylesheet(new NordDark().getUserAgentStylesheet());
+                break;
+            case "Cupertino Light":
+                Application.setUserAgentStylesheet(new CupertinoLight().getUserAgentStylesheet());
+                break;
+            case "Cupertino Dark":
+                Application.setUserAgentStylesheet(new CupertinoDark().getUserAgentStylesheet());
+                break;
+            case "Dracula":
+                Application.setUserAgentStylesheet(new Dracula().getUserAgentStylesheet());
+                break;
+            case "Primer Light":
+            default:
+                Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
+                break;
+        }
     }
 }
