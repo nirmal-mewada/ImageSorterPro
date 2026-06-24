@@ -761,7 +761,6 @@ public class MainController implements Initializable {
 
         double width = thumbnailBox.getWidth();
         double height = thumbnailBox.getHeight();
-        int halfThumbnails;
         double thumbSize;
 
         if (height <= 0) {
@@ -770,22 +769,22 @@ public class MainController implements Initializable {
             thumbSize = Math.max(40.0, height - 10.0);
         }
 
+        int targetCapacity;
         if (width <= 0) {
-            int thumbnailCount = configService.getConfig().getThumbnailCount();
-            halfThumbnails = thumbnailCount / 2;
+            targetCapacity = configService.getConfig().getThumbnailCount();
         } else {
             double spacing = 5.0; // Spacing configured in main.fxml HBox spacing="5.0"
             double selectedSize = thumbSize;
             double otherSize = thumbSize * 0.7;
-            double margin = 60.0; // Margin to account for pin button, padding, and UI boundaries
+            double margin = 20.0; // Minimal safety margin since thumbnailBox doesn't include the pin button
             double availableWidth = width - margin;
             
-            // Equation: selectedSize + 2 * halfThumbnails * (otherSize + spacing) <= availableWidth
-            halfThumbnails = Math.max(0, (int) ((availableWidth - selectedSize) / (2.0 * (otherSize + spacing))));
+            // selectedSize + (K - 1) * (otherSize + spacing) <= availableWidth
+            targetCapacity = 1 + Math.max(0, (int) ((availableWidth - selectedSize) / (otherSize + spacing)));
         }
 
         // De-duplicate layout updates to prevent flickering and performance overhead
-        String stateKey = currentSourceFolder + "_" + currentImageIndex + "_" + halfThumbnails + "_" + (int) thumbSize + "_" + currentImages.size();
+        String stateKey = currentSourceFolder + "_" + currentImageIndex + "_" + targetCapacity + "_" + (int) thumbSize + "_" + currentImages.size();
         if (stateKey.equals(lastThumbnailStateKey)) {
             return;
         }
@@ -793,8 +792,19 @@ public class MainController implements Initializable {
 
         thumbnailBox.getChildren().clear();
 
-        int startIndex = Math.max(0, currentImageIndex - halfThumbnails);
-        int endIndex = Math.min(currentImages.size() - 1, currentImageIndex + halfThumbnails);
+        int totalImages = currentImages.size();
+        int targetSize = Math.min(targetCapacity, totalImages);
+        
+        // Sliding window calculation to fill full width at boundaries
+        int startIndex = currentImageIndex - (targetSize - 1) / 2;
+        if (startIndex < 0) {
+            startIndex = 0;
+        }
+        int endIndex = startIndex + targetSize - 1;
+        if (endIndex >= totalImages) {
+            endIndex = totalImages - 1;
+            startIndex = Math.max(0, endIndex - targetSize + 1);
+        }
 
         for (int i = startIndex; i <= endIndex; i++) {
             ImageFile imageFile = currentImages.get(i);
