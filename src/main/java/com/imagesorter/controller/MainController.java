@@ -128,6 +128,13 @@ public class MainController implements Initializable {
     @FXML private MenuItem configureRulesMenuItem;
     @FXML private MenuItem applyRulesMenuItem;
 
+    @FXML private RadioMenuItem sortByNameMenuItem;
+    @FXML private RadioMenuItem sortByCreatedMenuItem;
+    @FXML private RadioMenuItem sortByModifiedMenuItem;
+    @FXML private RadioMenuItem sortBySizeMenuItem;
+    @FXML private RadioMenuItem sortOrderAscMenuItem;
+    @FXML private RadioMenuItem sortOrderDescMenuItem;
+
     @FXML private HBox starRatingBox;
     @FXML private Button star1;
     @FXML private Button star2;
@@ -1400,6 +1407,71 @@ public class MainController implements Initializable {
                 lastAction.setText("Changed theme to: " + selectedTheme);
             }
         });
+
+        // 5. Setup Sorting Menu Items
+        ToggleGroup sortFieldGroup = new ToggleGroup();
+        sortByNameMenuItem.setToggleGroup(sortFieldGroup);
+        sortByCreatedMenuItem.setToggleGroup(sortFieldGroup);
+        sortByModifiedMenuItem.setToggleGroup(sortFieldGroup);
+        sortBySizeMenuItem.setToggleGroup(sortFieldGroup);
+
+        String activeField = config.getSortField();
+        switch (activeField) {
+            case "Date Created":
+                sortByCreatedMenuItem.setSelected(true);
+                break;
+            case "Date Modified":
+                sortByModifiedMenuItem.setSelected(true);
+                break;
+            case "Size":
+                sortBySizeMenuItem.setSelected(true);
+                break;
+            case "Name":
+            default:
+                sortByNameMenuItem.setSelected(true);
+                break;
+        }
+
+        ToggleGroup sortOrderGroup = new ToggleGroup();
+        sortOrderAscMenuItem.setToggleGroup(sortOrderGroup);
+        sortOrderDescMenuItem.setToggleGroup(sortOrderGroup);
+
+        String activeOrder = config.getSortOrder();
+        if ("Descending".equals(activeOrder)) {
+            sortOrderDescMenuItem.setSelected(true);
+        } else {
+            sortOrderAscMenuItem.setSelected(true);
+        }
+
+        sortFieldGroup.selectedToggleProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                String field = "Name";
+                if (newVal == sortByCreatedMenuItem) {
+                    field = "Date Created";
+                } else if (newVal == sortByModifiedMenuItem) {
+                    field = "Date Modified";
+                } else if (newVal == sortBySizeMenuItem) {
+                    field = "Size";
+                }
+                config.setSortField(field);
+                configService.saveConfig();
+                sortCurrentImages();
+                lastAction.setText("Sorting changed to: " + field);
+            }
+        });
+
+        sortOrderGroup.selectedToggleProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                String order = "Ascending";
+                if (newVal == sortOrderDescMenuItem) {
+                    order = "Descending";
+                }
+                config.setSortOrder(order);
+                configService.saveConfig();
+                sortCurrentImages();
+                lastAction.setText("Sort order changed to: " + order);
+            }
+        });
     }
 
     private void refreshBookmarksMenu() {
@@ -1902,5 +1974,52 @@ public class MainController implements Initializable {
         colorYellow.setStyle("-fx-background-color: #ffaa00; -fx-min-width: 16px; -fx-min-height: 16px; -fx-max-width: 16px; -fx-max-height: 16px; -fx-background-radius: 8; -fx-cursor: hand;" + ("Yellow".equals(label) ? " -fx-border-color: white; -fx-border-width: 2; -fx-border-radius: 8;" : ""));
         colorGreen.setStyle("-fx-background-color: #55ff55; -fx-min-width: 16px; -fx-min-height: 16px; -fx-max-width: 16px; -fx-max-height: 16px; -fx-background-radius: 8; -fx-cursor: hand;" + ("Green".equals(label) ? " -fx-border-color: white; -fx-border-width: 2; -fx-border-radius: 8;" : ""));
         colorBlue.setStyle("-fx-background-color: #5555ff; -fx-min-width: 16px; -fx-min-height: 16px; -fx-max-width: 16px; -fx-max-height: 16px; -fx-background-radius: 8; -fx-cursor: hand;" + ("Blue".equals(label) ? " -fx-border-color: white; -fx-border-width: 2; -fx-border-radius: 8;" : ""));
+    }
+
+    private void sortCurrentImages() {
+        if (currentImages == null || currentImages.isEmpty()) {
+            return;
+        }
+
+        ImageFile currentFile = (currentImageIndex >= 0 && currentImageIndex < currentImages.size()) 
+                ? currentImages.get(currentImageIndex) : null;
+
+        String sortField = configService.getConfig().getSortField();
+        String sortOrder = configService.getConfig().getSortOrder();
+        boolean ascending = "Ascending".equals(sortOrder);
+
+        currentImages.sort((a, b) -> {
+            int cmp = 0;
+            switch (sortField) {
+                case "Date Created":
+                    long timeA = ImageUtils.getCreationTime(a.getFile());
+                    long timeB = ImageUtils.getCreationTime(b.getFile());
+                    cmp = Long.compare(timeA, timeB);
+                    break;
+                case "Date Modified":
+                    cmp = Long.compare(a.getFile().lastModified(), b.getFile().lastModified());
+                    break;
+                case "Size":
+                    cmp = Long.compare(a.getFile().length(), b.getFile().length());
+                    break;
+                case "Name":
+                default:
+                    cmp = a.getName().compareToIgnoreCase(b.getName());
+                    break;
+            }
+            return ascending ? cmp : -cmp;
+        });
+
+        if (currentFile != null) {
+            currentImageIndex = currentImages.indexOf(currentFile);
+            if (currentImageIndex == -1) {
+                currentImageIndex = 0;
+            }
+        } else {
+            currentImageIndex = 0;
+        }
+
+        displayCurrentImage();
+        updateThumbnails();
     }
 }

@@ -40,6 +40,15 @@
                     <RadioMenuItem fx:id="actionModeStagedMoveMenuItem" mnemonicParsing="false" text="Stage Move (Batch)" />
                     <RadioMenuItem fx:id="actionModeStagedCopyMenuItem" mnemonicParsing="false" text="Stage Copy (Batch)" />
                 </Menu>
+                <Menu mnemonicParsing="false" text="Sort By">
+                    <RadioMenuItem fx:id="sortByNameMenuItem" mnemonicParsing="false" text="Name" selected="true" />
+                    <RadioMenuItem fx:id="sortByCreatedMenuItem" mnemonicParsing="false" text="Date Created" />
+                    <RadioMenuItem fx:id="sortByModifiedMenuItem" mnemonicParsing="false" text="Date Modified" />
+                    <RadioMenuItem fx:id="sortBySizeMenuItem" mnemonicParsing="false" text="File Size" />
+                    <SeparatorMenuItem />
+                    <RadioMenuItem fx:id="sortOrderAscMenuItem" mnemonicParsing="false" text="Ascending" selected="true" />
+                    <RadioMenuItem fx:id="sortOrderDescMenuItem" mnemonicParsing="false" text="Descending" />
+                </Menu>
                 <Menu mnemonicParsing="false" text="Slideshow">
                     <CheckMenuItem fx:id="slideshowPlayMenuItem" mnemonicParsing="false" text="Play Slideshow" accelerator="F5"/>
                     <Menu mnemonicParsing="false" text="Interval">

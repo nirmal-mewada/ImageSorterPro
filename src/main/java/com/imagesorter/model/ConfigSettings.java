@@ -33,6 +33,8 @@ public class ConfigSettings {
     private java.util.List<String> bookmarkedFolders = new java.util.ArrayList<>();
     private String actionMode = "MOVE";
     private String theme = "Primer Light";
+    private String sortField = "Name";
+    private String sortOrder = "Ascending";
     private Map<String, Integer> ratings = new HashMap<>();
     private Map<String, String> colorLabels = new HashMap<>();
     private Map<String, String> titles = new HashMap<>();
@@ -55,6 +57,8 @@ public class ConfigSettings {
         this.bookmarkedFolders = new java.util.ArrayList<>();
         this.actionMode = "MOVE";
         this.theme = "Primer Light";
+        this.sortField = "Name";
+        this.sortOrder = "Ascending";
         this.ratings = new HashMap<>();
         this.colorLabels = new HashMap<>();
         this.titles = new HashMap<>();
@@ -289,5 +293,25 @@ public class ConfigSettings {
     }
     public void setSortingRules(java.util.List<SortingRule> sortingRules) {
         this.sortingRules = sortingRules;
+    }
+
+    public String getSortField() {
+        if (sortField == null || sortField.trim().isEmpty()) {
+            sortField = "Name";
+        }
+        return sortField;
+    }
+    public void setSortField(String sortField) {
+        this.sortField = sortField;
+    }
+
+    public String getSortOrder() {
+        if (sortOrder == null || sortOrder.trim().isEmpty()) {
+            sortOrder = "Ascending";
+        }
+        return sortOrder;
+    }
+    public void setSortOrder(String sortOrder) {
+        this.sortOrder = sortOrder;
     }
 }

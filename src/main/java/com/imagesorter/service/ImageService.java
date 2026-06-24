@@ -60,8 +60,33 @@ public class ImageService {
             }
         }
 
-        // Sort by name for consistent ordering
-        imageFiles.sort((a, b) -> a.getName().compareToIgnoreCase(b.getName()));
+        // Sort according to configuration
+        com.imagesorter.model.ConfigSettings config = ConfigService.getInstance().getConfig();
+        String sortField = config.getSortField();
+        String sortOrder = config.getSortOrder();
+        boolean ascending = "Ascending".equals(sortOrder);
+
+        imageFiles.sort((a, b) -> {
+            int cmp = 0;
+            switch (sortField) {
+                case "Date Created":
+                    long timeA = ImageUtils.getCreationTime(a.getFile());
+                    long timeB = ImageUtils.getCreationTime(b.getFile());
+                    cmp = Long.compare(timeA, timeB);
+                    break;
+                case "Date Modified":
+                    cmp = Long.compare(a.getFile().lastModified(), b.getFile().lastModified());
+                    break;
+                case "Size":
+                    cmp = Long.compare(a.getFile().length(), b.getFile().length());
+                    break;
+                case "Name":
+                default:
+                    cmp = a.getName().compareToIgnoreCase(b.getName());
+                    break;
+            }
+            return ascending ? cmp : -cmp;
+        });
 
         // Reset processed count when loading new folder
         return imageFiles;

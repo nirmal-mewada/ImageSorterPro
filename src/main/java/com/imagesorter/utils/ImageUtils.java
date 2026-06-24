@@ -285,4 +285,16 @@ public class ImageUtils {
         return metadataMap;
     }
 
+    /**
+     * Gets file creation time or falls back to last modified time.
+     */
+    public static long getCreationTime(File file) {
+        try {
+            java.nio.file.attribute.BasicFileAttributes attrs = 
+                java.nio.file.Files.readAttributes(file.toPath(), java.nio.file.attribute.BasicFileAttributes.class);
+            return attrs.creationTime().toMillis();
+        } catch (Exception e) {
+            return file.lastModified();
+        }
+    }
 }
