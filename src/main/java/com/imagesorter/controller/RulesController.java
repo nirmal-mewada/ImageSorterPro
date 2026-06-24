@@ -47,22 +47,13 @@ public class RulesController implements Initializable {
         // Update operator list dynamically based on field choice
         fieldComboBox.valueProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null) {
-                if (newVal == SortingRule.Field.RATING) {
-                    operatorComboBox.setItems(FXCollections.observableArrayList(
-                        SortingRule.Operator.EQUALS, 
-                        SortingRule.Operator.GREATER_THAN, 
-                        SortingRule.Operator.LESS_THAN, 
-                        SortingRule.Operator.IS_SET
-                    ));
-                } else {
-                    operatorComboBox.setItems(FXCollections.observableArrayList(
-                        SortingRule.Operator.CONTAINS, 
-                        SortingRule.Operator.EQUALS, 
-                        SortingRule.Operator.STARTS_WITH, 
-                        SortingRule.Operator.ENDS_WITH, 
-                        SortingRule.Operator.IS_SET
-                    ));
-                }
+                operatorComboBox.setItems(FXCollections.observableArrayList(
+                    SortingRule.Operator.CONTAINS, 
+                    SortingRule.Operator.EQUALS, 
+                    SortingRule.Operator.STARTS_WITH, 
+                    SortingRule.Operator.ENDS_WITH, 
+                    SortingRule.Operator.IS_SET
+                ));
             }
         });
 

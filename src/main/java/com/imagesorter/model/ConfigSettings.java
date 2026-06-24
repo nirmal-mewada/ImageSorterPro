@@ -40,11 +40,6 @@ public class ConfigSettings {
     private String theme = "Primer Light";
     private String sortField = "Name";
     private String sortOrder = "Ascending";
-    private Map<String, Integer> ratings = new HashMap<>();
-    private Map<String, String> colorLabels = new HashMap<>();
-    private Map<String, String> titles = new HashMap<>();
-    private Map<String, String> descriptions = new HashMap<>();
-    private Map<String, String> tags = new HashMap<>();
     private java.util.List<SortingRule> sortingRules = new java.util.ArrayList<>();
     
     public ConfigSettings() {
@@ -69,11 +64,6 @@ public class ConfigSettings {
         this.theme = "Primer Light";
         this.sortField = "Name";
         this.sortOrder = "Ascending";
-        this.ratings = new HashMap<>();
-        this.colorLabels = new HashMap<>();
-        this.titles = new HashMap<>();
-        this.descriptions = new HashMap<>();
-        this.tags = new HashMap<>();
         this.sortingRules = new java.util.ArrayList<>();
     }
     
@@ -286,45 +276,7 @@ public class ConfigSettings {
         this.theme = theme;
     }
 
-    public Map<String, Integer> getRatings() {
-        if (ratings == null) ratings = new HashMap<>();
-        return ratings;
-    }
-    public void setRatings(Map<String, Integer> ratings) {
-        this.ratings = ratings;
-    }
 
-    public Map<String, String> getColorLabels() {
-        if (colorLabels == null) colorLabels = new HashMap<>();
-        return colorLabels;
-    }
-    public void setColorLabels(Map<String, String> colorLabels) {
-        this.colorLabels = colorLabels;
-    }
-
-    public Map<String, String> getTitles() {
-        if (titles == null) titles = new HashMap<>();
-        return titles;
-    }
-    public void setTitles(Map<String, String> titles) {
-        this.titles = titles;
-    }
-
-    public Map<String, String> getDescriptions() {
-        if (descriptions == null) descriptions = new HashMap<>();
-        return descriptions;
-    }
-    public void setDescriptions(Map<String, String> descriptions) {
-        this.descriptions = descriptions;
-    }
-
-    public Map<String, String> getTags() {
-        if (tags == null) tags = new HashMap<>();
-        return tags;
-    }
-    public void setTags(Map<String, String> tags) {
-        this.tags = tags;
-    }
 
     public java.util.List<SortingRule> getSortingRules() {
         if (sortingRules == null) sortingRules = new java.util.ArrayList<>();

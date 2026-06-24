@@ -5,7 +5,7 @@ package com.imagesorter.model;
  */
 public class SortingRule {
     public enum Field {
-        FILE_NAME, FILE_EXTENSION, RATING, COLOR_LABEL, CAMERA
+        FILE_NAME, FILE_EXTENSION, CAMERA
     }
 
     public enum Operator {
@@ -51,7 +51,7 @@ public class SortingRule {
     /**
      * Evaluates the rule against file information and metadata.
      */
-    public boolean matches(String filePath, String fileName, int rating, String colorLabel, String camera) {
+    public boolean matches(String filePath, String fileName, String camera) {
         String testVal = "";
         switch (field) {
             case FILE_NAME:
@@ -60,26 +60,6 @@ public class SortingRule {
             case FILE_EXTENSION:
                 int dotIdx = fileName.lastIndexOf('.');
                 testVal = dotIdx >= 0 ? fileName.substring(dotIdx + 1).toLowerCase() : "";
-                break;
-            case RATING:
-                if (operator == Operator.GREATER_THAN) {
-                    try {
-                        return rating > Integer.parseInt(value);
-                    } catch (NumberFormatException e) { return false; }
-                } else if (operator == Operator.LESS_THAN) {
-                    try {
-                        return rating < Integer.parseInt(value);
-                    } catch (NumberFormatException e) { return false; }
-                } else if (operator == Operator.EQUALS) {
-                    try {
-                        return rating == Integer.parseInt(value);
-                    } catch (NumberFormatException e) { return false; }
-                } else if (operator == Operator.IS_SET) {
-                    return rating > 0;
-                }
-                return false;
-            case COLOR_LABEL:
-                testVal = colorLabel != null ? colorLabel : "";
                 break;
             case CAMERA:
                 testVal = camera != null ? camera : "";

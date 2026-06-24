@@ -99,22 +99,6 @@ public class ImageService {
                 case "Size":
                     cmp = Long.compare(a.getFile().length(), b.getFile().length());
                     break;
-                case "Rating":
-                    int ratingA = config.getRatings().getOrDefault(a.getFile().getAbsolutePath(), 0);
-                    int ratingB = config.getRatings().getOrDefault(b.getFile().getAbsolutePath(), 0);
-                    cmp = Integer.compare(ratingA, ratingB);
-                    if (cmp == 0) {
-                        cmp = a.getName().compareToIgnoreCase(b.getName());
-                    }
-                    break;
-                case "Color Label":
-                    String colorA = config.getColorLabels().getOrDefault(a.getFile().getAbsolutePath(), "");
-                    String colorB = config.getColorLabels().getOrDefault(b.getFile().getAbsolutePath(), "");
-                    cmp = colorA.compareToIgnoreCase(colorB);
-                    if (cmp == 0) {
-                        cmp = a.getName().compareToIgnoreCase(b.getName());
-                    }
-                    break;
                 case "Name":
                 default:
                     cmp = a.getName().compareToIgnoreCase(b.getName());

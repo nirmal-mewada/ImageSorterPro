@@ -133,30 +133,8 @@ public class MainController implements Initializable {
     @FXML private RadioMenuItem sortByCreatedMenuItem;
     @FXML private RadioMenuItem sortByModifiedMenuItem;
     @FXML private RadioMenuItem sortBySizeMenuItem;
-    @FXML private RadioMenuItem sortByRatingMenuItem;
-    @FXML private RadioMenuItem sortByColorLabelMenuItem;
     @FXML private RadioMenuItem sortOrderAscMenuItem;
     @FXML private RadioMenuItem sortOrderDescMenuItem;
-
-
-    @FXML private HBox starRatingBox;
-    @FXML private Button star1;
-    @FXML private Button star2;
-    @FXML private Button star3;
-    @FXML private Button star4;
-    @FXML private Button star5;
-
-    @FXML private HBox colorLabelBox;
-    @FXML private Button colorRed;
-    @FXML private Button colorYellow;
-    @FXML private Button colorGreen;
-    @FXML private Button colorBlue;
-    @FXML private Button colorClear;
-
-    @FXML private TextField metaTitleField;
-    @FXML private TextField metaDescField;
-    @FXML private TextField metaTagsField;
-    @FXML private Button saveMetaButton;
 
     @FXML private HBox batchControlsBox;
     @FXML private Label stagedCountLabel;
@@ -207,7 +185,6 @@ public class MainController implements Initializable {
         setupHotkeyList();
         setupMenuItems();
         setupNewFeatures();
-        setupMetadataEditor();
         applyLayoutVisibilityFromConfig();
 
         // Update UI with current config
@@ -499,19 +476,7 @@ public class MainController implements Initializable {
         String keyText = code.getName().toLowerCase();
         boolean handled = true;
 
-        if (event.isAltDown()) {
-            if (code == KeyCode.DIGIT1 || code == KeyCode.NUMPAD1) { setRating(1); return; }
-            if (code == KeyCode.DIGIT2 || code == KeyCode.NUMPAD2) { setRating(2); return; }
-            if (code == KeyCode.DIGIT3 || code == KeyCode.NUMPAD3) { setRating(3); return; }
-            if (code == KeyCode.DIGIT4 || code == KeyCode.NUMPAD4) { setRating(4); return; }
-            if (code == KeyCode.DIGIT5 || code == KeyCode.NUMPAD5) { setRating(5); return; }
-            if (code == KeyCode.DIGIT0 || code == KeyCode.NUMPAD0) { setRating(0); return; }
-            if (code == KeyCode.R) { setColorLabel("Red"); return; }
-            if (code == KeyCode.Y) { setColorLabel("Yellow"); return; }
-            if (code == KeyCode.G) { setColorLabel("Green"); return; }
-            if (code == KeyCode.B) { setColorLabel("Blue"); return; }
-            if (code == KeyCode.C) { setColorLabel(""); return; }
-        }
+
 
         if (event.isControlDown() && code == KeyCode.Z) {
             undoLastAction();
@@ -808,7 +773,6 @@ public class MainController implements Initializable {
         updateStatusBar();
         updateThumbnails();
         updateMetadataPanel();
-        displayCustomMetadata();
 
         // Pre-cache surrounding images
 
@@ -1110,7 +1074,6 @@ public class MainController implements Initializable {
             if (success) {
                 lastAction.setText("Last Action: [Moved] " + sourceFile.getName() +" -> " + destinationFolder.getPath());
                 System.out.println("Moved: " + sourceFile.getAbsolutePath() + " -> " + destinationFile.getAbsolutePath());
-                configService.updateMetadataPath(sourceFile.getAbsolutePath(), destinationFile.getAbsolutePath());
             }
         }
 
@@ -1183,7 +1146,6 @@ public class MainController implements Initializable {
             if (sourceFile.renameTo(destinationFile)) {
                 lastAction.setText("Last Action: [Deleted] " + currentImageFile.getName());
                 System.out.println("Last Action: [Deleted] "+currentImageFile.getFile().getAbsolutePath());
-                configService.updateMetadataPath(sourceFile.getAbsolutePath(), destinationFile.getAbsolutePath());
                 // Remove from list
                 currentImages.remove(currentImageIndex);
 
@@ -1583,8 +1545,6 @@ public class MainController implements Initializable {
         sortByCreatedMenuItem.setToggleGroup(sortFieldGroup);
         sortByModifiedMenuItem.setToggleGroup(sortFieldGroup);
         sortBySizeMenuItem.setToggleGroup(sortFieldGroup);
-        sortByRatingMenuItem.setToggleGroup(sortFieldGroup);
-        sortByColorLabelMenuItem.setToggleGroup(sortFieldGroup);
 
         ToggleGroup sortOrderGroup = new ToggleGroup();
         sortOrderAscMenuItem.setToggleGroup(sortOrderGroup);
@@ -1603,10 +1563,6 @@ public class MainController implements Initializable {
                 field = "Date Modified";
             } else if (newVal == sortBySizeMenuItem) {
                 field = "Size";
-            } else if (newVal == sortByRatingMenuItem) {
-                field = "Rating";
-            } else if (newVal == sortByColorLabelMenuItem) {
-                field = "Color Label";
             }
             config.setSortField(field);
             configService.saveConfig();
@@ -1646,12 +1602,6 @@ public class MainController implements Initializable {
                     break;
                 case "Size":
                     sortBySizeMenuItem.setSelected(true);
-                    break;
-                case "Rating":
-                    sortByRatingMenuItem.setSelected(true);
-                    break;
-                case "Color Label":
-                    sortByColorLabelMenuItem.setSelected(true);
                     break;
                 case "Name":
                 default:
@@ -1951,7 +1901,7 @@ public class MainController implements Initializable {
             Stage stage = new Stage();
             stage.setTitle("Configure Rules");
             stage.initModality(Modality.WINDOW_MODAL);
-            stage.initOwner(saveMetaButton.getScene().getWindow());
+            stage.initOwner(mediaContainer.getScene().getWindow());
             stage.setScene(new Scene(root));
             stage.showAndWait();
             setupKeyboardFocus();
@@ -1980,9 +1930,6 @@ public class MainController implements Initializable {
             File file = imgFile.getFile();
             String path = file.getAbsolutePath();
             
-            int rating = configService.getConfig().getRatings().getOrDefault(path, 0);
-            String label = configService.getConfig().getColorLabels().getOrDefault(path, "");
-            
             String camera = "";
             try {
                 com.drew.metadata.Metadata metadata = com.drew.imaging.ImageMetadataReader.readMetadata(file);
@@ -1995,7 +1942,7 @@ public class MainController implements Initializable {
             } catch (Exception ignored) {}
 
             for (SortingRule rule : rules) {
-                if (rule.matches(path, file.getName(), rating, label, camera)) {
+                if (rule.matches(path, file.getName(), camera)) {
                     File destDir = new File(rule.getDestinationFolder());
                     if (!destDir.exists()) {
                         destDir.mkdirs();
@@ -2022,7 +1969,6 @@ public class MainController implements Initializable {
                         } else {
                             success = file.renameTo(destFile);
                             if (success) {
-                                configService.updateMetadataPath(path, destFile.getAbsolutePath());
                                 currentImages.remove(imgFile);
                             }
                         }
@@ -2055,133 +2001,6 @@ public class MainController implements Initializable {
         updateThumbnails();
     }
 
-    private void setupMetadataEditor() {
-        star1.setOnAction(e -> setRating(1));
-        star2.setOnAction(e -> setRating(2));
-        star3.setOnAction(e -> setRating(3));
-        star4.setOnAction(e -> setRating(4));
-        star5.setOnAction(e -> setRating(5));
-
-        colorRed.setOnAction(e -> setColorLabel("Red"));
-        colorYellow.setOnAction(e -> setColorLabel("Yellow"));
-        colorGreen.setOnAction(e -> setColorLabel("Green"));
-        colorBlue.setOnAction(e -> setColorLabel("Blue"));
-        colorClear.setOnAction(e -> setColorLabel(""));
-
-        saveMetaButton.setOnAction(e -> saveCustomMetadata());
-    }
-
-    private void setRating(int rating) {
-        if (currentImages == null || currentImageIndex < 0 || currentImageIndex >= currentImages.size()) {
-            return;
-        }
-        ImageFile currentImageFile = currentImages.get(currentImageIndex);
-        String path = currentImageFile.getFile().getAbsolutePath();
-        configService.getConfig().getRatings().put(path, rating);
-        configService.saveConfig();
-        updateRatingUI(rating);
-        lastAction.setText("Rated " + rating + " stars: " + currentImageFile.getFile().getName());
-        
-        String sortField = configService.getConfig().getSortField();
-        if ("Rating".equals(sortField)) {
-            sortCurrentImages();
-        }
-    }
-
-    private void setColorLabel(String label) {
-        if (currentImages == null || currentImageIndex < 0 || currentImageIndex >= currentImages.size()) {
-            return;
-        }
-        ImageFile currentImageFile = currentImages.get(currentImageIndex);
-        String path = currentImageFile.getFile().getAbsolutePath();
-        if (label.isEmpty()) {
-            configService.getConfig().getColorLabels().remove(path);
-        } else {
-            configService.getConfig().getColorLabels().put(path, label);
-        }
-        configService.saveConfig();
-        updateColorLabelUI(label);
-        lastAction.setText("Labeled '" + (label.isEmpty() ? "None" : label) + "': " + currentImageFile.getFile().getName());
-        
-        String sortField = configService.getConfig().getSortField();
-        if ("Color Label".equals(sortField)) {
-            sortCurrentImages();
-        }
-    }
-
-    private void saveCustomMetadata() {
-        if (currentImages == null || currentImageIndex < 0 || currentImageIndex >= currentImages.size()) {
-            return;
-        }
-        ImageFile currentImageFile = currentImages.get(currentImageIndex);
-        String path = currentImageFile.getFile().getAbsolutePath();
-        
-        String title = metaTitleField.getText();
-        String desc = metaDescField.getText();
-        String tags = metaTagsField.getText();
-
-        if (title == null || title.trim().isEmpty()) {
-            configService.getConfig().getTitles().remove(path);
-        } else {
-            configService.getConfig().getTitles().put(path, title.trim());
-        }
-
-        if (desc == null || desc.trim().isEmpty()) {
-            configService.getConfig().getDescriptions().remove(path);
-        } else {
-            configService.getConfig().getDescriptions().put(path, desc.trim());
-        }
-
-        if (tags == null || tags.trim().isEmpty()) {
-            configService.getConfig().getTags().remove(path);
-        } else {
-            configService.getConfig().getTags().put(path, tags.trim());
-        }
-
-        configService.saveConfig();
-        lastAction.setText("Saved metadata: " + currentImageFile.getFile().getName());
-        setupKeyboardFocus();
-    }
-
-    private void displayCustomMetadata() {
-        if (currentImages == null || currentImageIndex < 0 || currentImageIndex >= currentImages.size()) {
-            updateRatingUI(0);
-            updateColorLabelUI("");
-            metaTitleField.clear();
-            metaDescField.clear();
-            metaTagsField.clear();
-            return;
-        }
-        
-        ImageFile currentImageFile = currentImages.get(currentImageIndex);
-        String path = currentImageFile.getFile().getAbsolutePath();
-
-        int rating = configService.getConfig().getRatings().getOrDefault(path, 0);
-        updateRatingUI(rating);
-
-        String label = configService.getConfig().getColorLabels().getOrDefault(path, "");
-        updateColorLabelUI(label);
-
-        metaTitleField.setText(configService.getConfig().getTitles().getOrDefault(path, ""));
-        metaDescField.setText(configService.getConfig().getDescriptions().getOrDefault(path, ""));
-        metaTagsField.setText(configService.getConfig().getTags().getOrDefault(path, ""));
-    }
-
-    private void updateRatingUI(int rating) {
-        star1.setText(rating >= 1 ? "★" : "☆");
-        star2.setText(rating >= 2 ? "★" : "☆");
-        star3.setText(rating >= 3 ? "★" : "☆");
-        star4.setText(rating >= 4 ? "★" : "☆");
-        star5.setText(rating >= 5 ? "★" : "☆");
-    }
-
-    private void updateColorLabelUI(String label) {
-        colorRed.setStyle("-fx-background-color: #ff5555; -fx-min-width: 16px; -fx-min-height: 16px; -fx-max-width: 16px; -fx-max-height: 16px; -fx-background-radius: 8; -fx-cursor: hand;" + ("Red".equals(label) ? " -fx-border-color: white; -fx-border-width: 2; -fx-border-radius: 8;" : ""));
-        colorYellow.setStyle("-fx-background-color: #ffaa00; -fx-min-width: 16px; -fx-min-height: 16px; -fx-max-width: 16px; -fx-max-height: 16px; -fx-background-radius: 8; -fx-cursor: hand;" + ("Yellow".equals(label) ? " -fx-border-color: white; -fx-border-width: 2; -fx-border-radius: 8;" : ""));
-        colorGreen.setStyle("-fx-background-color: #55ff55; -fx-min-width: 16px; -fx-min-height: 16px; -fx-max-width: 16px; -fx-max-height: 16px; -fx-background-radius: 8; -fx-cursor: hand;" + ("Green".equals(label) ? " -fx-border-color: white; -fx-border-width: 2; -fx-border-radius: 8;" : ""));
-        colorBlue.setStyle("-fx-background-color: #5555ff; -fx-min-width: 16px; -fx-min-height: 16px; -fx-max-width: 16px; -fx-max-height: 16px; -fx-background-radius: 8; -fx-cursor: hand;" + ("Blue".equals(label) ? " -fx-border-color: white; -fx-border-width: 2; -fx-border-radius: 8;" : ""));
-    }
-
     private void sortCurrentImages() {
         if (currentImages == null || currentImages.isEmpty()) {
             return;
@@ -2207,22 +2026,6 @@ public class MainController implements Initializable {
                     break;
                 case "Size":
                     cmp = Long.compare(a.getFile().length(), b.getFile().length());
-                    break;
-                case "Rating":
-                    int ratingA = configService.getConfig().getRatings().getOrDefault(a.getFile().getAbsolutePath(), 0);
-                    int ratingB = configService.getConfig().getRatings().getOrDefault(b.getFile().getAbsolutePath(), 0);
-                    cmp = Integer.compare(ratingA, ratingB);
-                    if (cmp == 0) {
-                        cmp = a.getName().compareToIgnoreCase(b.getName());
-                    }
-                    break;
-                case "Color Label":
-                    String colorA = configService.getConfig().getColorLabels().getOrDefault(a.getFile().getAbsolutePath(), "");
-                    String colorB = configService.getConfig().getColorLabels().getOrDefault(b.getFile().getAbsolutePath(), "");
-                    cmp = colorA.compareToIgnoreCase(colorB);
-                    if (cmp == 0) {
-                        cmp = a.getName().compareToIgnoreCase(b.getName());
-                    }
                     break;
                 case "Name":
                 default:
