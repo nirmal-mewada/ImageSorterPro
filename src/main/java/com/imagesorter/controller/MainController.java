@@ -186,6 +186,7 @@ public class MainController implements Initializable {
     private  Player currentMediaPlayer;
     private boolean keyFilterRegistered = false;
     private Task<Image> currentImageLoadTask = null;
+    private String lastThumbnailStateKey = "";
 
 
 
@@ -216,6 +217,14 @@ public class MainController implements Initializable {
 
         openLastOpenedFolder();
         setupKeyboardFocus();
+
+        // Listen to width changes to dynamically recalculate and redraw thumbnails
+        thumbnailBox.widthProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal.doubleValue() > 0) {
+                updateThumbnails();
+            }
+        });
+
         updateThumbnails();
     }
 
@@ -737,14 +746,39 @@ public class MainController implements Initializable {
     }
 
     private void updateThumbnails() {
-        thumbnailBox.getChildren().clear();
-
         if (currentImages == null || currentImages.isEmpty()) {
+            thumbnailBox.getChildren().clear();
+            lastThumbnailStateKey = "";
             return;
         }
 
-        int thumbnailCount = configService.getConfig().getThumbnailCount();
-        int halfThumbnails = thumbnailCount / 2;
+        double width = thumbnailBox.getWidth();
+        int halfThumbnails;
+
+        if (width <= 0) {
+            int thumbnailCount = configService.getConfig().getThumbnailCount();
+            halfThumbnails = thumbnailCount / 2;
+        } else {
+            double thumbSize = configService.getConfig().getThumbnailSize();
+            double spacing = 5.0; // Spacing configured in main.fxml HBox spacing="5.0"
+            double selectedSize = thumbSize;
+            double otherSize = thumbSize * 0.7;
+            double margin = 60.0; // Margin to account for pin button, padding, and UI boundaries
+            double availableWidth = width - margin;
+            
+            // Equation: selectedSize + 2 * halfThumbnails * (otherSize + spacing) <= availableWidth
+            halfThumbnails = Math.max(0, (int) ((availableWidth - selectedSize) / (2.0 * (otherSize + spacing))));
+        }
+
+        // De-duplicate layout updates to prevent flickering and performance overhead
+        String stateKey = currentSourceFolder + "_" + currentImageIndex + "_" + halfThumbnails + "_" + currentImages.size();
+        if (stateKey.equals(lastThumbnailStateKey)) {
+            return;
+        }
+        lastThumbnailStateKey = stateKey;
+
+        thumbnailBox.getChildren().clear();
+
         int startIndex = Math.max(0, currentImageIndex - halfThumbnails);
         int endIndex = Math.min(currentImages.size() - 1, currentImageIndex + halfThumbnails);
 
