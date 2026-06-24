@@ -16,6 +16,8 @@
                 <MenuItem fx:id="openFolderMenuItem" mnemonicParsing="false" text="Open Folder..." accelerator="Ctrl+O" />
                 <SeparatorMenuItem />
                 <MenuItem fx:id="configureFoldersMenuItem" mnemonicParsing="false" text="Configure Folders..." accelerator="Ctrl+P" />
+                <MenuItem fx:id="configureRulesMenuItem" mnemonicParsing="false" text="Configure Rules..." accelerator="Ctrl+Shift+P" />
+                <MenuItem fx:id="applyRulesMenuItem" mnemonicParsing="false" text="Apply Rules to Folder" accelerator="Ctrl+Shift+R" />
                 <SeparatorMenuItem />
                 <MenuItem fx:id="exitMenuItem" mnemonicParsing="false" text="Exit" accelerator="Alt+F4" />
             </Menu>
@@ -145,6 +147,57 @@
                         </tooltip>
                     </ToggleButton>
                 </HBox>
+                <Separator />
+                
+                <VBox spacing="10.0" style="-fx-background-color: -color-bg-subtle; -fx-background-radius: 6; -fx-border-color: -color-border-default; -fx-border-width: 1; -fx-border-radius: 6;">
+                    <padding>
+                        <javafx.geometry.Insets top="10.0" right="10.0" bottom="10.0" left="10.0" />
+                    </padding>
+                    <Label text="Interactive Metadata" style="-fx-font-weight: bold;" />
+                    
+                    <HBox alignment="CENTER_LEFT" spacing="5.0">
+                        <Label text="Rating:" minWidth="55.0" halignment="RIGHT"/>
+                        <HBox fx:id="starRatingBox" spacing="2.0">
+                            <Button fx:id="star1" text="☆" style="-fx-padding: 2 4; -fx-background-color: transparent; -fx-font-size: 14px; -fx-text-fill: -color-warning-fg;"/>
+                            <Button fx:id="star2" text="☆" style="-fx-padding: 2 4; -fx-background-color: transparent; -fx-font-size: 14px; -fx-text-fill: -color-warning-fg;"/>
+                            <Button fx:id="star3" text="☆" style="-fx-padding: 2 4; -fx-background-color: transparent; -fx-font-size: 14px; -fx-text-fill: -color-warning-fg;"/>
+                            <Button fx:id="star4" text="☆" style="-fx-padding: 2 4; -fx-background-color: transparent; -fx-font-size: 14px; -fx-text-fill: -color-warning-fg;"/>
+                            <Button fx:id="star5" text="☆" style="-fx-padding: 2 4; -fx-background-color: transparent; -fx-font-size: 14px; -fx-text-fill: -color-warning-fg;"/>
+                        </HBox>
+                    </HBox>
+                    
+                    <HBox alignment="CENTER_LEFT" spacing="5.0">
+                        <Label text="Label:" minWidth="55.0" halignment="RIGHT"/>
+                        <HBox fx:id="colorLabelBox" spacing="5.0" alignment="CENTER_LEFT">
+                            <Button fx:id="colorRed" style="-fx-background-color: #ff5555; -fx-min-width: 16px; -fx-min-height: 16px; -fx-max-width: 16px; -fx-max-height: 16px; -fx-background-radius: 8; -fx-cursor: hand;"/>
+                            <Button fx:id="colorYellow" style="-fx-background-color: #ffaa00; -fx-min-width: 16px; -fx-min-height: 16px; -fx-max-width: 16px; -fx-max-height: 16px; -fx-background-radius: 8; -fx-cursor: hand;"/>
+                            <Button fx:id="colorGreen" style="-fx-background-color: #55ff55; -fx-min-width: 16px; -fx-min-height: 16px; -fx-max-width: 16px; -fx-max-height: 16px; -fx-background-radius: 8; -fx-cursor: hand;"/>
+                            <Button fx:id="colorBlue" style="-fx-background-color: #5555ff; -fx-min-width: 16px; -fx-min-height: 16px; -fx-max-width: 16px; -fx-max-height: 16px; -fx-background-radius: 8; -fx-cursor: hand;"/>
+                            <Button fx:id="colorClear" text="✖" style="-fx-padding: 0 4; -fx-background-color: transparent; -fx-font-size: 10px; -fx-text-fill: -color-fg-muted; -fx-cursor: hand;"/>
+                        </HBox>
+                    </HBox>
+                    
+                    <GridPane hgap="5.0" vgap="6.0">
+                        <columnConstraints>
+                            <ColumnConstraints minWidth="55.0" prefWidth="55.0" halignment="RIGHT" />
+                            <ColumnConstraints hgrow="ALWAYS" />
+                        </columnConstraints>
+                        
+                        <Label text="Title:" GridPane.rowIndex="0" GridPane.columnIndex="0" style="-fx-font-size: 11px;"/>
+                        <TextField fx:id="metaTitleField" promptText="Add title..." GridPane.rowIndex="0" GridPane.columnIndex="1" style="-fx-font-size: 11px;"/>
+                        
+                        <Label text="Desc:" GridPane.rowIndex="1" GridPane.columnIndex="0" style="-fx-font-size: 11px;"/>
+                        <TextField fx:id="metaDescField" promptText="Add description..." GridPane.rowIndex="1" GridPane.columnIndex="1" style="-fx-font-size: 11px;"/>
+                        
+                        <Label text="Tags:" GridPane.rowIndex="2" GridPane.columnIndex="0" style="-fx-font-size: 11px;"/>
+                        <TextField fx:id="metaTagsField" promptText="comma-separated..." GridPane.rowIndex="2" GridPane.columnIndex="1" style="-fx-font-size: 11px;"/>
+                    </GridPane>
+                    
+                    <HBox alignment="CENTER_RIGHT" spacing="5.0">
+                        <Button fx:id="saveMetaButton" text="Save Meta" styleClass="primary-button" style="-fx-font-size: 10px; -fx-padding: 3 8;"/>
+                    </HBox>
+                </VBox>
+                
                 <Separator />
                 <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="image-scroll-pane" hbarPolicy="NEVER">
                     <GridPane fx:id="metadataGridPane" hgap="10.0" vgap="8.0">

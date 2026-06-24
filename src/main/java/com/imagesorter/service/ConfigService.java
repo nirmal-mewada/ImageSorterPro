@@ -223,4 +223,55 @@ public class ConfigService {
 
         return true;
     }
+
+    /**
+     * Updates metadata path mapping when a file is moved/renamed.
+     */
+    public void updateMetadataPath(String oldPath, String newPath) {
+        if (config == null) return;
+        boolean changed = false;
+
+        if (config.getRatings().containsKey(oldPath)) {
+            config.getRatings().put(newPath, config.getRatings().remove(oldPath));
+            changed = true;
+        }
+        if (config.getColorLabels().containsKey(oldPath)) {
+            config.getColorLabels().put(newPath, config.getColorLabels().remove(oldPath));
+            changed = true;
+        }
+        if (config.getTitles().containsKey(oldPath)) {
+            config.getTitles().put(newPath, config.getTitles().remove(oldPath));
+            changed = true;
+        }
+        if (config.getDescriptions().containsKey(oldPath)) {
+            config.getDescriptions().put(newPath, config.getDescriptions().remove(oldPath));
+            changed = true;
+        }
+        if (config.getTags().containsKey(oldPath)) {
+            config.getTags().put(newPath, config.getTags().remove(oldPath));
+            changed = true;
+        }
+
+        if (changed) {
+            saveConfig();
+        }
+    }
+
+    /**
+     * Removes metadata when a file is deleted.
+     */
+    public void removeMetadata(String path) {
+        if (config == null) return;
+        boolean changed = false;
+
+        if (config.getRatings().remove(path) != null) changed = true;
+        if (config.getColorLabels().remove(path) != null) changed = true;
+        if (config.getTitles().remove(path) != null) changed = true;
+        if (config.getDescriptions().remove(path) != null) changed = true;
+        if (config.getTags().remove(path) != null) changed = true;
+
+        if (changed) {
+            saveConfig();
+        }
+    }
 }

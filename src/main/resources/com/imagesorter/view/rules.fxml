@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.imagesorter.controller.RulesController"
+            prefWidth="700.0" prefHeight="500.0">
+
+    <top>
+        <VBox spacing="10.0">
+            <padding>
+                <Insets bottom="10.0" left="20.0" right="20.0" top="20.0" />
+            </padding>
+            <Label text="Configure Rule-Based Sorting" styleClass="dialog-title" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+            <Label text="Define conditions to automatically copy or move matching photos/videos to specific folders."
+                   styleClass="dialog-description" wrapText="true" />
+            <Separator />
+        </VBox>
+    </top>
+
+    <center>
+        <SplitPane dividerPositions="0.45" HBox.hgrow="ALWAYS">
+            <!-- Left Panel: List of Rules -->
+            <VBox spacing="10.0">
+                <padding>
+                    <Insets bottom="15.0" left="15.0" right="15.0" top="10.0" />
+                </padding>
+                <Label text="Active Rules" style="-fx-font-weight: bold;"/>
+                <ListView fx:id="rulesListView" VBox.vgrow="ALWAYS" />
+                <HBox spacing="10.0" alignment="CENTER_RIGHT">
+                    <Button fx:id="deleteRuleButton" text="Delete Selected" styleClass="danger-button"/>
+                </HBox>
+            </VBox>
+
+            <!-- Right Panel: Rule Editor -->
+            <VBox spacing="15.0">
+                <padding>
+                    <Insets bottom="15.0" left="15.0" right="15.0" top="10.0" />
+                </padding>
+                <Label text="Rule Editor" style="-fx-font-weight: bold;"/>
+                <Separator />
+                
+                <GridPane hgap="10.0" vgap="12.0" VBox.vgrow="ALWAYS">
+                    <columnConstraints>
+                        <ColumnConstraints minWidth="80.0" prefWidth="90.0" halignment="RIGHT"/>
+                        <ColumnConstraints hgrow="ALWAYS" />
+                    </columnConstraints>
+
+                    <!-- Condition Field -->
+                    <Label text="If Field:" GridPane.rowIndex="0" GridPane.columnIndex="0" />
+                    <ComboBox fx:id="fieldComboBox" promptText="Select field..." HBox.hgrow="ALWAYS" maxWidth="Infinity" GridPane.rowIndex="0" GridPane.columnIndex="1" />
+
+                    <!-- Operator Field -->
+                    <Label text="Operator:" GridPane.rowIndex="1" GridPane.columnIndex="0" />
+                    <ComboBox fx:id="operatorComboBox" promptText="Select operator..." HBox.hgrow="ALWAYS" maxWidth="Infinity" GridPane.rowIndex="1" GridPane.columnIndex="1" />
+
+                    <!-- Value Field -->
+                    <Label text="Value:" GridPane.rowIndex="2" GridPane.columnIndex="0" />
+                    <TextField fx:id="valueTextField" promptText="Condition value..." GridPane.rowIndex="2" GridPane.columnIndex="1" />
+
+                    <!-- Action Field -->
+                    <Label text="Then Action:" GridPane.rowIndex="3" GridPane.columnIndex="0" />
+                    <ComboBox fx:id="actionComboBox" promptText="Select action..." HBox.hgrow="ALWAYS" maxWidth="Infinity" GridPane.rowIndex="3" GridPane.columnIndex="1" />
+
+                    <!-- Destination Folder Field -->
+                    <Label text="Destination:" GridPane.rowIndex="4" GridPane.columnIndex="0" />
+                    <HBox spacing="5.0" GridPane.rowIndex="4" GridPane.columnIndex="1" alignment="CENTER_LEFT">
+                        <TextField fx:id="destFolderTextField" promptText="Select destination folder..." HBox.hgrow="ALWAYS" editable="false"/>
+                        <Button fx:id="browseDestFolderButton" text="Browse..." styleClass="browse-button"/>
+                    </HBox>
+                </GridPane>
+
+                <HBox spacing="10.0" alignment="CENTER_RIGHT">
+                    <Button fx:id="addRuleButton" text="Add / Save Rule" styleClass="primary-button"/>
+                </HBox>
+            </VBox>
+        </SplitPane>
+    </center>
+
+    <bottom>
+        <HBox spacing="10.0" alignment="CENTER_RIGHT">
+            <padding>
+                <Insets bottom="20.0" left="20.0" right="20.0" top="15.0" />
+            </padding>
+            <Button fx:id="closeButton" text="Close" styleClass="secondary-button" defaultButton="true"/>
+        </HBox>
+    </bottom>
+
+</BorderPane>
