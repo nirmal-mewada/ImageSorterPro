@@ -143,6 +143,7 @@ public class ImageService {
 
         if(imageFile.isVideoFile()) {
             image = FastVideoThumbnailUtil.createVideoThumbnail(imageFile.getFile());
+            ensureExifRotation(imageFile);
         } else {
             // Load image from file
 

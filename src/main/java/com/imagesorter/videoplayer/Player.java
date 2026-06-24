@@ -101,8 +101,16 @@ public class Player extends BorderPane {
                 if(view != null){
                     view.setMediaPlayer(null);
                 }
-                player.dispose();
+                MediaPlayer playerToDispose = player;
                 player = null;
+                // Offload dispose to a background thread to prevent UI blocking/lag
+                java.util.concurrent.CompletableFuture.runAsync(() -> {
+                    try {
+                        playerToDispose.dispose();
+                    } catch (Exception e) {
+                        System.err.println("Error disposing MediaPlayer: " + e.getMessage());
+                    }
+                });
             }
             media = null;
             if (view != null) {
