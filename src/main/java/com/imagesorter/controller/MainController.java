@@ -10,6 +10,7 @@ import com.imagesorter.utils.ImageUtils;
 import com.imagesorter.model.StagedAction;
 import com.imagesorter.model.SortingRule;
 import com.imagesorter.videoplayer.Player;
+import com.imagesorter.videoplayer.FastVideoThumbnailUtil;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
@@ -184,6 +185,7 @@ public class MainController implements Initializable {
     @FXML private StackPane mediaContainer;
     private  Player currentMediaPlayer;
     private boolean keyFilterRegistered = false;
+    private Task<Image> currentImageLoadTask = null;
 
 
 
@@ -695,8 +697,12 @@ public class MainController implements Initializable {
 
         } else {
             mediaContainer.getChildren().clear();
-
             mediaContainer.getChildren().add(imageView);
+
+            // Cancel any running image load task
+            if (currentImageLoadTask != null && currentImageLoadTask.isRunning()) {
+                currentImageLoadTask.cancel();
+            }
 
             Image image = imageService.getCachedImage(currentImageFile);
 
@@ -704,13 +710,20 @@ public class MainController implements Initializable {
                 imageView.setImage(image);
             } else {
                 System.out.println("cache miss" + currentImageFile.getName());
-                try {
-                    Image img = imageService.loadImage(currentImageFile);
-                    imageView.setImage(img);
-                } catch (IOException e) {
-                    showAlert("Error", "Failed to load image: " + currentImageFile.getName());
-
-                }
+                imageView.setImage(null);
+                currentImageLoadTask = imageService.createLoadImageTask(currentImageFile);
+                currentImageLoadTask.setOnSucceeded(e -> {
+                    Image img = currentImageLoadTask.getValue();
+                    if (img != null) {
+                        imageView.setImage(img);
+                        updateMetadataPanel();
+                    }
+                });
+                currentImageLoadTask.setOnFailed(e -> {
+                    Throwable ex = currentImageLoadTask.getException();
+                    System.err.println("Failed to load image: " + currentImageFile.getName() + " - " + (ex != null ? ex.getMessage() : ""));
+                });
+                imageService.submitTask(currentImageLoadTask);
             }
         }
         updateStatusBar();
@@ -727,7 +740,6 @@ public class MainController implements Initializable {
     private void updateThumbnails() {
         thumbnailBox.getChildren().clear();
 
-
         if (currentImages == null || currentImages.isEmpty()) {
             return;
         }
@@ -739,21 +751,8 @@ public class MainController implements Initializable {
 
         for (int i = startIndex; i <= endIndex; i++) {
             ImageFile imageFile = currentImages.get(i);
-            Image image = null;
-            try {
-                image = imageService.loadThumbnail(imageFile);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
 
-            if (image == null) {
-                // If the image is not in the cache, we can show a placeholder or load it.
-                // For now, let's just skip it.
-                continue;
-            }
-
-            ImageView thumbnail = new ImageView(image);
-
+            ImageView thumbnail = new ImageView();
             thumbnail.setPreserveRatio(true);
             thumbnail.getStyleClass().add("thumbnail-image");
             double thumbBoxheight = configService.getConfig().getThumbnailSize();
@@ -777,6 +776,40 @@ public class MainController implements Initializable {
 
             thumbnailBox.getChildren().add(thumbnail);
 
+            Image cachedThumb = imageService.getCachedThumbnail(imageFile);
+            if (cachedThumb != null) {
+                thumbnail.setImage(cachedThumb);
+            } else {
+                // Set initial placeholder if video
+                if (imageFile.isVideoFile()) {
+                    try (java.io.InputStream fis = FastVideoThumbnailUtil.class.getResourceAsStream("/video.png")) {
+                        if (fis != null) {
+                            thumbnail.setImage(new Image(fis, 200, 0, true, false));
+                        }
+                    } catch (Exception e) {
+                        // ignore
+                    }
+                }
+
+                // Load thumbnail asynchronously
+                final ImageView finalThumbnail = thumbnail;
+                Task<Image> loadThumbTask = new Task<>() {
+                    @Override
+                    protected Image call() throws Exception {
+                        return imageService.loadThumbnail(imageFile);
+                    }
+                };
+                loadThumbTask.setOnSucceeded(e -> {
+                    Image thumbImg = loadThumbTask.getValue();
+                    if (thumbImg != null) {
+                        finalThumbnail.setImage(thumbImg);
+                    }
+                });
+                loadThumbTask.setOnFailed(e -> {
+                    System.err.println("Failed to load thumbnail for: " + imageFile.getName());
+                });
+                imageService.submitTask(loadThumbTask);
+            }
         }
     }
 
@@ -790,8 +823,16 @@ public class MainController implements Initializable {
         ImageFile currentImageFile = currentImages.get(currentImageIndex);
         File file = currentImageFile.getFile();
 
-        // Get metadata map from ImageUtils helper
-        Map<String, String> metadata = ImageUtils.getMetadataMap(file);
+        // Get metadata map from cache or load it
+        Map<String, String> cachedMetadata = currentImageFile.getMetadataMap();
+        Map<String, String> metadata;
+        if (cachedMetadata != null) {
+            metadata = new LinkedHashMap<>(cachedMetadata);
+        } else {
+            cachedMetadata = ImageUtils.getMetadataMap(file);
+            currentImageFile.setMetadataMap(cachedMetadata);
+            metadata = new LinkedHashMap<>(cachedMetadata);
+        }
 
         // Add dimensions if we have loaded the image/video
         if (!currentImageFile.isVideoFile()) {

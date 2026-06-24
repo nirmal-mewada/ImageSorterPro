@@ -105,7 +105,6 @@ public class Player extends BorderPane {
                 player = null;
             }
             media = null;
-            System.gc();
             if (view != null) {
                 view.fitWidthProperty().unbind();
                 view.fitHeightProperty().unbind();

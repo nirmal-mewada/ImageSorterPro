@@ -17,6 +17,7 @@ public class ImageFile {
     private String extension;
 
     private Integer exifRotate = null;
+    private volatile java.util.Map<String, String> metadataMap = null;
     
     public ImageFile(File file) {
         this.file = file;
@@ -61,6 +62,14 @@ public class ImageFile {
 
     public void setExifRotate(Integer exifRotate) {
         this.exifRotate = exifRotate;
+    }
+
+    public java.util.Map<String, String> getMetadataMap() {
+        return metadataMap;
+    }
+
+    public void setMetadataMap(java.util.Map<String, String> metadataMap) {
+        this.metadataMap = metadataMap;
     }
 
     @Override

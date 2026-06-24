@@ -211,6 +211,11 @@ public class ImageService {
         return imageCache.get(imageFile.getPath());
     }
 
+    public Image getCachedThumbnail(ImageFile imageFile) {
+        if (imageFile == null) return null;
+        return imageCache.get(imageFile.getPath() + "_thumb");
+    }
+
     public List<Image> getRecentImages(int count) {
         return imageCache.getRecentImages(count);
     }
@@ -255,7 +260,25 @@ public class ImageService {
             // Submit loading task
             java.util.concurrent.Future<?> future = executorService.submit(() -> {
                 try {
+                    // 1. Pre-cache full image
                     loadImage(imageFile);
+
+                    // 2. Pre-cache thumbnail
+                    try {
+                        loadThumbnail(imageFile);
+                    } catch (Exception e) {
+                        System.err.println("Failed to pre-cache thumbnail: " + imageFile.getName() + " - " + e.getMessage());
+                    }
+
+                    // 3. Pre-cache metadata
+                    if (imageFile.getMetadataMap() == null) {
+                        try {
+                            imageFile.setMetadataMap(ImageUtils.getMetadataMap(imageFile.getFile()));
+                        } catch (Exception e) {
+                            System.err.println("Failed to pre-cache metadata: " + imageFile.getName() + " - " + e.getMessage());
+                        }
+                    }
+
                     if(progress!=null)
                         progress.accept(executorService.getActiveCount()-1);
                 } catch (IOException e) {
@@ -274,6 +297,10 @@ public class ImageService {
      */
     public Future<Image> loadImageAsync(ImageFile imageFile) {
         return executorService.submit(() -> loadImage(imageFile));
+    }
+
+    public void submitTask(Runnable task) {
+        executorService.submit(task);
     }
 
     /**
