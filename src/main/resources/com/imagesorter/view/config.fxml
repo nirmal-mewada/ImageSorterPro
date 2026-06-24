@@ -130,6 +130,9 @@
                                     
                                     <Label text="Video Extensions:" styleClass="hotkey-label" GridPane.columnIndex="0" GridPane.rowIndex="11" />
                                     <TextField fx:id="supportedVideoExtensionsField" promptText="e.g. mp4" GridPane.columnIndex="1" GridPane.rowIndex="11" />
+                                    
+                                    <Label text="Smooth Image Loading:" styleClass="hotkey-label" GridPane.columnIndex="0" GridPane.rowIndex="12" />
+                                    <CheckBox fx:id="smoothCheckBox" GridPane.columnIndex="1" GridPane.rowIndex="12" />
                                 </GridPane>
                             </VBox>
                         </ScrollPane>

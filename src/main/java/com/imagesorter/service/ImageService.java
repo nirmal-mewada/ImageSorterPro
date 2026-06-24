@@ -148,7 +148,7 @@ public class ImageService {
 
             try (InputStream fis = Files.newInputStream(imageFile.getFile().toPath())) {
                 int size = ConfigService.getInstance().getConfig().getImageQualityPx();
-                image = new Image(fis, size, 0, true, false);
+                image = new Image(fis, size, 0, true, ConfigService.getInstance().getConfig().isSmooth());
             }
 
             ensureExifRotation(imageFile);
@@ -325,6 +325,13 @@ public class ImageService {
             imageCache.remove(currentImageFile.getPath());
             metadataCache.remove(currentImageFile.getPath());
         }
+    }
+
+    /**
+     * Clears all images from the cache
+     */
+    public void clearImageCache() {
+        imageCache.clear();
     }
 
     /**

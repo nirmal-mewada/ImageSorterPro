@@ -285,7 +285,7 @@ public class MainController implements Initializable {
     private void setupImageView() {
         // Configure image view properties
         imageView.setPreserveRatio(true);
-        imageView.setSmooth(true);
+        imageView.setSmooth(configService.getConfig().isSmooth());
         imageView.setCache(false);
         imageView.setPickOnBounds(true); // Important for mouse events
 
@@ -1266,7 +1266,16 @@ public class MainController implements Initializable {
             }
 
             ConfigController configController = loader.getController();
-            configController.setOnConfigSaved(() -> updateHotkeyList());
+            configController.setOnConfigSaved(() -> {
+                updateHotkeyList();
+                imageView.setSmooth(configService.getConfig().isSmooth());
+                imageService.clearImageCache();
+                try {
+                    displayCurrentImage();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            });
 
             configStage.showAndWait();
 

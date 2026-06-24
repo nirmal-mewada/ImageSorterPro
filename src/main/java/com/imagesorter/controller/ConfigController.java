@@ -39,6 +39,7 @@ public class ConfigController implements Initializable {
 
     // Advanced configuration fields
     @FXML private javafx.scene.control.CheckBox confirmDeleteCheckBox;
+    @FXML private javafx.scene.control.CheckBox smoothCheckBox;
     @FXML private TextField cacheSizeField;
     @FXML private TextField prevCacheField;
     @FXML private TextField nextCacheField;
@@ -283,6 +284,7 @@ public class ConfigController implements Initializable {
         trashFolderTextField.setText(config.getTrashFolderPath() != null ? config.getTrashFolderPath() : "");
 
         confirmDeleteCheckBox.setSelected(config.isConfirmDelete());
+        smoothCheckBox.setSelected(config.isSmooth());
         cacheSizeField.setText(String.valueOf(config.getCacheSize()));
         prevCacheField.setText(String.valueOf(config.getPrevCache()));
         nextCacheField.setText(String.valueOf(config.getNextCache()));
@@ -336,6 +338,7 @@ public class ConfigController implements Initializable {
 
         // Advanced settings
         config.setConfirmDelete(confirmDeleteCheckBox.isSelected());
+        config.setSmooth(smoothCheckBox.isSelected());
         config.setCacheSize(parseInteger(cacheSizeField.getText(), config.getCacheSize()));
         config.setPrevCache(parseInteger(prevCacheField.getText(), config.getPrevCache()));
         config.setNextCache(parseInteger(nextCacheField.getText(), config.getNextCache()));

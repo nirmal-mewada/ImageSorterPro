@@ -15,6 +15,7 @@ public class ConfigSettings {
     private String lastOpenedFolder;
     private String defaultFileChooseLocation;
     private boolean confirmDelete;
+    private boolean smooth = true;
     private int cacheSize;
     private int prevCache;
     private int nextCache;
@@ -46,6 +47,7 @@ public class ConfigSettings {
     public ConfigSettings() {
         this.allFolderPaths = new HashMap<>();
         this.confirmDelete = true;
+        this.smooth = true;
         this.cacheSize = 20;
         this.prevCache = 5;
         this.nextCache= 8;
@@ -115,6 +117,9 @@ public class ConfigSettings {
     
     public boolean isConfirmDelete() { return confirmDelete; }
     public void setConfirmDelete(boolean confirmDelete) { this.confirmDelete = confirmDelete; }
+    
+    public boolean isSmooth() { return smooth; }
+    public void setSmooth(boolean smooth) { this.smooth = smooth; }
     
     public int getCacheSize() { return cacheSize; }
     public void setCacheSize(int cacheSize) { 
@@ -200,6 +205,7 @@ public class ConfigSettings {
                 ", lastOpenedFolder='" + lastOpenedFolder + '\'' +
                 ", defaultFileChooseLocation='" + defaultFileChooseLocation + '\'' +
                 ", confirmDelete=" + confirmDelete +
+                ", smooth=" + smooth +
                 ", cacheSize=" + cacheSize +
                 ", prevCache=" + prevCache +
                 ", nextCache=" + nextCache +
