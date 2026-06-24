@@ -253,10 +253,31 @@ public class MainController implements Initializable {
 
                 setupFullScreenListener();
 
-                if (!keyFilterRegistered) {
-                    mediaContainer.getScene().addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyPressed);
-                    keyFilterRegistered = true;
-                }
+                 if (!keyFilterRegistered) {
+                     mediaContainer.getScene().addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyPressed);
+                     
+                     // Clear focus on text inputs when clicking outside them to restore hotkeys
+                     mediaContainer.getScene().addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
+                         Node target = (Node) event.getTarget();
+                         boolean isInteractive = false;
+                         Node node = target;
+                         while (node != null) {
+                             if (node instanceof javafx.scene.control.TextInputControl || 
+                                 node instanceof javafx.scene.control.Button || 
+                                 node instanceof javafx.scene.control.ListCell || 
+                                 node instanceof javafx.scene.control.ListView) {
+                                 isInteractive = true;
+                                 break;
+                             }
+                             node = node.getParent();
+                         }
+                         if (!isInteractive) {
+                             setupKeyboardFocus();
+                         }
+                     });
+                     
+                     keyFilterRegistered = true;
+                 }
             }
         });
     }
@@ -438,6 +459,14 @@ public class MainController implements Initializable {
 
     @FXML
     private void handleKeyPressed(KeyEvent event) {
+        Scene scene = mediaContainer.getScene();
+        if (scene != null) {
+            Node focusOwner = scene.getFocusOwner();
+            if (focusOwner instanceof javafx.scene.control.TextInputControl) {
+                return; // Let the text field handle typing and keyboard shortcuts
+            }
+        }
+
         KeyCode code = event.getCode();
         String keyText = code.getName().toLowerCase();
         boolean handled = true;
@@ -2074,6 +2103,7 @@ public class MainController implements Initializable {
 
         configService.saveConfig();
         lastAction.setText("Saved metadata: " + currentImageFile.getFile().getName());
+        setupKeyboardFocus();
     }
 
     private void displayCustomMetadata() {
