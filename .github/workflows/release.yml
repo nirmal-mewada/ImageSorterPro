@@ -164,61 +164,11 @@ jobs:
           path: dist/ImageSorterPro-macOS-aarch64.zip
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # macOS App Bundle (jpackage) — Intel (x64)
-  # ─────────────────────────────────────────────────────────────────────────────
-  build_macos_intel:
-    name: Build macOS App (Intel)
-    runs-on: macos-13
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 21 with JavaFX (BellSoft Liberica)
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'liberica'
-          java-package: 'jdk+fx'
-          architecture: x64
-          cache: 'maven'
-
-      - name: Build JAR with Maven
-        run: mvn clean package -DskipTests
-
-      - name: Prepare packaging folder
-        run: |
-          mkdir -p target/app
-          cp target/ImageSorterPro-1.0-SNAPSHOT.jar target/app/
-
-      - name: Build .app bundle with jpackage
-        run: |
-          jpackage --type app-image --dest dist \
-            --name "ImageSorterPro" \
-            --input target/app \
-            --main-jar ImageSorterPro-1.0-SNAPSHOT.jar \
-            --main-class com.imagesorter.Main \
-            --add-modules javafx.controls,javafx.fxml,javafx.swing,javafx.media \
-            --app-version "1.0.${{ github.run_number }}" \
-            --mac-package-name "ImageSorterPro" \
-            --icon src/main/resources/com/imagesorter/images/app_icon.icns
-
-      - name: Zip .app bundle for distribution
-        run: |
-          cd dist
-          zip -r "ImageSorterPro-macOS-x64.zip" "ImageSorterPro.app"
-
-      - name: Upload macOS Intel artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos-intel-app
-          path: dist/ImageSorterPro-macOS-x64.zip
-
-  # ─────────────────────────────────────────────────────────────────────────────
   # Create GitHub Release with all artifacts
   # ─────────────────────────────────────────────────────────────────────────────
   release:
     name: Create Release
-    needs: [build_windows_exe, build_windows_native, build_macos_silicon, build_macos_intel]
+    needs: [build_windows_exe, build_windows_native, build_macos_silicon]
     if: always() && needs.build_windows_exe.result == 'success'
     runs-on: ubuntu-latest
     steps:
@@ -247,7 +197,6 @@ jobs:
             | 🪟 Windows | `ImageSorterPro-1.0.*.exe` | Installer with embedded JVM (recommended) |
             | 🪟 Windows | `ImageSorterPro-native-windows-x64.exe` | GraalVM native binary (no JVM needed, fastest startup) |
             | 🍎 macOS (Apple Silicon) | `ImageSorterPro-macOS-aarch64.zip` | .app bundle for M1/M2/M3/M4 Macs |
-            | 🍎 macOS (Intel) | `ImageSorterPro-macOS-x64.zip` | .app bundle for Intel Macs |
             | 🌐 Cross-platform | `ImageSorterPro-1.0-SNAPSHOT.jar` | Portable fat JAR (requires Java 14+ with JavaFX) |
             | 🪟 Windows (Optional) | `context-menu-install.bat` | Adds "Open with ImageSorterPro" to folder right-click menu |
 
@@ -265,7 +214,6 @@ jobs:
             release-artifacts/windows-exe-installer/*
             release-artifacts/windows-native-image/*
             release-artifacts/macos-silicon-app/*
-            release-artifacts/macos-intel-app/*
             release-artifacts/cross-platform-jar/*
             release-artifacts/windows-context-menu-scripts/*
           fail_on_unmatched_files: false
