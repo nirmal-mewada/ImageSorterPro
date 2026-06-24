@@ -35,6 +35,8 @@ jobs:
         run: |
           mkdir target\app
           copy target\ImageSorterPro-1.0-SNAPSHOT.jar target\app\
+          copy scripts\windows\context-menu-install.bat target\app\
+          copy scripts\windows\context-menu-uninstall.bat target\app\
         shell: cmd
 
       - name: Build EXE Installer with jpackage
@@ -53,6 +55,12 @@ jobs:
         with:
           name: cross-platform-jar
           path: target/ImageSorterPro-1.0-SNAPSHOT.jar
+
+      - name: Upload context menu scripts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-context-menu-scripts
+          path: scripts/windows/context-menu-*.bat
 
   # ─────────────────────────────────────────────────────────────────────────────
   # Windows Native Image (GraalVM)
@@ -248,8 +256,12 @@ jobs:
             | 🍎 macOS (Apple Silicon) | `ImageSorterPro-macOS-aarch64.zip` | .app bundle for M1/M2/M3/M4 Macs |
             | 🍎 macOS (Intel) | `ImageSorterPro-macOS-x64.zip` | .app bundle for Intel Macs |
             | 🌐 Cross-platform | `ImageSorterPro-1.0-SNAPSHOT.jar` | Portable fat JAR (requires Java 14+ with JavaFX) |
+            | 🪟 Windows (Optional) | `context-menu-install.bat` | Adds "Open with ImageSorterPro" to folder right-click menu |
 
-            ### ℹ️ macOS Note
+            ### 🪟 Windows: Right-Click Context Menu
+            After installing, run `context-menu-install.bat` (bundled in the installer or download separately) to add **"Open with ImageSorterPro"** to the right-click menu for any folder in Windows Explorer. No admin rights required. Run `context-menu-uninstall.bat` to remove it.
+
+            ### 🍎 macOS Note
             After downloading and unzipping, you may need to right-click → Open to bypass Gatekeeper on first launch.
 
             ---
@@ -262,6 +274,7 @@ jobs:
             release-artifacts/macos-silicon-app/*
             release-artifacts/macos-intel-app/*
             release-artifacts/cross-platform-jar/*
+            release-artifacts/windows-context-menu-scripts/*
           fail_on_unmatched_files: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
