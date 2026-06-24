@@ -137,8 +137,6 @@ public class MainController implements Initializable {
     @FXML private RadioMenuItem sortOrderAscMenuItem;
     @FXML private RadioMenuItem sortOrderDescMenuItem;
 
-    @FXML private ComboBox<String> sortFieldComboBox;
-    @FXML private Button sortOrderDirectionButton;
 
     @FXML private HBox starRatingBox;
     @FXML private Button star1;
@@ -1414,7 +1412,7 @@ public class MainController implements Initializable {
             }
         });
 
-        // 5. Setup Sorting Menu Items and Controls
+        // 5. Setup Sorting Menu Items
         ToggleGroup sortFieldGroup = new ToggleGroup();
         sortByNameMenuItem.setToggleGroup(sortFieldGroup);
         sortByCreatedMenuItem.setToggleGroup(sortFieldGroup);
@@ -1426,16 +1424,6 @@ public class MainController implements Initializable {
         ToggleGroup sortOrderGroup = new ToggleGroup();
         sortOrderAscMenuItem.setToggleGroup(sortOrderGroup);
         sortOrderDescMenuItem.setToggleGroup(sortOrderGroup);
-
-        // Setup ComboBox items
-        sortFieldComboBox.getItems().addAll(
-            "Name",
-            "Date Created",
-            "Date Modified",
-            "File Size",
-            "Rating",
-            "Color Label"
-        );
 
         // Initialize UI from config
         syncSortingUI();
@@ -1474,31 +1462,6 @@ public class MainController implements Initializable {
             sortCurrentImages();
             lastAction.setText("Sort order changed to: " + order);
         });
-
-        // Listeners for ComboBox and Button
-        sortFieldComboBox.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
-            if (isUpdatingSortingUI || newVal == null) return;
-            String field = newVal;
-            if ("File Size".equals(field)) {
-                field = "Size";
-            }
-            config.setSortField(field);
-            configService.saveConfig();
-            syncSortingUI();
-            sortCurrentImages();
-            lastAction.setText("Sorting changed to: " + newVal);
-        });
-
-        sortOrderDirectionButton.setOnAction(e -> {
-            if (isUpdatingSortingUI) return;
-            String currentOrder = config.getSortOrder();
-            String newOrder = "Descending".equals(currentOrder) ? "Ascending" : "Descending";
-            config.setSortOrder(newOrder);
-            configService.saveConfig();
-            syncSortingUI();
-            sortCurrentImages();
-            lastAction.setText("Sort order changed to: " + newOrder);
-        });
     }
 
     private void syncSortingUI() {
@@ -1535,20 +1498,6 @@ public class MainController implements Initializable {
                 sortOrderDescMenuItem.setSelected(true);
             } else {
                 sortOrderAscMenuItem.setSelected(true);
-            }
-
-            // Sync combobox
-            if ("Size".equals(activeField)) {
-                sortFieldComboBox.getSelectionModel().select("File Size");
-            } else {
-                sortFieldComboBox.getSelectionModel().select(activeField);
-            }
-
-            // Sync order button text/icon
-            if ("Descending".equals(activeOrder)) {
-                sortOrderDirectionButton.setText("▼ DESC");
-            } else {
-                sortOrderDirectionButton.setText("▲ ASC");
             }
         } finally {
             isUpdatingSortingUI = false;

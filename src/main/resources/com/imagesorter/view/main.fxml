@@ -105,16 +105,7 @@
                 <CheckBox text="Auto-advance on move" fx:id="autoAdvanceCheckBox"
                           selected="true" styleClass="help-text" />
                 <Separator />
-                
-                <!-- Quick Sorting Controls -->
-                <VBox spacing="6.0">
-                    <Label text="File Sorting" style="-fx-font-weight: bold; -fx-font-size: 11px; -fx-text-fill: -color-fg-muted;" />
-                    <HBox spacing="6.0" alignment="CENTER_LEFT">
-                        <ComboBox fx:id="sortFieldComboBox" prefWidth="130.0" styleClass="dense" />
-                        <Button fx:id="sortOrderDirectionButton" text="▲ ASC" styleClass="dense" prefWidth="75.0" />
-                    </HBox>
-                </VBox>
-                <Separator />
+
 
                 <ListView fx:id="hotkeyListView" VBox.vgrow="ALWAYS"
                           styleClass="hotkey-list1" minHeight="200.0">
