@@ -52,6 +52,50 @@ public class Player extends BorderPane {
         player.setOnEndOfMedia(() -> player.stop());
 
     }
+
+    /**
+     * Constructor that reuses a pre-created (cached) MediaPlayer instance.
+     * This avoids the expensive Media parsing and MediaPlayer initialisation
+     * that happens when constructing from scratch.
+     *
+     * @param currentImageFile the video file being played
+     * @param cachedPlayer     a pre-created MediaPlayer (typically from VideoPlayerCache)
+     */
+    public Player(ImageFile currentImageFile, MediaPlayer cachedPlayer) {
+        this.currentImageFile = currentImageFile;
+        this.media = cachedPlayer.getMedia();
+        this.player = cachedPlayer;
+        view = new MediaView(player);
+        view.setPreserveRatio(true);
+
+        mpane = new StackPane(view);
+        mpane.setAlignment(Pos.CENTER);
+        mpane.setStyle("-fx-background-color: black;");
+
+        setRotation();
+        setCenter(mpane);
+        bar = new MediaBar(player, this);
+        setBottom(bar);
+
+        setStyle("-fx-background-color:#bfc2c7;");
+        player.setMute(false);
+        player.setOnReady(() -> {
+            setRotation();
+            player.play();
+        });
+
+        // If already READY (pre-loaded), play immediately
+        if (player.getStatus() == MediaPlayer.Status.READY ||
+            player.getStatus() == MediaPlayer.Status.PAUSED ||
+            player.getStatus() == MediaPlayer.Status.STOPPED) {
+            setRotation();
+            player.play();
+        }
+
+        player.setOnError(() -> System.err.println("Error: " + player.getError()));
+        player.setOnEndOfMedia(() -> player.stop());
+    }
+
     public void rotate90() {
         Integer exifRotate = currentImageFile.getExifRotate();
         exifRotate = (exifRotate + 90) % 360;

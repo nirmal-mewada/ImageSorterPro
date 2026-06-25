@@ -2,6 +2,7 @@ package com.imagesorter.service;
 
 import com.imagesorter.model.ConfigSettings;
 import com.imagesorter.model.ImageCache;
+import com.imagesorter.model.VideoPlayerCache;
 import com.imagesorter.model.ImageFile;
 import com.imagesorter.utils.ImageUtils;
 import com.imagesorter.videoplayer.FastVideoThumbnailUtil;
@@ -28,6 +29,7 @@ public class ImageService {
 
 
     private final ImageCache imageCache;
+    private final VideoPlayerCache videoPlayerCache;
     private final ThreadPoolExecutor executorService;
     private final ThreadPoolExecutor thumbnailExecutor;
     private final Map<String, Future<?>> pendingTasks = new ConcurrentHashMap<>();
@@ -37,6 +39,7 @@ public class ImageService {
     public ImageService() {
         ConfigService configService = ConfigService.getInstance();
         this.imageCache = new ImageCache(configService.getConfig().getCacheSize());
+        this.videoPlayerCache = new VideoPlayerCache(configService.getConfig().getCacheSize());
         this.executorService = new ThreadPoolExecutor(
             configService.getConfig().getThreadPoolSize(),
             configService.getConfig().getThreadPoolSize(),
@@ -236,8 +239,19 @@ public class ImageService {
                     // 1. Pre-cache full image (also used as thumbnail)
                     loadImage(imageFile);
 
+                    // 2. Pre-cache video MediaPlayer if enabled
+                    if (imageFile.isVideoFile() &&
+                        ConfigService.getInstance().getConfig().isPreloadVideos() &&
+                        !videoPlayerCache.contains(imageFile.getPath())) {
+                        try {
+                            videoPlayerCache.preload(imageFile.getPath());
+                        } catch (Exception ve) {
+                            System.err.println("Failed to pre-cache video player: " + imageFile.getName() + " - " + ve.getMessage());
+                        }
+                    }
+
                     if (Thread.currentThread().isInterrupted()) return null;
-                    // 2. Pre-cache metadata
+                    // 3. Pre-cache metadata
                     try {
                         getOrLoadMetadata(imageFile);
                     } catch (Exception e) {
@@ -306,11 +320,30 @@ public class ImageService {
 
 
     /**
+     * Takes a pre-cached MediaPlayer for the given video file, if available.
+     * The caller assumes ownership and must dispose the player when done.
+     *
+     * @return the pre-created MediaPlayer, or null if not cached
+     */
+    public javafx.scene.media.MediaPlayer getCachedVideoPlayer(ImageFile imageFile) {
+        if (imageFile == null) return null;
+        return videoPlayerCache.take(imageFile.getPath());
+    }
+
+    /**
+     * Clears all cached video players and disposes their resources.
+     */
+    public void clearVideoPlayerCache() {
+        videoPlayerCache.clear();
+    }
+
+    /**
      * Clears the image and metadata cache for the specified file
      */
     public void clearCache(ImageFile currentImageFile) {
         if (currentImageFile != null) {
             imageCache.remove(currentImageFile.getPath());
+            videoPlayerCache.remove(currentImageFile.getPath());
             metadataCache.remove(currentImageFile.getPath());
         }
     }
@@ -366,6 +399,7 @@ public class ImageService {
         executorService.shutdown();
         thumbnailExecutor.shutdown();
         imageCache.clear();
+        videoPlayerCache.clear();
         metadataCache.clear();
     }
 

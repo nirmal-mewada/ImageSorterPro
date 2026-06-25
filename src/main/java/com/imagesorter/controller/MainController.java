@@ -111,6 +111,8 @@ public class MainController implements Initializable {
     @FXML private RadioMenuItem interval10sMenuItem;
     @FXML private RadioMenuItem intervalCustomMenuItem;
 
+    @FXML private CheckMenuItem preloadVideosMenuItem;
+
     @FXML private MenuItem toggleFullScreenMenuItem;
 
     @FXML private Menu themeMenu;
@@ -360,6 +362,17 @@ public class MainController implements Initializable {
         toggleThumbnailBoxMenuItem.setOnAction(e -> toggleNodeVisibility(thumbnailContainer));
         helpShortcutsMenuItem.setOnAction(e -> showShortcuts());
 //        resetFocus.setOnAction(e -> setupKeyboardFocus());
+
+        // Video player preload toggle
+        preloadVideosMenuItem.setSelected(configService.getConfig().isPreloadVideos());
+        preloadVideosMenuItem.setOnAction(e -> {
+            boolean selected = preloadVideosMenuItem.isSelected();
+            configService.getConfig().setPreloadVideos(selected);
+            configService.saveConfig();
+            if (!selected) {
+                imageService.clearVideoPlayerCache();
+            }
+        });
     }
 
     private void showShortcuts() {
@@ -723,7 +736,15 @@ public class MainController implements Initializable {
             System.out.println("Video file detected: "+ currentImageFile.getName());
             Player videoPlayer;
             try {
-                videoPlayer = new Player(currentImageFile);
+                // Try to use a pre-cached MediaPlayer for instant video loading
+                javafx.scene.media.MediaPlayer cachedMp = imageService.getCachedVideoPlayer(currentImageFile);
+                if (cachedMp != null) {
+                    System.out.println("Video player cache hit: " + currentImageFile.getName());
+                    videoPlayer = new Player(currentImageFile, cachedMp);
+                } else {
+                    System.out.println("Video player cache miss: " + currentImageFile.getName());
+                    videoPlayer = new Player(currentImageFile);
+                }
                 videoPlayer.setOnMouseClicked(this::handleVideoClick);
             } catch (Exception e) {
                 throw  new RuntimeException(e);
@@ -1295,6 +1316,7 @@ public class MainController implements Initializable {
                 updateHotkeyList();
                 imageView.setSmooth(configService.getConfig().isSmooth());
                 imageService.clearImageCache();
+                imageService.clearVideoPlayerCache();
                 try {
                     displayCurrentImage();
                 } catch (Exception ex) {

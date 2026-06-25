@@ -16,6 +16,7 @@ public class ConfigSettings {
     private String defaultFileChooseLocation;
     private boolean confirmDelete;
     private boolean smooth = true;
+    private boolean preloadVideos = false;
     private boolean showLeftPane = true;
     private boolean showRightPane = true;
     private boolean showThumbnailBox = true;
@@ -116,6 +117,9 @@ public class ConfigSettings {
     
     public boolean isSmooth() { return smooth; }
     public void setSmooth(boolean smooth) { this.smooth = smooth; }
+
+    public boolean isPreloadVideos() { return preloadVideos; }
+    public void setPreloadVideos(boolean preloadVideos) { this.preloadVideos = preloadVideos; }
 
     public boolean isShowLeftPane() { return showLeftPane; }
     public void setShowLeftPane(boolean showLeftPane) { this.showLeftPane = showLeftPane; }

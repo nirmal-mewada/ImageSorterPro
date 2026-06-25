@@ -78,5 +78,14 @@
     "allDeclaredFields": true,
     "allPublicConstructors": true,
     "allPublicFields": true
+  },
+  {
+    "name": "com.imagesorter.model.VideoPlayerCache",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true,
+    "allDeclaredFields": true,
+    "allPublicConstructors": true,
+    "allPublicMethods": true,
+    "allPublicFields": true
   }
 ]
