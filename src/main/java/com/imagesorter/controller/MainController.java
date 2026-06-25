@@ -33,6 +33,9 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.shape.Polygon;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -895,29 +898,57 @@ public class MainController implements Initializable {
         for (int i = startIndex; i <= endIndex; i++) {
             ImageFile imageFile = currentImages.get(i);
 
-            ImageView thumbnail = new ImageView();
-            thumbnail.setPreserveRatio(true);
-            thumbnail.getStyleClass().add("thumbnail-image");
+            StackPane container = new StackPane();
+            container.getStyleClass().add("thumbnail-image");
             double thumbBoxheight = thumbSize;
             if (i == currentImageIndex) {
-                thumbnail.getStyleClass().add("thumbnail-selected");
+                container.getStyleClass().add("thumbnail-selected");
             } else {
                 thumbBoxheight = thumbBoxheight * 0.7;
             }
-            thumbnail.setFitHeight(thumbBoxheight);
-            thumbnail.setFitWidth(thumbBoxheight);
+
+            container.setMaxSize(thumbBoxheight, thumbBoxheight);
+            container.setMinSize(thumbBoxheight, thumbBoxheight);
+            container.setPrefSize(thumbBoxheight, thumbBoxheight);
+
+            ImageView thumbnail = new ImageView();
+            thumbnail.setPreserveRatio(true);
             
+            double imageFitSize = (i == currentImageIndex) ? (thumbBoxheight - 8.0) : (thumbBoxheight - 2.0);
+            thumbnail.setFitHeight(imageFitSize);
+            thumbnail.setFitWidth(imageFitSize);
+
+            container.getChildren().add(thumbnail);
+
+            // Add indicator badge overlay
+            if (imageFile.isVideoFile()) {
+                StackPane videoBadge = new StackPane();
+                videoBadge.getStyleClass().add("thumbnail-video-badge");
+
+                Polygon playTriangle = new Polygon(
+                    0.0, 0.0,
+                    0.0, 8.0,
+                    7.0, 4.0
+                );
+                playTriangle.setFill(javafx.scene.paint.Color.WHITE);
+
+                videoBadge.getChildren().add(playTriangle);
+                StackPane.setAlignment(videoBadge, Pos.BOTTOM_RIGHT);
+                StackPane.setMargin(videoBadge, new Insets(4));
+                container.getChildren().add(videoBadge);
+            }
+
             // Navigate to image on click
             final int targetIndex = i;
-            thumbnail.setOnMouseClicked(event -> {
+            container.setOnMouseClicked(event -> {
                 currentImageIndex = targetIndex;
                 displayCurrentImage();
                 setupKeyboardFocus();
                 event.consume();
             });
-            thumbnail.setCursor(javafx.scene.Cursor.HAND);
+            container.setCursor(javafx.scene.Cursor.HAND);
 
-            thumbnailBox.getChildren().add(thumbnail);
+            thumbnailBox.getChildren().add(container);
 
             Image cachedThumb = imageService.getCachedThumbnail(imageFile);
             if (cachedThumb != null) {
