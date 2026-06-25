@@ -1,20 +1,14 @@
 package com.imagesorter.controller;
 
 import com.imagesorter.MemUtils;
-import com.imagesorter.model.ConfigSettings;
-import com.imagesorter.model.ImageFile;
-import com.imagesorter.model.LastAction;
+import com.imagesorter.model.*;
 import com.imagesorter.service.ConfigService;
 import com.imagesorter.service.ImageService;
-import com.imagesorter.utils.ImageUtils;
-import com.imagesorter.model.StagedAction;
-import com.imagesorter.model.SortingRule;
-import com.imagesorter.videoplayer.Player;
 import com.imagesorter.videoplayer.FastVideoThumbnailUtil;
+import com.imagesorter.videoplayer.Player;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
-import javafx.util.Duration;
 import javafx.concurrent.Task;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -24,7 +18,9 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
@@ -37,21 +33,21 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.media.MediaPlayer;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
-import java.awt.Desktop;
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
 
-import static com.imagesorter.utils.ImageUtils.*;
+import static com.imagesorter.utils.ImageUtils.humanReadableByteCountSI;
+import static com.imagesorter.utils.ImageUtils.rotateExifOrientation;
 
 /**
  * Controller for the main application window
@@ -311,7 +307,7 @@ public class MainController implements Initializable {
     }
 
     private void setupHotkeyList() {
-        hotkeyListView.setCellFactory(listView -> new ListCell<String>() {
+        hotkeyListView.setCellFactory(listView -> new ListCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
@@ -334,22 +330,19 @@ public class MainController implements Initializable {
                 }
             }
         });
-        hotkeyListView.setOnMouseClicked(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent mouseEvent) {
-                Object target = mouseEvent.getTarget();
-                while (target instanceof Node && !(target instanceof ListCell)) {
-                    target = ((Node) target).getParent();
-                }
-                if (target instanceof ListCell) {
-                    String value = (String) ((ListCell<?>) target).getItem();
+        hotkeyListView.setOnMouseClicked(mouseEvent -> {
+            Object target = mouseEvent.getTarget();
+            while (target instanceof Node && !(target instanceof ListCell)) {
+                target = ((Node) target).getParent();
+            }
+            if (target instanceof ListCell) {
+                String value = (String) ((ListCell<?>) target).getItem();
 //                    System.out.println("Clicked text: " + value);
-                    if(value != null && value.trim() !="" && clickToMoveCheckBox.isSelected()){
-                        //extract char from squire brackets at start and send ot to move files method
-                        String key = value.charAt(1)+"";
-                        if(key.matches("[1-9a-z]")){
-                            moveToFolder(key,mouseEvent.isShiftDown());
-                        }
+                if(value != null && !value.trim().equals("") && clickToMoveCheckBox.isSelected()){
+                    //extract char from squire brackets at start and send ot to move files method
+                    String key = value.charAt(1)+"";
+                    if(key.matches("[1-9a-z]")){
+                        moveToFolder(key,mouseEvent.isShiftDown());
                     }
                 }
             }
@@ -411,17 +404,17 @@ public class MainController implements Initializable {
     private void applyLayoutVisibilityFromConfig() {
         ConfigSettings config = configService.getConfig();
         if (!config.isShowLeftPane()) {
-            if (horizontalSplitPane != null && horizontalSplitPane.getItems().contains(leftVBox)) {
+            if (horizontalSplitPane != null) {
                 horizontalSplitPane.getItems().remove(leftVBox);
             }
         }
         if (!config.isShowRightPane()) {
-            if (horizontalSplitPane != null && horizontalSplitPane.getItems().contains(rightVBox)) {
+            if (horizontalSplitPane != null) {
                 horizontalSplitPane.getItems().remove(rightVBox);
             }
         }
         if (!config.isShowThumbnailBox()) {
-            if (verticalSplitPane != null && verticalSplitPane.getItems().contains(thumbnailContainer)) {
+            if (verticalSplitPane != null) {
                 verticalSplitPane.getItems().remove(thumbnailContainer);
             }
         }
@@ -673,9 +666,9 @@ public class MainController implements Initializable {
         currentFileLabel.setText("Loading images...");
 
         // Load images in background thread
-        Task<List<ImageFile>> loadTask = new Task<List<ImageFile>>() {
+        Task<List<ImageFile>> loadTask = new Task<>() {
             @Override
-            protected List<ImageFile> call() throws Exception {
+            protected List<ImageFile> call() {
                 return imageService.loadImagesFromFolder(folder);
             }
 
@@ -683,7 +676,7 @@ public class MainController implements Initializable {
             protected void succeeded() {
                 Platform.runLater(() -> {
                     currentImages = getValue();
-                    if(currentImageIndex < 1 ) // keep current index in case of reload
+                    if (currentImageIndex < 1) // keep current index in case of reload
                         currentImageIndex = 0;
 
                     if (!currentImages.isEmpty()) {
@@ -811,7 +804,7 @@ public class MainController implements Initializable {
             if (oldPlayer.player != null) {
                 oldPlayer.player.setMute(true);
             }
-            Platform.runLater(() -> oldPlayer.dispose());
+            Platform.runLater(oldPlayer::dispose);
         }
 
         updateStatusBar();
@@ -951,8 +944,6 @@ public class MainController implements Initializable {
         }
 
         ImageFile currentImageFile = currentImages.get(currentImageIndex);
-        File file = currentImageFile.getFile();
-
         // Get metadata map from cache or load it
         Map<String, String> cachedMetadata = imageService.getOrLoadMetadata(currentImageFile);
         Map<String, String> metadata = new LinkedHashMap<>(cachedMetadata);
@@ -1325,23 +1316,22 @@ public class MainController implements Initializable {
 
         // Add numbers 1-9
         for (int i = 1; i <= 9; i++) {
-            String hotkey = String.valueOf(i);
-            String path = config.getFolderPath(hotkey);
-            if(path != null && !path.trim().isEmpty()){
-                String displayText = String.format("[%s] %s", hotkey, path );
-                hotkeyListView.getItems().add(displayText);
-            }
+            addHotKeyDisplay(config, String.valueOf(i), i);
 
         }
 
         // Add letters a-z
         for (char c = 'a'; c <= 'z'; c++) {
-            String hotkey = String.valueOf(c);
-            String path = config.getFolderPath(hotkey);
-            if (path != null && !path.trim().isEmpty()) {
-                String displayText = String.format("[%s] %s", hotkey, path );
-                hotkeyListView.getItems().add(displayText);
-            }
+            addHotKeyDisplay(config, String.valueOf(c), c);
+        }
+    }
+
+    private void addHotKeyDisplay(ConfigSettings config, String s, int i) {
+        String hotkey = s;
+        String path = config.getFolderPath(hotkey);
+        if(path != null && !path.trim().isEmpty()){
+            String displayText = String.format("[%s] %s", hotkey, path );
+            hotkeyListView.getItems().add(displayText);
         }
     }
 
@@ -1723,7 +1713,7 @@ public class MainController implements Initializable {
     private void clearBatch() {
         if (stagedActions.isEmpty()) return;
         
-        stagedActions.sort((a, b) -> Integer.compare(a.getOriginalIndex(), b.getOriginalIndex()));
+        stagedActions.sort(Comparator.comparingInt(StagedAction::getOriginalIndex));
         for (StagedAction action : stagedActions) {
             if (!currentImages.contains(action.getImageFile())) {
                 currentImages.add(Math.min(action.getOriginalIndex(), currentImages.size()), action.getImageFile());
@@ -2059,27 +2049,7 @@ public class MainController implements Initializable {
         String sortOrder = configService.getConfig().getSortOrder();
         boolean ascending = "Ascending".equals(sortOrder);
 
-        currentImages.sort((a, b) -> {
-            int cmp = 0;
-            switch (sortField) {
-                case "Date Created":
-                    long timeA = ImageUtils.getCreationTime(a.getFile());
-                    long timeB = ImageUtils.getCreationTime(b.getFile());
-                    cmp = Long.compare(timeA, timeB);
-                    break;
-                case "Date Modified":
-                    cmp = Long.compare(a.getFile().lastModified(), b.getFile().lastModified());
-                    break;
-                case "Size":
-                    cmp = Long.compare(a.getFile().length(), b.getFile().length());
-                    break;
-                case "Name":
-                default:
-                    cmp = a.getName().compareToIgnoreCase(b.getName());
-                    break;
-            }
-            return ascending ? cmp : -cmp;
-        });
+        currentImages.sort((a, b) -> ImageService.sortByField(a, b, sortField, ascending));
 
         if (currentFile != null) {
             currentImageIndex = currentImages.indexOf(currentFile);

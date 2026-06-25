@@ -1,5 +1,6 @@
 package com.imagesorter.service;
 
+import com.imagesorter.model.ConfigSettings;
 import com.imagesorter.model.ImageCache;
 import com.imagesorter.model.ImageFile;
 import com.imagesorter.utils.ImageUtils;
@@ -9,15 +10,15 @@ import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
 
 import java.awt.image.BufferedImage;
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.*;
+import java.util.concurrent.*;
+
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 /**
@@ -29,9 +30,9 @@ public class ImageService {
     private final ImageCache imageCache;
     private final ThreadPoolExecutor executorService;
     private final ThreadPoolExecutor thumbnailExecutor;
-    private final java.util.Map<String, java.util.concurrent.Future<?>> pendingTasks = new java.util.concurrent.ConcurrentHashMap<>();
-    private final java.util.concurrent.atomic.AtomicLong seqGenerator = new java.util.concurrent.atomic.AtomicLong(0);
-    private final java.util.Map<String, java.util.Map<String, String>> metadataCache;
+    private final Map<String, Future<?>> pendingTasks = new ConcurrentHashMap<>();
+    private final AtomicLong seqGenerator = new AtomicLong(0);
+    private final Map<String, Map<String, String>> metadataCache;
 
     public ImageService() {
         ConfigService configService = ConfigService.getInstance();
@@ -39,16 +40,16 @@ public class ImageService {
         this.executorService = new ThreadPoolExecutor(
             configService.getConfig().getThreadPoolSize(),
             configService.getConfig().getThreadPoolSize(),
-            0L, java.util.concurrent.TimeUnit.MILLISECONDS,
-            new java.util.concurrent.PriorityBlockingQueue<Runnable>()
+            0L, TimeUnit.MILLISECONDS,
+                new PriorityBlockingQueue<>()
         );
         this.thumbnailExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(4);
         
         int metaCacheSize = configService.getConfig().getMetadataCacheSize();
-        this.metadataCache = java.util.Collections.synchronizedMap(
-            new java.util.LinkedHashMap<String, java.util.Map<String, String>>(metaCacheSize + 1, 0.75f, true) {
+        this.metadataCache = Collections.synchronizedMap(
+            new LinkedHashMap<>(metaCacheSize + 1, 0.75f, true) {
                 @Override
-                protected boolean removeEldestEntry(java.util.Map.Entry<String, java.util.Map<String, String>> eldest) {
+                protected boolean removeEldestEntry(Map.Entry<String, Map<String, String>> eldest) {
                     return size() > metaCacheSize;
                 }
             }
@@ -80,35 +81,37 @@ public class ImageService {
         }
 
         // Sort according to configuration
-        com.imagesorter.model.ConfigSettings config = ConfigService.getInstance().getConfig();
+       ConfigSettings config = ConfigService.getInstance().getConfig();
         String sortField = config.getSortField();
         String sortOrder = config.getSortOrder();
         boolean ascending = "Ascending".equals(sortOrder);
 
-        imageFiles.sort((a, b) -> {
-            int cmp = 0;
-            switch (sortField) {
-                case "Date Created":
-                    long timeA = ImageUtils.getCreationTime(a.getFile());
-                    long timeB = ImageUtils.getCreationTime(b.getFile());
-                    cmp = Long.compare(timeA, timeB);
-                    break;
-                case "Date Modified":
-                    cmp = Long.compare(a.getFile().lastModified(), b.getFile().lastModified());
-                    break;
-                case "Size":
-                    cmp = Long.compare(a.getFile().length(), b.getFile().length());
-                    break;
-                case "Name":
-                default:
-                    cmp = a.getName().compareToIgnoreCase(b.getName());
-                    break;
-            }
-            return ascending ? cmp : -cmp;
-        });
+        imageFiles.sort((a, b) -> sortByField(a, b, sortField, ascending));
 
         // Reset processed count when loading new folder
         return imageFiles;
+    }
+
+    public static int sortByField(ImageFile imageFile, ImageFile imageFile1, String sortField, boolean ascending) {
+        int cmp;
+        switch (sortField) {
+            case "Date Created":
+                long timeA = ImageUtils.getCreationTime(imageFile.getFile());
+                long timeB = ImageUtils.getCreationTime(imageFile1.getFile());
+                cmp = Long.compare(timeA, timeB);
+                break;
+            case "Date Modified":
+                cmp = Long.compare(imageFile.getFile().lastModified(), imageFile1.getFile().lastModified());
+                break;
+            case "Size":
+                cmp = Long.compare(imageFile.getFile().length(), imageFile1.getFile().length());
+                break;
+            case "Name":
+            default:
+                cmp = imageFile.getName().compareToIgnoreCase(imageFile1.getName());
+                break;
+        }
+        return ascending ? cmp : -cmp;
     }
 
     /**
@@ -131,7 +134,7 @@ public class ImageService {
         } else {
             // Load image from file
 
-            try (InputStream fis = Files.newInputStream(imageFile.getFile().toPath())) {
+            try (InputStream fis = new BufferedInputStream(Files.newInputStream(imageFile.getFile().toPath()))) {
                 int size = ConfigService.getInstance().getConfig().getImageQualityPx();
                 image = new Image(fis, size, 0, true, ConfigService.getInstance().getConfig().isSmooth());
             }
@@ -227,7 +230,7 @@ public class ImageService {
             }
 
             // Submit loading task as a FutureTask with PriorityRunnable
-            java.util.concurrent.FutureTask<Void> futureTask = new java.util.concurrent.FutureTask<>(() -> {
+            FutureTask<Void> futureTask = new FutureTask<>(() -> {
                 try {
                     if (Thread.currentThread().isInterrupted()) return null;
                     // 1. Pre-cache full image (also used as thumbnail)
@@ -274,7 +277,7 @@ public class ImageService {
      * Loads image asynchronously and returns a Future
      */
     public Future<Image> loadImageAsync(ImageFile imageFile) {
-        java.util.concurrent.FutureTask<Image> futureTask = new java.util.concurrent.FutureTask<>(() -> loadImage(imageFile));
+        FutureTask<Image> futureTask = new FutureTask<>(() -> loadImage(imageFile));
         PriorityRunnable priorityRunnable = new PriorityRunnable(futureTask, 10, seqGenerator.getAndIncrement());
         executorService.execute(priorityRunnable);
         return futureTask;
@@ -322,7 +325,7 @@ public class ImageService {
     /**
      * Gets cached metadata if available
      */
-    public java.util.Map<String, String> getMetadata(ImageFile imageFile) {
+    public Map<String, String> getMetadata(ImageFile imageFile) {
         if (imageFile == null) return null;
         return metadataCache.get(imageFile.getPath());
     }
@@ -330,7 +333,7 @@ public class ImageService {
     /**
      * Puts metadata in the cache
      */
-    public void putMetadata(ImageFile imageFile, java.util.Map<String, String> metadata) {
+    public void putMetadata(ImageFile imageFile, Map<String, String> metadata) {
         if (imageFile == null || metadata == null) return;
         metadataCache.put(imageFile.getPath(), metadata);
     }
@@ -338,10 +341,10 @@ public class ImageService {
     /**
      * Gets metadata from the cache, or loads it if not present
      */
-    public java.util.Map<String, String> getOrLoadMetadata(ImageFile imageFile) {
+    public Map<String, String> getOrLoadMetadata(ImageFile imageFile) {
         if (imageFile == null) return null;
         String path = imageFile.getPath();
-        java.util.Map<String, String> cached = metadataCache.get(path);
+        Map<String, String> cached = metadataCache.get(path);
         if (cached == null) {
             cached = ImageUtils.getMetadataMap(imageFile.getFile());
             metadataCache.put(path, cached);
