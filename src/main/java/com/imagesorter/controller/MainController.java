@@ -165,6 +165,8 @@ public class MainController implements Initializable {
     private  Player currentMediaPlayer;
     private boolean keyFilterRegistered = false;
     private Task<Image> currentImageLoadTask = null;
+    private java.util.concurrent.Future<?> currentImageLoadFuture = null;
+    private Timeline preCacheTimeline = null;
     private String lastThumbnailStateKey = "";
 
 
@@ -721,13 +723,26 @@ public class MainController implements Initializable {
     }
 
     private synchronized void displayCurrentImage() throws RuntimeException {
-        // Cancel all pending pre-cache tasks immediately to avoid executor pool starvation
-//        imageService.cancelAllPendingPreCacheTasks();
+        // Cancel any running image load task and interrupt its executing thread
+        if (currentImageLoadTask != null && currentImageLoadTask.isRunning()) {
+            currentImageLoadTask.cancel();
+        }
+        if (currentImageLoadFuture != null) {
+            currentImageLoadFuture.cancel(true);
+        }
 
         if (currentImages == null || currentImageIndex < 0 || currentImageIndex >= currentImages.size()) {
             imageView.setImage(null);
             return;
         }
+
+        // Cancel out-of-window pre-cache tasks immediately to avoid thread starvation
+        imageService.cancelOutOfWindowPreCacheTasks(
+            currentImages, 
+            currentImageIndex, 
+            configService.getConfig().getPrevCache(), 
+            configService.getConfig().getNextCache()
+        );
 
         ImageFile currentImageFile = currentImages.get(currentImageIndex);
 
@@ -790,11 +805,6 @@ public class MainController implements Initializable {
                 mediaContainer.getChildren().add(imageView);
             }
 
-            // Cancel any running image load task
-            if (currentImageLoadTask != null && currentImageLoadTask.isRunning()) {
-                currentImageLoadTask.cancel();
-            }
-
             Image image = imageService.getCachedImage(currentImageFile);
 
             if (image != null) {
@@ -818,7 +828,7 @@ public class MainController implements Initializable {
                     Throwable ex = currentImageLoadTask.getException();
                     System.err.println("Failed to load image: " + currentImageFile.getName() + " - " + (ex != null ? ex.getMessage() : ""));
                 });
-                imageService.submitTask(currentImageLoadTask);
+                currentImageLoadFuture = imageService.submitTask(currentImageLoadTask);
             }
         }
 
@@ -835,9 +845,18 @@ public class MainController implements Initializable {
         updateThumbnails();
         updateMetadataPanel();
 
-        // Pre-cache surrounding images
-
-        imageService.preCacheImages(currentImages, currentImageIndex, configService.getConfig().getPrevCache(), configService.getConfig().getNextCache(), progressUpdaterCallback);
+        // Debounce pre-caching to avoid heavy thread pool task submissions during rapid scrolling
+        if (preCacheTimeline != null) {
+            preCacheTimeline.stop();
+        }
+        preCacheTimeline = new Timeline(new KeyFrame(
+            Duration.millis(150),
+            ae -> imageService.preCacheImages(currentImages, currentImageIndex, 
+                                              configService.getConfig().getPrevCache(), 
+                                              configService.getConfig().getNextCache(), 
+                                              progressUpdaterCallback)
+        ));
+        preCacheTimeline.play();
 
     }
 

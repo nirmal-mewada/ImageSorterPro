@@ -129,10 +129,14 @@ public class ImageService {
             ensureExifRotation(imageFile);
             return cachedImage;
         }
+        if (Thread.currentThread().isInterrupted()) {
+            return null;
+        }
         Image image;
 
         if(imageFile.isVideoFile()) {
             image = FastVideoThumbnailUtil.createVideoThumbnail(imageFile.getFile());
+            if (Thread.currentThread().isInterrupted()) return null;
             ensureExifRotation(imageFile);
         } else {
             // Load image from file
@@ -142,13 +146,27 @@ public class ImageService {
                 image = new Image(fis, size, 0, true, ConfigService.getInstance().getConfig().isSmooth());
             }
 
+            if (Thread.currentThread().isInterrupted()) {
+                return null;
+            }
+
             ensureExifRotation(imageFile);
+
+            if (Thread.currentThread().isInterrupted()) {
+                return null;
+            }
 
             // Apply rotation if needed
             if (imageFile.getExifRotate() != 0) {
                 BufferedImage bufferedImage = SwingFXUtils.fromFXImage(image, null);
+                if (Thread.currentThread().isInterrupted()) return null;
                 bufferedImage = ImageUtils.rotateImage(bufferedImage, imageFile.getExifRotate());
+                if (Thread.currentThread().isInterrupted()) return null;
                 image = SwingFXUtils.toFXImage(bufferedImage, null);
+            }
+
+            if (Thread.currentThread().isInterrupted()) {
+                return null;
             }
 
             // Throw exception if image loading failed
@@ -196,17 +214,15 @@ public class ImageService {
     }
 
     /**
-     * Pre-caches images around the current index for fast navigation
+     * Cancels pending pre-cache tasks that fall outside the current navigation window
      */
-    public void preCacheImages(List<ImageFile> images, int currentIndex, int prevImage, int nextImage, Consumer<Integer> progress) {
+    public void cancelOutOfWindowPreCacheTasks(List<ImageFile> images, int currentIndex, int prevImage, int nextImage) {
         if (images == null || images.isEmpty()) {
             return;
         }
-
         int start = Math.max(0, currentIndex - prevImage);
-        int end = Math.min(images.size() - 1, currentIndex + nextImage );
+        int end = Math.min(images.size() - 1, currentIndex + nextImage);
 
-        // Cancel pending pre-cache tasks that are no longer within the navigation window
         pendingTasks.forEach((path, future) -> {
             boolean inWindow = false;
             for (int i = start; i <= end; i++) {
@@ -216,10 +232,26 @@ public class ImageService {
                 }
             }
             if (!inWindow) {
-                future.cancel(true); // Cancel task immediately
+                if (future != null) {
+                    future.cancel(true); // Cancel task immediately
+                }
                 pendingTasks.remove(path);
             }
         });
+    }
+
+    /**
+     * Pre-caches images around the current index for fast navigation
+     */
+    public void preCacheImages(List<ImageFile> images, int currentIndex, int prevImage, int nextImage, Consumer<Integer> progress) {
+        if (images == null || images.isEmpty()) {
+            return;
+        }
+
+        cancelOutOfWindowPreCacheTasks(images, currentIndex, prevImage, nextImage);
+
+        int start = Math.max(0, currentIndex - prevImage);
+        int end = Math.min(images.size() - 1, currentIndex + nextImage );
 
         // Cache images in background
         for (int i = start; i <= end; i++) {
@@ -297,9 +329,11 @@ public class ImageService {
         return futureTask;
     }
 
-    public void submitTask(Runnable task) {
-        PriorityRunnable priorityRunnable = new PriorityRunnable(task, 10, seqGenerator.getAndIncrement());
+    public Future<?> submitTask(Runnable task) {
+        FutureTask<Void> futureTask = new FutureTask<>(task, null);
+        PriorityRunnable priorityRunnable = new PriorityRunnable(futureTask, 10, seqGenerator.getAndIncrement());
         executorService.execute(priorityRunnable);
+        return futureTask;
     }
 
     public void submitThumbnailTask(Runnable task) {
