@@ -55,9 +55,8 @@ public class ImageSorterApp extends Application {
             String cssPath = getClass().getResource(STYLES_CSS).toExternalForm();
             scene.getStylesheets().add(cssPath);
             if (OsTheme.isDark()) {
-                scene.getStylesheets().add(
-                    getClass().getResource("/com/imagesorter/css/styles-dark.css").toExternalForm()
-                );
+                var darkCss = getClass().getResource("/com/imagesorter/css/styles-dark.css");
+                if (darkCss != null) scene.getStylesheets().add(darkCss.toExternalForm());
             }
 
             // Configure primary stage

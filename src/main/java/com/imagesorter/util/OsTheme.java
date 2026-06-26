@@ -13,7 +13,11 @@ public final class OsTheme {
         try {
             Process p = new ProcessBuilder("defaults", "read", "-g", "AppleInterfaceStyle")
                     .start();
-            p.waitFor(1, TimeUnit.SECONDS);
+            boolean finished = p.waitFor(1, TimeUnit.SECONDS);
+            if (!finished) {
+                p.destroyForcibly();
+                return false;
+            }
             return p.exitValue() == 0;
         } catch (Exception e) {
             return false;

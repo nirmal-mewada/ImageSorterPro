@@ -206,3 +206,56 @@
 .tooltip {
     -fx-background-color: rgba(58, 58, 60, 0.95);
 }
+
+/* Hotkey List1 (alias for hotkey-list with trailing 1 styleClass) */
+.hotkey-list1 {
+    -fx-background-color: #2C2C2E;
+    -fx-border-color: #3A3A3C;
+}
+
+.hotkey-list1 .list-cell {
+    -fx-border-color: #3A3A3C;
+    -fx-text-fill: #F5F5F7;
+}
+
+.hotkey-list1 .list-cell:hover {
+    -fx-background-color: #1E3A5F;
+    -fx-text-fill: #60A5FA;
+}
+
+.hotkey-list1 .list-cell:selected {
+    -fx-background-color: #1E40AF;
+    -fx-text-fill: #93C5FD;
+}
+
+/* Danger Button */
+.danger-button {
+    -fx-text-fill: #F87171;
+    -fx-border-color: #7F1D1D;
+}
+
+.danger-button:hover {
+    -fx-background-color: #450A0A;
+}
+
+/* Tab Pane */
+.tab-pane .tab-header-area {
+    -fx-background-color: #2C2C2E;
+    -fx-border-color: #3A3A3C;
+}
+
+.tab-pane .tab-header-area .tab-header-background {
+    -fx-background-color: #2C2C2E;
+}
+
+.tab-pane .tab .tab-label {
+    -fx-text-fill: #98989D;
+}
+
+.tab-pane .tab:selected .tab-label {
+    -fx-text-fill: #3B82F6;
+}
+
+.tab-pane .tab:hover .tab-label {
+    -fx-text-fill: #F5F5F7;
+}

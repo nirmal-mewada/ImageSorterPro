@@ -98,6 +98,39 @@
     -fx-text-fill: transparent;
 }
 
+.hotkey-list1 {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E5E5EA;
+    -fx-border-width: 1px;
+    -fx-border-radius: 6px;
+}
+
+.hotkey-list1 .list-cell {
+    -fx-padding: 6 10 6 10;
+    -fx-background-color: transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-border-color: #F5F5F7;
+    -fx-text-fill: #1D1D1F;
+    -fx-font-family: "SF Mono", "Menlo", "Monaco", "Courier New", monospace;
+    -fx-font-size: 11px;
+}
+
+.hotkey-list1 .list-cell:hover {
+    -fx-background-color: #EFF6FF;
+    -fx-text-fill: #2563EB;
+}
+
+.hotkey-list1 .list-cell:selected {
+    -fx-background-color: #DBEAFE;
+    -fx-text-fill: #1D4ED8;
+    -fx-font-weight: bold;
+}
+
+.hotkey-list1 .list-cell:empty {
+    -fx-background-color: transparent;
+    -fx-text-fill: transparent;
+}
+
 .list-cell .text {
     -fx-fill: inherit;
 }
@@ -287,6 +320,26 @@
     -fx-background-color: #E5E5EA;
 }
 
+.danger-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #EF4444;
+    -fx-border-color: #FCA5A5;
+    -fx-border-width: 1px;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-padding: 7 14 7 14;
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+}
+
+.danger-button:hover {
+    -fx-background-color: #FEF2F2;
+}
+
+.danger-button:pressed {
+    -fx-background-color: #FEE2E2;
+}
+
 /* ── Config Dialog Notes ────────────────────────────────────── */
 .notes-title {
     -fx-font-weight: bold;
@@ -408,4 +461,41 @@
 .pin-button:selected {
     -fx-opacity: 1.0;
     -fx-background-color: rgba(59, 130, 246, 0.12);
+}
+
+/* ── Tab Pane ───────────────────────────────────────────────── */
+.tab-pane .tab-header-area {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E5E5EA;
+    -fx-border-width: 0 0 1 0;
+}
+
+.tab-pane .tab-header-area .tab-header-background {
+    -fx-background-color: #FFFFFF;
+}
+
+.tab-pane .tab {
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 8 12 8 12;
+}
+
+.tab-pane .tab .tab-label {
+    -fx-text-fill: #6E6E73;
+    -fx-font-size: 13px;
+}
+
+.tab-pane .tab:selected {
+    -fx-background-color: transparent;
+    -fx-border-color: #3B82F6;
+    -fx-border-width: 0 0 2 0;
+}
+
+.tab-pane .tab:selected .tab-label {
+    -fx-text-fill: #3B82F6;
+    -fx-font-weight: bold;
+}
+
+.tab-pane .tab:hover .tab-label {
+    -fx-text-fill: #1D1D1F;
 }
