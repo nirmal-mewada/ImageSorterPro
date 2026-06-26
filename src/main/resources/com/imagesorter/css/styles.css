@@ -102,13 +102,11 @@
     -fx-fill: inherit;
 }
 
-/* Image Scroll Pane */
+/* ── Image Viewer ───────────────────────────────────────────── */
 .image-scroll-pane {
     -fx-background-color: transparent;
-    -fx-border-color: #dee2e6;
-    -fx-border-width: 1px;
-    -fx-border-radius: 4px;
-    -fx-padding: 0px;
+    -fx-border-width: 0;
+    -fx-padding: 0;
 }
 
 .image-scroll-pane .viewport {
@@ -116,16 +114,16 @@
 }
 
 #imageScrollPane .viewport {
-    -fx-background-color: #fafafa;
+    -fx-background-color: #F5F5F7;
 }
 
 .main-image {
     -fx-cursor: hand;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0.5, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 12, 0.3, 0, 2);
 }
 
 .main-image:hover {
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 15, 0.5, 0, 3);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.14), 16, 0.3, 0, 3);
 }
 
 /* ── Thumbnail Bar ──────────────────────────────────────────── */
@@ -288,9 +286,9 @@
     -fx-padding: 2 0 2 0;
 }
 
-/* Separator Styles */
+/* ── Separator ──────────────────────────────────────────────── */
 .separator .line {
-    -fx-border-color: #e9ecef;
+    -fx-border-color: #E5E5EA;
     -fx-border-width: 1px 0 0 0;
 }
 
