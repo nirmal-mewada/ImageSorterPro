@@ -182,16 +182,16 @@
     -fx-background-radius: 2px;
 }
 
-/* Dialog Styles */
+/* ── Dialogs ────────────────────────────────────────────────── */
 .dialog-title {
-    -fx-font-size: 18px;
+    -fx-font-size: 15px;
     -fx-font-weight: bold;
-    -fx-text-fill: #212529;
+    -fx-text-fill: #1D1D1F;
 }
 
 .dialog-description {
-    -fx-font-size: 13px;
-    -fx-text-fill: #6c757d;
+    -fx-font-size: 12px;
+    -fx-text-fill: #6E6E73;
     -fx-wrap-text: true;
 }
 
@@ -287,16 +287,16 @@
     -fx-background-color: #E5E5EA;
 }
 
-/* Notes Section in Config Dialog */
+/* ── Config Dialog Notes ────────────────────────────────────── */
 .notes-title {
     -fx-font-weight: bold;
-    -fx-text-fill: #495057;
-    -fx-font-size: 14px;
+    -fx-text-fill: #1D1D1F;
+    -fx-font-size: 13px;
 }
 
 .notes-text {
-    -fx-text-fill: #6c757d;
-    -fx-font-size: 12px;
+    -fx-text-fill: #6E6E73;
+    -fx-font-size: 11px;
     -fx-padding: 2 0 2 0;
 }
 
@@ -348,37 +348,37 @@
     -fx-padding: 0;
 }
 
-/* Alert Dialog Styling */
+/* ── Alerts ─────────────────────────────────────────────────── */
 .alert {
-    -fx-background-color: #ffffff;
+    -fx-background-color: #FFFFFF;
 }
 
 .alert .header-panel {
-    -fx-background-color: #f8f9fa;
+    -fx-background-color: #FFFFFF;
     -fx-border-width: 0 0 1 0;
-    -fx-border-color: #e9ecef;
+    -fx-border-color: #E5E5EA;
 }
 
 .alert .header-panel .label {
-    -fx-font-size: 14px;
+    -fx-font-size: 13px;
     -fx-font-weight: bold;
-    -fx-text-fill: #495057;
+    -fx-text-fill: #1D1D1F;
 }
 
 .alert .content.label {
-    -fx-text-fill: #6c757d;
+    -fx-text-fill: #6E6E73;
     -fx-wrap-text: true;
     -fx-font-size: 13px;
 }
 
-/* Tooltip Styling */
+/* ── Tooltips ───────────────────────────────────────────────── */
 .tooltip {
-    -fx-background-color: rgba(0, 0, 0, 0.9);
-    -fx-text-fill: white;
-    -fx-background-radius: 4px;
-    -fx-font-size: 12px;
-    -fx-padding: 8 12 8 12;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 5, 0.5, 0, 1);
+    -fx-background-color: rgba(29, 29, 31, 0.92);
+    -fx-text-fill: #FFFFFF;
+    -fx-background-radius: 6px;
+    -fx-font-size: 11px;
+    -fx-padding: 7 10 7 10;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 4, 0.3, 0, 1);
 }
 
 /* ── Focus Indicators ───────────────────────────────────────── */
