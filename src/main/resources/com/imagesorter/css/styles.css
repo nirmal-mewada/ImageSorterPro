@@ -195,26 +195,30 @@
     -fx-wrap-text: true;
 }
 
-/* Configuration Dialog */
+/* ── Dialog Labels ──────────────────────────────────────────── */
 .hotkey-label {
-    -fx-font-weight: bold;
-    -fx-text-fill: #495057;
+    -fx-font-size: 12px;
+    -fx-font-weight: 500;
+    -fx-text-fill: #6E6E73;
     -fx-alignment: center-right;
 }
 
+/* ── Text Fields ────────────────────────────────────────────── */
 .text-field {
-    -fx-background-color: #ffffff;
-    -fx-border-color: #ced4da;
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E5E5EA;
     -fx-border-width: 1px;
-    -fx-border-radius: 4px;
-    -fx-padding: 8 12 8 12;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-padding: 7 10 7 10;
     -fx-font-size: 13px;
+    -fx-text-fill: #1D1D1F;
 }
 
 .text-field:focused {
-    -fx-border-color: #007bff;
-    -fx-background-color: #ffffff;
-    -fx-effect: dropshadow(gaussian, rgba(0, 123, 255, 0.25), 0, 0.5, 0, 0);
+    -fx-border-color: #3B82F6;
+    -fx-background-color: #FFFFFF;
+    -fx-effect: null;
 }
 
 /* ── Buttons ────────────────────────────────────────────────── */
@@ -302,29 +306,46 @@
     -fx-border-width: 1px 0 0 0;
 }
 
-/* Scroll Bar Styling */
-.scroll-bar:horizontal, .scroll-bar:vertical {
+/* ── Scrollbars ─────────────────────────────────────────────── */
+.scroll-bar:horizontal,
+.scroll-bar:vertical {
     -fx-background-color: transparent;
+    -fx-pref-width: 4px;
+    -fx-pref-height: 4px;
 }
 
 .scroll-bar .track {
-    -fx-background-color: #f8f9fa;
-    -fx-border-radius: 5px;
-    -fx-background-radius: 5px;
+    -fx-background-color: transparent;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
 }
 
 .scroll-bar .thumb {
-    -fx-background-color: #ced4da;
-    -fx-border-radius: 5px;
-    -fx-background-radius: 5px;
+    -fx-background-color: rgba(0, 0, 0, 0.2);
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
 }
 
 .scroll-bar .thumb:hover {
-    -fx-background-color: #adb5bd;
+    -fx-background-color: rgba(0, 0, 0, 0.35);
 }
 
 .scroll-bar .thumb:pressed {
-    -fx-background-color: #6c757d;
+    -fx-background-color: rgba(0, 0, 0, 0.5);
+}
+
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-pref-width: 0;
+    -fx-pref-height: 0;
+    -fx-padding: 0;
+}
+
+.scroll-bar .increment-arrow,
+.scroll-bar .decrement-arrow {
+    -fx-shape: "";
+    -fx-padding: 0;
 }
 
 /* Alert Dialog Styling */
@@ -360,31 +381,31 @@
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 5, 0.5, 0, 1);
 }
 
-/* Focus Indicators */
+/* ── Focus Indicators ───────────────────────────────────────── */
 .button:focused,
 .text-field:focused,
 .list-view:focused {
-    -fx-effect: dropshadow(gaussian, rgba(0, 123, 255, 0.5), 0, 0.5, 0, 0);
+    -fx-effect: null;
 }
 
-/* Pin Button Styling */
+/* ── Pin Button ─────────────────────────────────────────────── */
 .pin-button {
     -fx-background-color: transparent;
     -fx-border-color: transparent;
-    -fx-border-width: 0px;
+    -fx-border-width: 0;
     -fx-padding: 3 6 3 6;
-    -fx-font-size: 14px;
+    -fx-font-size: 13px;
     -fx-cursor: hand;
-    -fx-opacity: 0.4;
-    -fx-background-radius: 4px;
+    -fx-opacity: 0.3;
+    -fx-background-radius: 6px;
 }
 
 .pin-button:hover {
-    -fx-opacity: 0.8;
-    -fx-background-color: #e9ecef;
+    -fx-opacity: 0.7;
+    -fx-background-color: rgba(0, 0, 0, 0.06);
 }
 
 .pin-button:selected {
     -fx-opacity: 1.0;
-    -fx-background-color: #ced4da;
+    -fx-background-color: rgba(59, 130, 246, 0.12);
 }
