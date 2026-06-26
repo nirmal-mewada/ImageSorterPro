@@ -1,8 +1,8 @@
-/* Main Application Styles */
+/* ── Root & Typography ─────────────────────────────────────── */
 .root {
-    -fx-font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    -fx-font-family: "-apple-system", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
     -fx-font-size: 13px;
-    -fx-background-color: #f8f9fa;
+    -fx-background-color: #F5F5F7;
 }
 
 /* Menu Bar */
@@ -358,41 +358,6 @@
 .text-field:focused,
 .list-view:focused {
     -fx-effect: dropshadow(gaussian, rgba(0, 123, 255, 0.5), 0, 0.5, 0, 0);
-}
-
-/* Dark Mode Support (Optional) */
-@media (prefers-color-scheme: dark) {
-    .root {
-        -fx-background-color: #212529;
-        -fx-text-fill: #f8f9fa;
-    }
-
-    .text-field {
-        -fx-background-color: #495057;
-        -fx-border-color: #6c757d;
-        -fx-text-fill: #f8f9fa;
-    }
-
-    .image-scroll-pane {
-        -fx-background-color: transparent;
-        -fx-border-color: #495057;
-    }
-
-    .image-scroll-pane .viewport {
-        -fx-background-color: transparent;
-    }
-
-    #imageScrollPane .viewport {
-        -fx-background-color: #212529;
-    }
-
-    .notes-title {
-        -fx-text-fill: #e9ecef;
-    }
-
-    .help-text {
-        -fx-text-fill: #adb5bd;
-    }
 }
 
 /* Pin Button Styling */
