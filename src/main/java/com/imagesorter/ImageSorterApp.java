@@ -8,6 +8,7 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import com.imagesorter.service.ConfigService;
+import com.imagesorter.util.OsTheme;
 
 import java.io.File;
 import java.util.Objects;
@@ -53,7 +54,12 @@ public class ImageSorterApp extends Application {
             // Add CSS styling
             String cssPath = getClass().getResource(STYLES_CSS).toExternalForm();
             scene.getStylesheets().add(cssPath);
-            
+            if (OsTheme.isDark()) {
+                scene.getStylesheets().add(
+                    getClass().getResource("/com/imagesorter/css/styles-dark.css").toExternalForm()
+                );
+            }
+
             // Configure primary stage
             primaryStage.setTitle(APP_TITLE);
             primaryStage.setScene(scene);
