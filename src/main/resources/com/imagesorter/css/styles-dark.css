@@ -1,0 +1,208 @@
+/* Dark mode overrides — loaded on top of styles.css when OS is dark */
+
+.root {
+    -fx-background-color: #1C1C1E;
+}
+
+/* Menu Bar */
+.menu-bar {
+    -fx-background-color: #2C2C2E;
+    -fx-border-color: #3A3A3C;
+}
+
+.menu-bar .menu .label,
+.menu-item .label {
+    -fx-text-fill: #F5F5F7;
+}
+
+.menu-bar .menu:hover {
+    -fx-background-color: #3A3A3C;
+}
+
+.menu-bar .menu:hover .label,
+.menu-bar .menu:showing .label,
+.menu-item:hover .label {
+    -fx-text-fill: #F5F5F7;
+}
+
+.menu-item:hover {
+    -fx-background-color: #1E3A5F;
+}
+
+/* Section Titles & Metadata */
+.section-title {
+    -fx-text-fill: #F5F5F7;
+}
+
+.metadata-key {
+    -fx-text-fill: #98989D;
+}
+
+.metadata-value {
+    -fx-text-fill: #F5F5F7;
+}
+
+.help-text {
+    -fx-text-fill: #98989D;
+}
+
+/* Hotkey List Panel */
+.hotkey-list {
+    -fx-background-color: #2C2C2E;
+    -fx-border-color: #3A3A3C;
+}
+
+.hotkey-list .list-cell {
+    -fx-border-color: #3A3A3C;
+    -fx-text-fill: #F5F5F7;
+}
+
+.hotkey-list .list-cell:hover {
+    -fx-background-color: #1E3A5F;
+    -fx-text-fill: #60A5FA;
+}
+
+.hotkey-list .list-cell:selected {
+    -fx-background-color: #1E40AF;
+    -fx-text-fill: #93C5FD;
+}
+
+/* Thumbnail Bar */
+.thumbnail-bar {
+    -fx-background-color: #2C2C2E;
+    -fx-border-color: #3A3A3C;
+}
+
+/* Status Bar */
+.status-label {
+    -fx-text-fill: #98989D;
+}
+
+/* Image Viewer */
+#imageScrollPane .viewport {
+    -fx-background-color: #1C1C1E;
+}
+
+/* Separator */
+.separator .line {
+    -fx-border-color: #3A3A3C;
+}
+
+/* Buttons */
+.button {
+    -fx-text-fill: #F5F5F7;
+    -fx-border-color: #3A3A3C;
+}
+
+.button:hover {
+    -fx-background-color: #3A3A3C;
+}
+
+.button:pressed {
+    -fx-background-color: #48484A;
+}
+
+.secondary-button {
+    -fx-text-fill: #F5F5F7;
+    -fx-border-color: #3A3A3C;
+}
+
+.secondary-button:hover {
+    -fx-background-color: #3A3A3C;
+}
+
+.browse-button {
+    -fx-text-fill: #F5F5F7;
+    -fx-border-color: #3A3A3C;
+}
+
+.browse-button:hover {
+    -fx-background-color: #3A3A3C;
+}
+
+.primary-button:hover {
+    -fx-background-color: #60A5FA;
+}
+
+.primary-button:pressed {
+    -fx-background-color: #3B82F6;
+}
+
+/* Text Fields */
+.text-field {
+    -fx-background-color: #2C2C2E;
+    -fx-border-color: #3A3A3C;
+    -fx-text-fill: #F5F5F7;
+}
+
+.text-field:focused {
+    -fx-border-color: #3B82F6;
+    -fx-background-color: #2C2C2E;
+}
+
+.hotkey-label {
+    -fx-text-fill: #98989D;
+}
+
+/* Scrollbars */
+.scroll-bar .thumb {
+    -fx-background-color: rgba(255, 255, 255, 0.2);
+}
+
+.scroll-bar .thumb:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.35);
+}
+
+.scroll-bar .thumb:pressed {
+    -fx-background-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Pin Button */
+.pin-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Progress Bar */
+.progress-bar .track {
+    -fx-background-color: #3A3A3C;
+}
+
+/* Dialogs */
+.dialog-title {
+    -fx-text-fill: #F5F5F7;
+}
+
+.dialog-description {
+    -fx-text-fill: #98989D;
+}
+
+.notes-title {
+    -fx-text-fill: #F5F5F7;
+}
+
+.notes-text {
+    -fx-text-fill: #98989D;
+}
+
+/* Alerts */
+.alert {
+    -fx-background-color: #2C2C2E;
+}
+
+.alert .header-panel {
+    -fx-background-color: #2C2C2E;
+    -fx-border-color: #3A3A3C;
+}
+
+.alert .header-panel .label {
+    -fx-text-fill: #F5F5F7;
+}
+
+.alert .content.label {
+    -fx-text-fill: #98989D;
+}
+
+/* Tooltips */
+.tooltip {
+    -fx-background-color: rgba(58, 58, 60, 0.95);
+}
