@@ -217,60 +217,70 @@
     -fx-effect: dropshadow(gaussian, rgba(0, 123, 255, 0.25), 0, 0.5, 0, 0);
 }
 
-/* Button Styles */
+/* ── Buttons ────────────────────────────────────────────────── */
 .button {
-    -fx-background-color: #6c757d;
-    -fx-text-fill: white;
-    -fx-border-radius: 4px;
-    -fx-background-radius: 4px;
-    -fx-padding: 8 16 8 16;
+    -fx-background-color: transparent;
+    -fx-text-fill: #1D1D1F;
+    -fx-border-color: #E5E5EA;
+    -fx-border-width: 1px;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-padding: 7 14 7 14;
     -fx-font-size: 13px;
     -fx-cursor: hand;
 }
 
 .button:hover {
-    -fx-background-color: #5a6268;
+    -fx-background-color: #F5F5F7;
 }
 
 .button:pressed {
-    -fx-background-color: #545b62;
+    -fx-background-color: #E5E5EA;
 }
 
 .primary-button {
-    -fx-background-color: #007bff;
+    -fx-background-color: #3B82F6;
+    -fx-text-fill: #FFFFFF;
+    -fx-border-width: 0;
 }
 
 .primary-button:hover {
-    -fx-background-color: #0056b3;
+    -fx-background-color: #2563EB;
 }
 
 .primary-button:pressed {
-    -fx-background-color: #004085;
+    -fx-background-color: #1D4ED8;
 }
 
 .secondary-button {
-    -fx-background-color: #6c757d;
+    -fx-background-color: transparent;
+    -fx-text-fill: #1D1D1F;
+    -fx-border-color: #E5E5EA;
+    -fx-border-width: 1px;
 }
 
 .secondary-button:hover {
-    -fx-background-color: #5a6268;
+    -fx-background-color: #F5F5F7;
 }
 
 .secondary-button:pressed {
-    -fx-background-color: #545b62;
+    -fx-background-color: #E5E5EA;
 }
 
 .browse-button {
-    -fx-background-color: #28a745;
-    -fx-min-width: 80px;
+    -fx-background-color: transparent;
+    -fx-text-fill: #1D1D1F;
+    -fx-border-color: #E5E5EA;
+    -fx-border-width: 1px;
+    -fx-min-width: 70px;
 }
 
 .browse-button:hover {
-    -fx-background-color: #218838;
+    -fx-background-color: #F5F5F7;
 }
 
 .browse-button:pressed {
-    -fx-background-color: #1e7e34;
+    -fx-background-color: #E5E5EA;
 }
 
 /* Notes Section in Config Dialog */
