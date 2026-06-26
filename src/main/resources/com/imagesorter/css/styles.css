@@ -39,57 +39,57 @@
     -fx-text-fill: #1D1D1F;
 }
 
-/* Section Titles */
+/* ── Section Titles & Metadata ─────────────────────────────── */
 .section-title {
-    -fx-font-size: 16px;
+    -fx-font-size: 13px;
     -fx-font-weight: bold;
-    -fx-text-fill: #495057;
-    -fx-padding: 0 0 10 0;
+    -fx-text-fill: #1D1D1F;
+    -fx-padding: 0 0 8 0;
 }
 
-/* Metadata Panel Styles */
 .metadata-key {
-    -fx-font-weight: bold;
-    -fx-text-fill: #495057;
+    -fx-font-size: 12px;
+    -fx-font-weight: 500;
+    -fx-text-fill: #6E6E73;
 }
 
 .metadata-value {
-    -fx-text-fill: #212529;
+    -fx-font-size: 12px;
+    -fx-text-fill: #1D1D1F;
 }
 
-/* Help Text */
 .help-text {
     -fx-font-size: 11px;
-    -fx-text-fill: #6c757d;
+    -fx-text-fill: #6E6E73;
     -fx-padding: 2 0 2 0;
 }
 
-/* Hotkey List */
+/* ── Hotkey List Panel ──────────────────────────────────────── */
 .hotkey-list {
-    -fx-background-color: #ffffff;
-    -fx-border-color: #dee2e6;
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E5E5EA;
     -fx-border-width: 1px;
-    -fx-border-radius: 4px;
+    -fx-border-radius: 6px;
 }
 
 .hotkey-list .list-cell {
-    -fx-padding: 8 12 8 12;
+    -fx-padding: 6 10 6 10;
     -fx-background-color: transparent;
     -fx-border-width: 0 0 1 0;
-    -fx-border-color: #f8f9fa;
-    -fx-text-fill: #2c3e50;
-    -fx-font-family: "Consolas", "Monaco", "Courier New", monospace;
+    -fx-border-color: #F5F5F7;
+    -fx-text-fill: #1D1D1F;
+    -fx-font-family: "SF Mono", "Menlo", "Monaco", "Courier New", monospace;
     -fx-font-size: 11px;
 }
 
 .hotkey-list .list-cell:hover {
-    -fx-background-color: #f8f9fa;
-    -fx-text-fill: #1976d2;
+    -fx-background-color: #EFF6FF;
+    -fx-text-fill: #2563EB;
 }
 
 .hotkey-list .list-cell:selected {
-    -fx-background-color: #e3f2fd;
-    -fx-text-fill: #1976d2;
+    -fx-background-color: #DBEAFE;
+    -fx-text-fill: #1D4ED8;
     -fx-font-weight: bold;
 }
 
@@ -98,7 +98,6 @@
     -fx-text-fill: transparent;
 }
 
-/* Ensure text is always visible */
 .list-cell .text {
     -fx-fill: inherit;
 }
