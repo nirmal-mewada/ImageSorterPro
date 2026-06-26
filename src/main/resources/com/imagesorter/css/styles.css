@@ -128,34 +128,32 @@
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 15, 0.5, 0, 3);
 }
 
-/* Thumbnail Bar */
+/* ── Thumbnail Bar ──────────────────────────────────────────── */
 .thumbnail-bar {
-    -fx-padding: 2px 5px;
-    -fx-background-color: #f1f1f1;
-    -fx-border-color: #ccc;
-    -fx-border-width: 1 0 1 0;
+    -fx-padding: 4px 8px;
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E5E5EA;
+    -fx-border-width: 0 0 1 0;
 }
 
 .thumbnail-image {
-    -fx-border-color: #ccc;
-    -fx-border-width: 1px;
-    -fx-border-radius: 3px;
-    -fx-background-radius: 3px;
-    -fx-background-color: #ffffff;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 0);
+    -fx-border-width: 0;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-background-color: transparent;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 6, 0.3, 0, 1);
 }
 
-
 .thumbnail-selected {
-    -fx-border-color: #007bff;
-    -fx-border-width: 4px;
-    -fx-border-radius: 4px;
-    -fx-background-radius: 4px;
-    -fx-effect: dropshadow(three-pass-box, rgba(0, 123, 255, 0.4), 12, 0.3, 0, 2);
+    -fx-border-color: #3B82F6;
+    -fx-border-width: 2px;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-effect: dropshadow(gaussian, rgba(59,130,246,0.25), 8, 0.3, 0, 1);
 }
 
 .thumbnail-video-badge {
-    -fx-background-color: rgba(0, 0, 0, 0.65);
+    -fx-background-color: rgba(0, 0, 0, 0.6);
     -fx-background-radius: 3px;
     -fx-padding: 3px 4px 3px 5px;
     -fx-max-width: 16px;
@@ -165,24 +163,24 @@
 }
 
 
-/* Status Bar */
+/* ── Status Bar ─────────────────────────────────────────────── */
 .status-label {
-    -fx-font-size: 12px;
-    -fx-text-fill: #495057;
-    -fx-padding: 2 8 2 8;
+    -fx-font-size: 11px;
+    -fx-text-fill: #6E6E73;
+    -fx-padding: 2 6 2 6;
 }
 
 .progress-bar {
-    -fx-accent: #007bff;
+    -fx-accent: #3B82F6;
 }
 
 .progress-bar .bar {
-    -fx-background-color: #007bff;
+    -fx-background-color: #3B82F6;
     -fx-background-radius: 2px;
 }
 
 .progress-bar .track {
-    -fx-background-color: #e9ecef;
+    -fx-background-color: #E5E5EA;
     -fx-background-radius: 2px;
 }
 
