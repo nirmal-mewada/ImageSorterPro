@@ -28,6 +28,7 @@ public class ImageSorterApp extends Application {
     private static final String APP_TITLE = "Image Sorter by Nirmal";
     private static final String MAIN_FXML = "/com/imagesorter/view/main.fxml";
     private static final String STYLES_CSS = "/com/imagesorter/css/styles.css";
+    private static final String STRUCTURE_CSS = "/com/imagesorter/css/styles-structure.css";
     
     @Override
     public void start(Stage primaryStage) {
@@ -51,12 +52,19 @@ public class ImageSorterApp extends Application {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(MAIN_FXML));
             Parent root = loader.load();
 
-            // Create scene with base CSS pre-loaded; applyAppearance() will remove it if an AtlantaFX theme is active
             Scene scene = new Scene(root, 1200, 800);
+
+            // styles-structure.css is ALWAYS loaded — pin button sizing, etc. that must
+            // survive when styles.css is unloaded for AtlantaFX themes.
+            var structureCssUrl = getClass().getResource(STRUCTURE_CSS);
+            if (structureCssUrl != null) scene.getStylesheets().add(structureCssUrl.toExternalForm());
+
+            // styles.css is loaded here as a starting point; applyAppearance() removes it
+            // when an AtlantaFX theme is active (structure CSS stays).
             String cssPath = getClass().getResource(STYLES_CSS).toExternalForm();
             scene.getStylesheets().add(cssPath);
 
-            // Apply saved appearance — sets UA stylesheet and manages custom CSS files
+            // Apply saved appearance — sets UA stylesheet and manages styles.css / styles-dark.css
             applyAppearance(configService.getConfig().getTheme(), scene);
 
             // Configure primary stage
@@ -109,7 +117,8 @@ public class ImageSorterApp extends Application {
             // Custom macOS mode
             Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
             if (lightCssPath != null && !scene.getStylesheets().contains(lightCssPath)) {
-                scene.getStylesheets().add(0, lightCssPath);
+                // Append after structure CSS (do not insert at 0 — structure CSS must remain first)
+                scene.getStylesheets().add(lightCssPath);
             }
             boolean wantDark = "Dark".equals(appearance) || ("System".equals(appearance) && OsTheme.isDark());
             if (darkCssPath != null) {

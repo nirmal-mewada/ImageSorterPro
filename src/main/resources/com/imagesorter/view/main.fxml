@@ -222,7 +222,6 @@
 
                 <ProgressBar fx:id="progressBar" progress="0.0"
                              prefWidth="150.0" visible="false" />
-                <Separator orientation="VERTICAL" />
 
                 <Label fx:id="currentFolderLabel" text="N/A"
                        styleClass="status-label" />

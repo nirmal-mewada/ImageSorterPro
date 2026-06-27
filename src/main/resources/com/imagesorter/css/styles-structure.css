@@ -1,0 +1,27 @@
+/* Structural rules — always loaded, regardless of active theme.
+   Use theme-neutral values (rgba, transparent) so this file adapts to any AtlantaFX theme. */
+
+/* ── Pin Button ──────────────────────────────────────────────── */
+.pin-button {
+    -fx-font-size: 11px;
+    -fx-padding: 2px 4px;
+    -fx-opacity: 0.4;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-border-width: 1px;
+    -fx-background-radius: 5px;
+    -fx-border-radius: 5px;
+    -fx-cursor: hand;
+}
+
+.pin-button:hover {
+    -fx-opacity: 0.75;
+    -fx-background-color: rgba(128, 128, 128, 0.15);
+    -fx-border-color: transparent;
+}
+
+.pin-button:selected {
+    -fx-opacity: 1.0;
+    -fx-background-color: rgba(59, 130, 246, 0.15);
+    -fx-border-color: rgba(59, 130, 246, 0.6);
+}
