@@ -22,6 +22,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.OverrunStyle;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -29,6 +30,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -85,6 +87,10 @@ public class MainController implements Initializable {
     @FXML private SplitPane horizontalSplitPane;
     @FXML private SplitPane verticalSplitPane;
     @FXML private ScrollPane imageScrollPane;
+    @FXML private VBox centerVBox;
+    @FXML private ToggleButton galleryViewButton;
+    @FXML private ScrollPane galleryScrollPane;
+    @FXML private FlowPane galleryPane;
 
     @FXML private Label currentFileLabel;
     @FXML private Label progressLabel;
@@ -154,6 +160,7 @@ public class MainController implements Initializable {
     private boolean wasRightVisibleBeforeFS = true;
     private boolean wasThumbnailVisibleBeforeFS = true;
     private boolean isUpdatingSortingUI = false;
+    private boolean galleryViewActive = false;
 
     // Services
     private ImageService imageService;
@@ -848,6 +855,15 @@ public class MainController implements Initializable {
         updateThumbnails();
         updateMetadataPanel();
 
+        if (galleryViewActive) {
+            int imageCount = currentImages != null ? currentImages.size() : 0;
+            if (galleryPane.getChildren().size() != imageCount) {
+                populateGallery(); // folder changed — full rebuild
+            } else {
+                updateGallerySelection(); // navigation only — just move the highlight
+            }
+        }
+
         // Debounce pre-caching to avoid heavy thread pool task submissions during rapid scrolling
         if (preCacheTimeline != null) {
             preCacheTimeline.stop();
@@ -863,7 +879,127 @@ public class MainController implements Initializable {
 
     }
 
+    // ── Gallery View ────────────────────────────────────────────────────────────
+
+    private void toggleGalleryView() {
+        galleryViewActive = galleryViewButton.isSelected();
+        if (galleryViewActive) {
+            verticalSplitPane.setVisible(false);
+            verticalSplitPane.setManaged(false);
+            galleryScrollPane.setVisible(true);
+            galleryScrollPane.setManaged(true);
+            populateGallery();
+        } else {
+            galleryScrollPane.setVisible(false);
+            galleryScrollPane.setManaged(false);
+            verticalSplitPane.setVisible(true);
+            verticalSplitPane.setManaged(true);
+            lastThumbnailStateKey = ""; // force strip rebuild
+            updateThumbnails();
+        }
+    }
+
+    private void populateGallery() {
+        galleryPane.getChildren().clear();
+        if (currentImages == null || currentImages.isEmpty()) return;
+
+        final int THUMB_SIZE = 120;
+
+        for (int i = 0; i < currentImages.size(); i++) {
+            final int index = i;
+            ImageFile imageFile = currentImages.get(i);
+
+            VBox cell = new VBox(4);
+            cell.setAlignment(Pos.TOP_CENTER);
+            cell.setPrefWidth(THUMB_SIZE + 20);
+            cell.setMaxWidth(THUMB_SIZE + 20);
+            cell.getStyleClass().add("gallery-cell");
+            if (i == currentImageIndex) {
+                cell.getStyleClass().add("gallery-cell-selected");
+            }
+
+            StackPane imgBox = new StackPane();
+            imgBox.getStyleClass().add("gallery-thumb");
+            imgBox.setPrefSize(THUMB_SIZE, THUMB_SIZE);
+            imgBox.setMinSize(THUMB_SIZE, THUMB_SIZE);
+            imgBox.setMaxSize(THUMB_SIZE, THUMB_SIZE);
+
+            ImageView iv = new ImageView();
+            iv.setPreserveRatio(true);
+            iv.setFitWidth(THUMB_SIZE - 4);
+            iv.setFitHeight(THUMB_SIZE - 4);
+            imgBox.getChildren().add(iv);
+
+            Label nameLabel = new Label(imageFile.getName());
+            nameLabel.getStyleClass().add("gallery-label");
+            nameLabel.setMaxWidth(THUMB_SIZE + 16);
+            nameLabel.setTextOverrun(OverrunStyle.CENTER_ELLIPSIS);
+
+            cell.getChildren().addAll(imgBox, nameLabel);
+
+            cell.setOnMouseClicked(event -> {
+                currentImageIndex = index;
+                galleryViewButton.setSelected(false);
+                toggleGalleryView();
+                try { displayCurrentImage(); } catch (Exception ex) { ex.printStackTrace(); }
+                setupKeyboardFocus();
+                event.consume();
+            });
+            cell.setCursor(javafx.scene.Cursor.HAND);
+
+            galleryPane.getChildren().add(cell);
+
+            Image cached = imageService.getCachedThumbnail(imageFile);
+            if (cached != null) {
+                iv.setImage(cached);
+            } else {
+                imageService.submitThumbnailTask(() -> {
+                    try {
+                        Image thumb = imageService.loadThumbnail(imageFile);
+                        Platform.runLater(() -> iv.setImage(thumb));
+                    } catch (Exception ex) {
+                        System.err.println("Gallery: failed to load thumbnail for " + imageFile.getName());
+                    }
+                });
+            }
+        }
+
+        Platform.runLater(this::scrollGalleryToSelected);
+    }
+
+    private void updateGallerySelection() {
+        java.util.List<javafx.scene.Node> cells = galleryPane.getChildren();
+        for (int i = 0; i < cells.size(); i++) {
+            javafx.scene.Node cell = cells.get(i);
+            if (i == currentImageIndex) {
+                if (!cell.getStyleClass().contains("gallery-cell-selected")) {
+                    cell.getStyleClass().add("gallery-cell-selected");
+                }
+            } else {
+                cell.getStyleClass().remove("gallery-cell-selected");
+            }
+        }
+        scrollGalleryToSelected();
+    }
+
+    private void scrollGalleryToSelected() {
+        if (currentImageIndex < 0 || currentImageIndex >= galleryPane.getChildren().size()) return;
+        javafx.scene.Node selectedCell = galleryPane.getChildren().get(currentImageIndex);
+        galleryPane.applyCss();
+        galleryPane.layout();
+        double cellY = selectedCell.getBoundsInParent().getMinY();
+        double totalH = galleryPane.getBoundsInParent().getHeight();
+        double viewH = galleryScrollPane.getViewportBounds().getHeight();
+        if (totalH > viewH) {
+            double target = Math.max(0, Math.min(1.0, (cellY - viewH / 2.0) / (totalH - viewH)));
+            galleryScrollPane.setVvalue(target);
+        }
+    }
+
+    // ── Thumbnail Strip ──────────────────────────────────────────────────────────
+
     private void updateThumbnails() {
+        if (galleryViewActive) return; // gallery owns the display; skip strip updates
         if (currentImages == null || currentImages.isEmpty()) {
             thumbnailBox.getChildren().clear();
             lastThumbnailStateKey = "";
@@ -1617,7 +1753,10 @@ public class MainController implements Initializable {
             }
         });
 
-        // 5. Setup Sorting Menu Items
+        // 5. Gallery view toggle
+        galleryViewButton.setOnAction(e -> toggleGalleryView());
+
+        // 6. Setup Sorting Menu Items
         ToggleGroup sortFieldGroup = new ToggleGroup();
         sortByNameMenuItem.setToggleGroup(sortFieldGroup);
         sortByCreatedMenuItem.setToggleGroup(sortFieldGroup);

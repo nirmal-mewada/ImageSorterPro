@@ -117,7 +117,20 @@
             </VBox>
 
             <!-- Center Panel - Image Viewer -->
-            <VBox spacing="2.0">
+            <VBox fx:id="centerVBox" spacing="0">
+                <!-- Toolbar: always visible in both single-image and gallery view -->
+                <HBox styleClass="center-toolbar" alignment="CENTER_RIGHT" spacing="4.0">
+                    <padding>
+                        <javafx.geometry.Insets top="3.0" right="8.0" bottom="3.0" left="8.0" />
+                    </padding>
+                    <ToggleButton fx:id="galleryViewButton" styleClass="view-toggle-button" text="⊞" selected="false">
+                        <tooltip>
+                            <Tooltip text="Gallery View" />
+                        </tooltip>
+                    </ToggleButton>
+                </HBox>
+
+                <!-- Single-image view: resizable thumbnail strip + image viewer -->
                 <SplitPane fx:id="verticalSplitPane" dividerPositions="0.1" orientation="VERTICAL" VBox.vgrow="ALWAYS">
                     <items>
                         <HBox fx:id="thumbnailContainer" alignment="CENTER_LEFT" styleClass="thumbnail-bar" spacing="10.0">
@@ -138,15 +151,24 @@
                                     fitToWidth="true" fitToHeight="true"
                                     pannable="false" styleClass="image-scroll-pane"
                                     hbarPolicy="NEVER" vbarPolicy="NEVER">
-
-                           <StackPane fx:id="mediaContainer">
+                            <StackPane fx:id="mediaContainer">
                                 <ImageView fx:id="imageView" preserveRatio="true" smooth="true"
                                            pickOnBounds="true" styleClass="main-image"/>
-
                             </StackPane>
                         </ScrollPane>
                     </items>
                 </SplitPane>
+
+                <!-- Gallery view: scrollable grid of all images; replaces SplitPane when active -->
+                <ScrollPane fx:id="galleryScrollPane" VBox.vgrow="ALWAYS" fitToWidth="true"
+                            visible="false" managed="false" hbarPolicy="NEVER"
+                            styleClass="gallery-scroll-pane">
+                    <FlowPane fx:id="galleryPane" hgap="8.0" vgap="8.0">
+                        <padding>
+                            <javafx.geometry.Insets top="12.0" right="12.0" bottom="12.0" left="12.0" />
+                        </padding>
+                    </FlowPane>
+                </ScrollPane>
             </VBox>
 
             <!-- Right Panel - Metadata -->

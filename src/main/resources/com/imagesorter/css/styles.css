@@ -501,3 +501,74 @@
 .tab-pane .tab:hover .tab-label {
     -fx-text-fill: #1D1D1F;
 }
+
+/* ── Gallery View ────────────────────────────────────────────── */
+.center-toolbar {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E5E5EA;
+    -fx-border-width: 0 0 1 0;
+}
+
+.view-toggle-button {
+    -fx-font-size: 13px;
+    -fx-padding: 3px 9px;
+    -fx-cursor: hand;
+    -fx-background-color: transparent;
+    -fx-border-color: #E5E5EA;
+    -fx-border-width: 1px;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-text-fill: #1D1D1F;
+}
+
+.view-toggle-button:hover {
+    -fx-background-color: #F5F5F7;
+}
+
+.view-toggle-button:selected {
+    -fx-background-color: #EFF6FF;
+    -fx-border-color: #3B82F6;
+    -fx-text-fill: #3B82F6;
+}
+
+.gallery-scroll-pane {
+    -fx-background-color: #F5F5F7;
+    -fx-border-width: 0;
+}
+
+.gallery-scroll-pane > .viewport {
+    -fx-background-color: #F5F5F7;
+}
+
+.gallery-cell {
+    -fx-padding: 6px;
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 7px;
+    -fx-border-radius: 7px;
+    -fx-border-width: 2px;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 4, 0.2, 0, 1);
+}
+
+.gallery-cell:hover {
+    -fx-background-color: #F0F7FF;
+    -fx-border-color: #BFDBFE;
+}
+
+.gallery-cell-selected {
+    -fx-border-color: #3B82F6;
+    -fx-background-color: #EFF6FF;
+    -fx-effect: dropshadow(gaussian, rgba(59,130,246,0.25), 8, 0.3, 0, 2);
+}
+
+.gallery-thumb {
+    -fx-background-color: #F5F5F7;
+    -fx-background-radius: 4px;
+}
+
+.gallery-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: #6E6E73;
+    -fx-max-width: 136px;
+}

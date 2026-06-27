@@ -1,6 +1,44 @@
 /* Structural rules — always loaded, regardless of active theme.
    Use theme-neutral values (rgba, transparent) so this file adapts to any AtlantaFX theme. */
 
+/* ── Gallery view toggle button ─────────────────────────────── */
+.view-toggle-button {
+    -fx-font-size: 13px;
+    -fx-padding: 3px 9px;
+    -fx-cursor: hand;
+    -fx-background-color: transparent;
+    -fx-border-color: rgba(128,128,128,0.4);
+    -fx-border-width: 1px;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+}
+
+.view-toggle-button:hover {
+    -fx-background-color: rgba(128,128,128,0.1);
+}
+
+.view-toggle-button:selected {
+    -fx-background-color: rgba(59,130,246,0.12);
+    -fx-border-color: rgba(59,130,246,0.7);
+}
+
+.gallery-cell {
+    -fx-padding: 6px;
+    -fx-background-radius: 7px;
+    -fx-border-radius: 7px;
+    -fx-border-width: 2px;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+}
+
+.gallery-cell:hover {
+    -fx-border-color: rgba(59,130,246,0.5);
+}
+
+.gallery-cell-selected {
+    -fx-border-color: rgba(59,130,246,0.9);
+}
+
 /* ── Thumbnail strip ─────────────────────────────────────────── */
 .thumbnail-image {
     -fx-opacity: 0.55;

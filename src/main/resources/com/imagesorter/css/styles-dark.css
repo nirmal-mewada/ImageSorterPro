@@ -281,3 +281,56 @@
 .tab-pane .tab:hover .tab-label {
     -fx-text-fill: #F5F5F7;
 }
+
+/* ── Gallery View ─────────────────────────────────────────────── */
+.center-toolbar {
+    -fx-background-color: #2C2C2E;
+    -fx-border-color: #3A3A3C;
+}
+
+.view-toggle-button {
+    -fx-text-fill: #F5F5F7;
+    -fx-border-color: #3A3A3C;
+}
+
+.view-toggle-button:hover {
+    -fx-background-color: #3A3A3C;
+}
+
+.view-toggle-button:selected {
+    -fx-background-color: #1E3A5F;
+    -fx-border-color: #60A5FA;
+    -fx-text-fill: #60A5FA;
+}
+
+.gallery-scroll-pane {
+    -fx-background-color: #1C1C1E;
+}
+
+.gallery-scroll-pane > .viewport {
+    -fx-background-color: #1C1C1E;
+}
+
+.gallery-cell {
+    -fx-background-color: #2C2C2E;
+    -fx-border-color: transparent;
+}
+
+.gallery-cell:hover {
+    -fx-background-color: #1E3A5F;
+    -fx-border-color: #1E40AF;
+}
+
+.gallery-cell-selected {
+    -fx-border-color: #60A5FA;
+    -fx-background-color: #1E3A5F;
+    -fx-effect: dropshadow(gaussian, rgba(96,165,250,0.3), 8, 0.3, 0, 2);
+}
+
+.gallery-thumb {
+    -fx-background-color: #3A3A3C;
+}
+
+.gallery-label {
+    -fx-text-fill: #98989D;
+}
