@@ -884,7 +884,7 @@ public class MainController implements Initializable {
         if (width <= 0) {
             targetCapacity = configService.getConfig().getThumbnailCount();
         } else {
-            double spacing = 5.0; // Spacing configured in main.fxml HBox spacing="5.0"
+            double spacing = 3.0; // Spacing configured in main.fxml HBox spacing="3.0"
             double selectedSize = thumbSize;
             double otherSize = thumbSize * 0.7;
             double margin = 20.0; // Minimal safety margin since thumbnailBox doesn't include the pin button

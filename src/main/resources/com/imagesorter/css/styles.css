@@ -173,6 +173,7 @@
     -fx-background-radius: 5px;
     -fx-background-color: transparent;
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 6, 0.3, 0, 1);
+    -fx-opacity: 0.55;
 }
 
 .thumbnail-selected {
@@ -180,7 +181,8 @@
     -fx-border-width: 2px;
     -fx-border-radius: 5px;
     -fx-background-radius: 5px;
-    -fx-effect: dropshadow(gaussian, rgba(59,130,246,0.25), 8, 0.3, 0, 1);
+    -fx-effect: dropshadow(gaussian, rgba(59,130,246,0.3), 10, 0.4, 0, 2);
+    -fx-opacity: 1.0;
 }
 
 .thumbnail-video-badge {

@@ -85,6 +85,16 @@
     -fx-border-color: #3A3A3C;
 }
 
+.thumbnail-image {
+    -fx-opacity: 0.5;
+}
+
+.thumbnail-selected {
+    -fx-opacity: 1.0;
+    -fx-border-color: #60A5FA;
+    -fx-effect: dropshadow(gaussian, rgba(96,165,250,0.35), 10, 0.4, 0, 2);
+}
+
 /* Status Bar */
 .status-label {
     -fx-text-fill: #98989D;

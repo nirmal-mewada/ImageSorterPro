@@ -117,11 +117,11 @@
             </VBox>
 
             <!-- Center Panel - Image Viewer -->
-            <VBox spacing="5.0">
+            <VBox spacing="2.0">
                 <SplitPane fx:id="verticalSplitPane" dividerPositions="0.1" orientation="VERTICAL" VBox.vgrow="ALWAYS">
                     <items>
                         <HBox fx:id="thumbnailContainer" alignment="CENTER_LEFT" styleClass="thumbnail-bar" spacing="10.0">
-                            <HBox fx:id="thumbnailBox" alignment="CENTER" spacing="5.0" HBox.hgrow="ALWAYS">
+                            <HBox fx:id="thumbnailBox" alignment="CENTER" spacing="3.0" HBox.hgrow="ALWAYS">
                                 <!-- Thumbnails will be added here dynamically -->
                             </HBox>
                             <ToggleButton fx:id="pinThumbnailButton" styleClass="pin-button" text="📌" selected="false">

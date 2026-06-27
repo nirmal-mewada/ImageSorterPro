@@ -1,6 +1,18 @@
 /* Structural rules — always loaded, regardless of active theme.
    Use theme-neutral values (rgba, transparent) so this file adapts to any AtlantaFX theme. */
 
+/* ── Thumbnail strip ─────────────────────────────────────────── */
+.thumbnail-image {
+    -fx-opacity: 0.55;
+}
+
+.thumbnail-selected {
+    -fx-opacity: 1.0;
+    -fx-border-color: rgba(59, 130, 246, 0.9);
+    -fx-border-width: 2px;
+    -fx-border-radius: 5px;
+}
+
 /* ── Pin Button ──────────────────────────────────────────────── */
 .pin-button {
     -fx-font-size: 11px;
