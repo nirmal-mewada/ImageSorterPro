@@ -31,15 +31,27 @@ ImageSorterPro is a lightweight, cross-platform desktop application built with J
 
 ### Main Application Window
 
-The main window provides an image preview, a list of configured hotkey folders, and status information.
+The main window provides a large image/video preview, a thumbnail strip at the top, a metadata panel on the right showing EXIF data, and a status bar with current file info and memory usage.
 
-![Main Application Window](screenshots/main.png)
+![Main Application Window](screenshots/screenshot-main-window.png)
 
-### Configuration Dialog
+### Configure Folders — Destination Folders
 
-The configuration dialog allows you to set up your destination folders for hotkeys and specify a trash folder for virtual deletes.
+The Destination Folders tab lets you assign a folder path to each hotkey (1–9, a–z). Press the corresponding key while viewing an image to instantly move it to that folder.
 
-![Configuration Dialog](screenshots/config.png)
+![Configure Folders — Destination Folders](screenshots/screenshot-configure-folders-destinations.png)
+
+### Configure Folders — Advanced Settings
+
+The Advanced Settings tab exposes the full JSON config: cache sizes, thumbnail dimensions, supported file extensions, thread pool size, and other performance-tuning options.
+
+![Configure Folders — Advanced Settings](screenshots/screenshot-configure-folders-advanced.png)
+
+### Configure Rules — Rule-Based Sorting
+
+The Configure Rules dialog lets you define conditional sorting rules. Each rule specifies an If Field / Operator / Value condition and a Then Action (copy or move) to a chosen destination folder — automating batch organisation without manual hotkeys.
+
+![Configure Rules — Rule-Based Sorting](screenshots/screenshot-configure-rules.png)
 
 ## System Requirements
 
