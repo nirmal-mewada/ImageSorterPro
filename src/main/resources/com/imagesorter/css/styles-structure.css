@@ -22,6 +22,28 @@
     -fx-border-color: rgba(59,130,246,0.7);
 }
 
+/* ── Gallery ListView ────────────────────────────────────────── */
+.gallery-list-view {
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.gallery-list-view .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+    -fx-border-color: transparent;
+}
+
+.gallery-list-view .list-cell:hover {
+    -fx-background-color: transparent;
+}
+
+.gallery-list-view .list-cell:selected,
+.gallery-list-view .list-cell:focused {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
 .gallery-cell {
     -fx-padding: 6px;
     -fx-background-radius: 7px;

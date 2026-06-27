@@ -159,16 +159,10 @@
                     </items>
                 </SplitPane>
 
-                <!-- Gallery view: scrollable grid of all images; replaces SplitPane when active -->
-                <ScrollPane fx:id="galleryScrollPane" VBox.vgrow="ALWAYS" fitToWidth="true"
-                            visible="false" managed="false" hbarPolicy="NEVER"
-                            styleClass="gallery-scroll-pane">
-                    <FlowPane fx:id="galleryPane" hgap="8.0" vgap="8.0">
-                        <padding>
-                            <javafx.geometry.Insets top="12.0" right="12.0" bottom="12.0" left="12.0" />
-                        </padding>
-                    </FlowPane>
-                </ScrollPane>
+                <!-- Gallery view: virtualized row list; replaces SplitPane when active -->
+                <ListView fx:id="galleryListView" VBox.vgrow="ALWAYS"
+                          visible="false" managed="false"
+                          styleClass="gallery-list-view" />
             </VBox>
 
             <!-- Right Panel - Metadata -->

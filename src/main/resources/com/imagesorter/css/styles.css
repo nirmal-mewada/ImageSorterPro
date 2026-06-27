@@ -531,13 +531,9 @@
     -fx-text-fill: #3B82F6;
 }
 
-.gallery-scroll-pane {
+.gallery-list-view {
     -fx-background-color: #F5F5F7;
     -fx-border-width: 0;
-}
-
-.gallery-scroll-pane > .viewport {
-    -fx-background-color: #F5F5F7;
 }
 
 .gallery-cell {

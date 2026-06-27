@@ -303,11 +303,11 @@
     -fx-text-fill: #60A5FA;
 }
 
-.gallery-scroll-pane {
+.gallery-list-view {
     -fx-background-color: #1C1C1E;
 }
 
-.gallery-scroll-pane > .viewport {
+.gallery-list-view > .virtual-flow > .clipped-container > .sheet > .list-cell {
     -fx-background-color: #1C1C1E;
 }
 

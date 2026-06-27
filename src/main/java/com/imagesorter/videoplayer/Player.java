@@ -2,6 +2,8 @@ package com.imagesorter.videoplayer;
 
 import com.imagesorter.model.ImageFile;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.DoubleBinding;
+import javafx.beans.value.ObservableDoubleValue;
 import javafx.geometry.Pos;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
@@ -18,6 +20,8 @@ public class Player extends BorderPane {
     private StackPane mpane;
     private MediaBar bar;
     ImageFile currentImageFile;
+    private ObservableDoubleValue containerWidth;
+    private ObservableDoubleValue containerHeight;
 
     public Player(ImageFile currentImageFile) throws MalformedURLException {
         // Prepare Media and Player
@@ -33,12 +37,11 @@ public class Player extends BorderPane {
         mpane.setAlignment(Pos.CENTER);
         mpane.setStyle("-fx-background-color: black;"); // Ensures black background
 
-        // Handle rotation (normalize)
-        setRotation();
         // Layout
         setCenter(mpane);
         bar = new MediaBar(player,this);
         setBottom(bar);
+        setRotation();
 
         setStyle("-fx-background-color:#bfc2c7;");
 //        player.play();
@@ -72,10 +75,10 @@ public class Player extends BorderPane {
         mpane.setAlignment(Pos.CENTER);
         mpane.setStyle("-fx-background-color: black;");
 
-        setRotation();
         setCenter(mpane);
         bar = new MediaBar(player, this);
         setBottom(bar);
+        setRotation();
 
         setStyle("-fx-background-color:#bfc2c7;");
         player.setMute(false);
@@ -103,40 +106,47 @@ public class Player extends BorderPane {
         setRotation();
     }
 
+    /**
+     * Bind the video fit dimensions to the scroll pane that contains this player.
+     * Must be called from the controller after construction — same pattern as imageView
+     * which binds to imageScrollPane.widthProperty()/.heightProperty().
+     * This avoids the layout cycle: view.fitWidth → mpane.prefWidth (native video
+     * resolution) → Player.prefWidth → container resize → view.fitWidth.
+     */
+    public void bindToContainer(ObservableDoubleValue w, ObservableDoubleValue h) {
+        containerWidth = w;
+        containerHeight = h;
+        setRotation();
+    }
+
     public void setRotation() {
         if (view == null) return; // Player already disposed; callback arrived late
+        if (bar == null) return;  // bar not yet initialized; called again after setBottom()
         Integer exifRotateVal = currentImageFile.getExifRotate();
         int rotation = ((exifRotateVal != null ? exifRotateVal : 0) % 360 + 360) % 360;
         switch (rotation) {
-            case 90 -> {
-                view.setRotate(270);
-//                view.setScaleY(-1); // flips vertically to correct upside-down
-            }
-            case 270 -> {
-                view.setRotate(90);
-//                view.setScaleX(-1); // flips horizontally to correct upside-down
-            }
-            case 180 -> {
-                view.setRotate(180);
-            }
-            default -> {
-                view.setRotate(0);
-            }
+            case 90  -> view.setRotate(270);
+            case 270 -> view.setRotate(90);
+            case 180 -> view.setRotate(180);
+            default  -> view.setRotate(0);
         }
 
-        // Fit bindings (handle both portrait & landscape)
+        view.fitWidthProperty().unbind();
+        view.fitHeightProperty().unbind();
+
+        if (containerWidth == null || containerHeight == null) return; // bindToContainer not yet called
+
+        DoubleBinding videoH = Bindings.createDoubleBinding(
+                () -> Math.max(0, containerHeight.get() - bar.getHeight()),
+                containerHeight, bar.heightProperty()
+        );
+
         if (rotation == 90 || rotation == 270) {
-            view.fitWidthProperty().bind(Bindings.createDoubleBinding(
-                    () -> mpane.getHeight(),
-                    mpane.heightProperty()
-            ));
-            view.fitHeightProperty().bind(Bindings.createDoubleBinding(
-                    () -> mpane.getWidth(),
-                    mpane.widthProperty()
-            ));
+            view.fitWidthProperty().bind(videoH);
+            view.fitHeightProperty().bind(containerWidth);
         } else {
-            view.fitWidthProperty().bind(mpane.widthProperty());
-            view.fitHeightProperty().bind(mpane.heightProperty());
+            view.fitWidthProperty().bind(containerWidth);
+            view.fitHeightProperty().bind(videoH);
         }
     }
 
