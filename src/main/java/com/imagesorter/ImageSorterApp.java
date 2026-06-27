@@ -1,6 +1,6 @@
 package com.imagesorter;
 
-import atlantafx.base.theme.*;
+import atlantafx.base.theme.PrimerLight;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -41,23 +41,22 @@ public class ImageSorterApp extends Application {
                 }
             }
             
-            // Set saved theme
-            setAppTheme(configService.getConfig().getTheme());
+            // Always use PrimerLight as AtlantaFX base for control styling
+            Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
 
             // Load main FXML
             FXMLLoader loader = new FXMLLoader(getClass().getResource(MAIN_FXML));
             Parent root = loader.load();
-            
+
             // Create scene
             Scene scene = new Scene(root, 1200, 800);
-            
-            // Add CSS styling
+
+            // Add base CSS
             String cssPath = getClass().getResource(STYLES_CSS).toExternalForm();
             scene.getStylesheets().add(cssPath);
-            if (OsTheme.isDark()) {
-                var darkCss = getClass().getResource("/com/imagesorter/css/styles-dark.css");
-                if (darkCss != null) scene.getStylesheets().add(darkCss.toExternalForm());
-            }
+
+            // Apply saved appearance (Light / Dark / System)
+            applyAppearance(configService.getConfig().getTheme(), scene);
 
             // Configure primary stage
             primaryStage.setTitle(APP_TITLE);
@@ -94,35 +93,26 @@ public class ImageSorterApp extends Application {
     }
 
     /**
-     * Applies the selected AtlantaFX theme stylesheet
+     * Applies Light/Dark/System appearance by adding or removing styles-dark.css from the scene.
+     * "System" follows the OS dark mode setting. Safe to call at any time — removes before re-adding.
      */
-    public static void setAppTheme(String themeName) {
-        if (themeName == null) {
-            themeName = "Primer Light";
+    public static void applyAppearance(String appearance, javafx.scene.Scene scene) {
+        var darkCssUrl = ImageSorterApp.class.getResource("/com/imagesorter/css/styles-dark.css");
+        if (darkCssUrl == null) return;
+        String darkCssPath = darkCssUrl.toExternalForm();
+
+        boolean wantDark;
+        if ("Dark".equals(appearance)) {
+            wantDark = true;
+        } else if ("Light".equals(appearance)) {
+            wantDark = false;
+        } else {
+            wantDark = OsTheme.isDark();
         }
-        switch (themeName) {
-            case "Primer Dark":
-                Application.setUserAgentStylesheet(new PrimerDark().getUserAgentStylesheet());
-                break;
-            case "Nord Light":
-                Application.setUserAgentStylesheet(new NordLight().getUserAgentStylesheet());
-                break;
-            case "Nord Dark":
-                Application.setUserAgentStylesheet(new NordDark().getUserAgentStylesheet());
-                break;
-            case "Cupertino Light":
-                Application.setUserAgentStylesheet(new CupertinoLight().getUserAgentStylesheet());
-                break;
-            case "Cupertino Dark":
-                Application.setUserAgentStylesheet(new CupertinoDark().getUserAgentStylesheet());
-                break;
-            case "Dracula":
-                Application.setUserAgentStylesheet(new Dracula().getUserAgentStylesheet());
-                break;
-            case "Primer Light":
-            default:
-                Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
-                break;
+
+        scene.getStylesheets().remove(darkCssPath);
+        if (wantDark) {
+            scene.getStylesheets().add(darkCssPath);
         }
     }
 }

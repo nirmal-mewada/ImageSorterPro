@@ -38,7 +38,7 @@ public class ConfigSettings {
     ));
     private java.util.List<String> bookmarkedFolders = new java.util.ArrayList<>();
     private String actionMode = "MOVE";
-    private String theme = "Primer Light";
+    private String theme = "System";
     private String sortField = "Name";
     private String sortOrder = "Ascending";
     private java.util.List<SortingRule> sortingRules = new java.util.ArrayList<>();
@@ -62,7 +62,7 @@ public class ConfigSettings {
         this.metadataCacheSize = 5000;
         this.bookmarkedFolders = new java.util.ArrayList<>();
         this.actionMode = "MOVE";
-        this.theme = "Primer Light";
+        this.theme = "System";
         this.sortField = "Name";
         this.sortOrder = "Ascending";
         this.sortingRules = new java.util.ArrayList<>();
@@ -271,7 +271,11 @@ public class ConfigSettings {
 
     public String getTheme() {
         if (theme == null || theme.trim().isEmpty()) {
-            theme = "Primer Light";
+            theme = "System";
+        }
+        // Normalize legacy AtlantaFX theme names to new appearance values
+        if (!theme.equals("Light") && !theme.equals("Dark") && !theme.equals("System")) {
+            theme = theme.contains("Dark") || theme.contains("dark") ? "Dark" : "System";
         }
         return theme;
     }

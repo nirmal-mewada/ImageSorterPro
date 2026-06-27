@@ -118,14 +118,10 @@ public class MainController implements Initializable {
 
     @FXML private MenuItem toggleFullScreenMenuItem;
 
-    @FXML private Menu themeMenu;
-    @FXML private RadioMenuItem themePrimerLightMenuItem;
-    @FXML private RadioMenuItem themePrimerDarkMenuItem;
-    @FXML private RadioMenuItem themeNordLightMenuItem;
-    @FXML private RadioMenuItem themeNordDarkMenuItem;
-    @FXML private RadioMenuItem themeCupertinoLightMenuItem;
-    @FXML private RadioMenuItem themeCupertinoDarkMenuItem;
-    @FXML private RadioMenuItem themeDraculaMenuItem;
+    @FXML private Menu appearanceMenu;
+    @FXML private RadioMenuItem appearanceLightMenuItem;
+    @FXML private RadioMenuItem appearanceDarkMenuItem;
+    @FXML private RadioMenuItem appearanceSystemMenuItem;
 
     @FXML private MenuItem configureRulesMenuItem;
     @FXML private MenuItem applyRulesMenuItem;
@@ -1586,62 +1582,33 @@ public class MainController implements Initializable {
 
         toggleFullScreenMenuItem.setOnAction(e -> toggleFullScreen());
 
-        // 4. Setup Theme Menu Items
-        ToggleGroup themeGroup = new ToggleGroup();
-        themePrimerLightMenuItem.setToggleGroup(themeGroup);
-        themePrimerDarkMenuItem.setToggleGroup(themeGroup);
-        themeNordLightMenuItem.setToggleGroup(themeGroup);
-        themeNordDarkMenuItem.setToggleGroup(themeGroup);
-        themeCupertinoLightMenuItem.setToggleGroup(themeGroup);
-        themeCupertinoDarkMenuItem.setToggleGroup(themeGroup);
-        themeDraculaMenuItem.setToggleGroup(themeGroup);
+        // 4. Setup Appearance Menu
+        ToggleGroup appearanceGroup = new ToggleGroup();
+        appearanceLightMenuItem.setToggleGroup(appearanceGroup);
+        appearanceDarkMenuItem.setToggleGroup(appearanceGroup);
+        appearanceSystemMenuItem.setToggleGroup(appearanceGroup);
 
-        String activeTheme = config.getTheme();
-        switch (activeTheme) {
-            case "Primer Dark":
-                themePrimerDarkMenuItem.setSelected(true);
+        switch (config.getTheme()) {
+            case "Light":
+                appearanceLightMenuItem.setSelected(true);
                 break;
-            case "Nord Light":
-                themeNordLightMenuItem.setSelected(true);
+            case "Dark":
+                appearanceDarkMenuItem.setSelected(true);
                 break;
-            case "Nord Dark":
-                themeNordDarkMenuItem.setSelected(true);
-                break;
-            case "Cupertino Light":
-                themeCupertinoLightMenuItem.setSelected(true);
-                break;
-            case "Cupertino Dark":
-                themeCupertinoDarkMenuItem.setSelected(true);
-                break;
-            case "Dracula":
-                themeDraculaMenuItem.setSelected(true);
-                break;
-            case "Primer Light":
             default:
-                themePrimerLightMenuItem.setSelected(true);
+                appearanceSystemMenuItem.setSelected(true);
                 break;
         }
 
-        themeGroup.selectedToggleProperty().addListener((obs, oldVal, newVal) -> {
+        appearanceGroup.selectedToggleProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null) {
-                String selectedTheme = "Primer Light";
-                if (newVal == themePrimerDarkMenuItem) {
-                    selectedTheme = "Primer Dark";
-                } else if (newVal == themeNordLightMenuItem) {
-                    selectedTheme = "Nord Light";
-                } else if (newVal == themeNordDarkMenuItem) {
-                    selectedTheme = "Nord Dark";
-                } else if (newVal == themeCupertinoLightMenuItem) {
-                    selectedTheme = "Cupertino Light";
-                } else if (newVal == themeCupertinoDarkMenuItem) {
-                    selectedTheme = "Cupertino Dark";
-                } else if (newVal == themeDraculaMenuItem) {
-                    selectedTheme = "Dracula";
-                }
-                config.setTheme(selectedTheme);
+                String appearance = "System";
+                if (newVal == appearanceLightMenuItem) appearance = "Light";
+                else if (newVal == appearanceDarkMenuItem) appearance = "Dark";
+                config.setTheme(appearance);
                 configService.saveConfig();
-                com.imagesorter.ImageSorterApp.setAppTheme(selectedTheme);
-                lastAction.setText("Changed theme to: " + selectedTheme);
+                com.imagesorter.ImageSorterApp.applyAppearance(appearance, mediaContainer.getScene());
+                lastAction.setText("Appearance: " + appearance);
             }
         });
 
