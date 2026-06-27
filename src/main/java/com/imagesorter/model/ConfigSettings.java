@@ -46,14 +46,10 @@ public class ConfigSettings {
     public ConfigSettings() {
         this.allFolderPaths = new HashMap<>();
         this.confirmDelete = true;
-        this.smooth = true;
-        this.showLeftPane = true;
-        this.showRightPane = true;
-        this.showThumbnailBox = true;
-        this.cacheSize = 20;
-        this.prevCache = 5;
-        this.nextCache= 8;
-        this.threadPoolSize = 4;
+        this.cacheSize = 100;
+        this.prevCache = 40;
+        this.nextCache= 60;
+        this.threadPoolSize = 20;
         defaultFileChooseLocation = "";
         undoSize = 50;
         this.thumbnailSize = 150;
