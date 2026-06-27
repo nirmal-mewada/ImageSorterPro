@@ -22,7 +22,9 @@ import uk.co.caprica.vlcj.player.embedded.videosurface.callback.RenderCallback;
 import uk.co.caprica.vlcj.player.embedded.videosurface.callback.format.RV32BufferFormat;
 
 import java.io.File;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.util.concurrent.TimeUnit;
 
 public class VlcjPlayer extends AbstractVideoPlayer {
 
@@ -35,11 +37,59 @@ public class VlcjPlayer extends AbstractVideoPlayer {
         if (vlcAvailable == null) {
             synchronized (VlcjPlayer.class) {
                 if (vlcAvailable == null) {
-                    vlcAvailable = detectVlc();
+                    vlcAvailable = detectVlc() && probeVlcSubprocess();
                 }
             }
         }
         return vlcAvailable;
+    }
+
+    /**
+     * Initialises VLC in a subprocess. If VLC triggers assert()/abort() during
+     * plugin loading the subprocess exits with a non-zero code (typically 134
+     * for SIGABRT); the main JVM is unaffected and we fall back to JavaFX Player.
+     */
+    private static boolean probeVlcSubprocess() {
+        try {
+            String java = System.getProperty("java.home")
+                + File.separator + "bin" + File.separator + "java";
+            String cp = System.getProperty("java.class.path");
+
+            ProcessBuilder pb = new ProcessBuilder(
+                java,
+                "-Djna.library.path=" + vlcLibPath,
+                "-cp", cp,
+                "com.imagesorter.videoplayer.VlcjProbe"
+            );
+            pb.redirectErrorStream(true);
+            Process proc = pb.start();
+
+            // Drain stdout/stderr on a daemon thread so the pipe never blocks
+            Thread drain = new Thread(() -> {
+                try { proc.getInputStream().transferTo(OutputStream.nullOutputStream()); }
+                catch (Exception ignored) {}
+            });
+            drain.setDaemon(true);
+            drain.start();
+
+            boolean finished = proc.waitFor(20, TimeUnit.SECONDS);
+            if (!finished) {
+                proc.destroyForcibly();
+                System.err.println("[VLCJ] Probe timed out — VLC unavailable");
+                return false;
+            }
+            int code = proc.exitValue();
+            if (code != 0) {
+                System.err.println("[VLCJ] Probe exited " + code +
+                    " (signal crash?) — VLC unavailable, falling back to JavaFX Player");
+                return false;
+            }
+            System.out.println("[VLCJ] Probe succeeded — using VLC player");
+            return true;
+        } catch (Exception e) {
+            System.err.println("[VLCJ] Probe error: " + e.getMessage());
+            return false;
+        }
     }
 
     private static boolean detectVlc() {
