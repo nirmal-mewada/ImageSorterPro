@@ -337,7 +337,6 @@ public class MainController implements Initializable {
                     setText(item);
                     setStyle("-fx-font-family: 'Consolas', 'Monaco', 'Courier New', monospace; " +
                             "-fx-font-size: 12px; " +
-                            "-fx-text-fill: #2c3e50; " +
                             "-fx-padding: 5 8 5 8;");
 
                     // Extract the folder path for tooltip
