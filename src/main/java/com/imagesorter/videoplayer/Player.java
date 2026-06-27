@@ -104,6 +104,7 @@ public class Player extends BorderPane {
     }
 
     public void setRotation() {
+        if (view == null) return; // Player already disposed; callback arrived late
         Integer exifRotateVal = currentImageFile.getExifRotate();
         int rotation = ((exifRotateVal != null ? exifRotateVal : 0) % 360 + 360) % 360;
         switch (rotation) {

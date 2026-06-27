@@ -259,8 +259,14 @@ public class ImageService {
             final ImageFile imageFile = images.get(index);
             final String path = imageFile.getPath();
 
-            // Skip if already cached or already being processed
-            if (imageCache.contains(path) || pendingTasks.containsKey(path)) {
+            // Skip if already cached or already being processed.
+            // For video files we must also check whether the video player still needs
+            // preloading — imageCache hitting true would otherwise prevent it.
+            boolean imageReady = imageCache.contains(path) || pendingTasks.containsKey(path);
+            boolean videoNeedsPreload = imageFile.isVideoFile()
+                    && ConfigService.getInstance().getConfig().isPreloadVideos()
+                    && !videoPlayerCache.contains(path);
+            if (imageReady && !videoNeedsPreload) {
                 continue;
             }
 
