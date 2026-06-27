@@ -33,6 +33,7 @@ public class ImageService {
     private final ThreadPoolExecutor executorService;
     private final ThreadPoolExecutor thumbnailExecutor;
     private final Map<String, Future<?>> pendingTasks = new ConcurrentHashMap<>();
+    private final Set<String> failedThumbnailPaths = ConcurrentHashMap.newKeySet();
     private final AtomicLong seqGenerator = new AtomicLong(0);
     private final Map<String, Map<String, String>> metadataCache;
 
@@ -129,51 +130,59 @@ public class ImageService {
             ensureExifRotation(imageFile);
             return cachedImage;
         }
+        // Skip permanently-failed files — don't retry on every scroll
+        if (failedThumbnailPaths.contains(filePath)) {
+            return null;
+        }
         if (Thread.currentThread().isInterrupted()) {
             return null;
         }
         Image image;
 
-        if(imageFile.isVideoFile()) {
-            image = FastVideoThumbnailUtil.createVideoThumbnail(imageFile.getFile());
-            if (Thread.currentThread().isInterrupted()) return null;
-            ensureExifRotation(imageFile);
-        } else {
-            // Load image from file
-
-            try (InputStream fis = new BufferedInputStream(Files.newInputStream(imageFile.getFile().toPath()))) {
-                int size = ConfigService.getInstance().getConfig().getImageQualityPx();
-                image = new Image(fis, size, 0, true, ConfigService.getInstance().getConfig().isSmooth());
-            }
-
-            if (Thread.currentThread().isInterrupted()) {
-                return null;
-            }
-
-            ensureExifRotation(imageFile);
-
-            if (Thread.currentThread().isInterrupted()) {
-                return null;
-            }
-
-            // Apply rotation if needed
-            if (imageFile.getExifRotate() != 0) {
-                BufferedImage bufferedImage = SwingFXUtils.fromFXImage(image, null);
+        try {
+            if (imageFile.isVideoFile()) {
+                image = FastVideoThumbnailUtil.createVideoThumbnail(imageFile.getFile());
                 if (Thread.currentThread().isInterrupted()) return null;
-                bufferedImage = ImageUtils.rotateImage(bufferedImage, imageFile.getExifRotate());
+                if (image == null) {
+                    failedThumbnailPaths.add(filePath);
+                    return null;
+                }
+                ensureExifRotation(imageFile);
+            } else {
+                try (InputStream fis = new BufferedInputStream(Files.newInputStream(imageFile.getFile().toPath()))) {
+                    int size = ConfigService.getInstance().getConfig().getImageQualityPx();
+                    image = new Image(fis, size, 0, true, ConfigService.getInstance().getConfig().isSmooth());
+                }
+
                 if (Thread.currentThread().isInterrupted()) return null;
-                image = SwingFXUtils.toFXImage(bufferedImage, null);
-            }
 
-            if (Thread.currentThread().isInterrupted()) {
-                return null;
-            }
+                ensureExifRotation(imageFile);
 
-            // Throw exception if image loading failed
-            if (image.isError()) {
-                throw new RuntimeException(image.getException());
+                if (Thread.currentThread().isInterrupted()) return null;
+
+                if (imageFile.getExifRotate() != 0) {
+                    BufferedImage bufferedImage = SwingFXUtils.fromFXImage(image, null);
+                    if (Thread.currentThread().isInterrupted()) return null;
+                    bufferedImage = ImageUtils.rotateImage(bufferedImage, imageFile.getExifRotate());
+                    if (Thread.currentThread().isInterrupted()) return null;
+                    image = SwingFXUtils.toFXImage(bufferedImage, null);
+                }
+
+                if (Thread.currentThread().isInterrupted()) return null;
+
+                if (image.isError()) {
+                    failedThumbnailPaths.add(filePath);
+                    throw new RuntimeException(image.getException());
+                }
             }
+        } catch (IOException e) {
+            failedThumbnailPaths.add(filePath);
+            throw e;
+        } catch (RuntimeException e) {
+            failedThumbnailPaths.add(filePath);
+            throw e;
         }
+
         // Cache the loaded image
         imageCache.put(filePath, image, imageFile.getSize());
 
@@ -207,6 +216,11 @@ public class ImageService {
     public Image getCachedThumbnail(ImageFile imageFile) {
         if (imageFile == null) return null;
         return getCachedImage(imageFile);
+    }
+
+    public boolean isThumbnailFailed(ImageFile imageFile) {
+        if (imageFile == null) return false;
+        return failedThumbnailPaths.contains(imageFile.getPath());
     }
 
     public List<Image> getRecentImages(int count) {
@@ -382,9 +396,11 @@ public class ImageService {
      */
     public void clearCache(ImageFile currentImageFile) {
         if (currentImageFile != null) {
-            imageCache.remove(currentImageFile.getPath());
-            videoPlayerCache.remove(currentImageFile.getPath());
-            metadataCache.remove(currentImageFile.getPath());
+            String path = currentImageFile.getPath();
+            imageCache.remove(path);
+            videoPlayerCache.remove(path);
+            metadataCache.remove(path);
+            failedThumbnailPaths.remove(path);
         }
     }
 
@@ -393,6 +409,7 @@ public class ImageService {
      */
     public void clearImageCache() {
         imageCache.clear();
+        failedThumbnailPaths.clear();
     }
 
     /**
@@ -441,6 +458,7 @@ public class ImageService {
         imageCache.clear();
         videoPlayerCache.clear();
         metadataCache.clear();
+        failedThumbnailPaths.clear();
     }
 
     /**

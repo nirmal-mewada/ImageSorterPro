@@ -949,11 +949,11 @@ public class MainController implements Initializable {
                     Image cached = imageService.getCachedThumbnail(imageFile);
                     if (cached != null) {
                         iv.setImage(cached);
-                    } else {
+                    } else if (!imageService.isThumbnailFailed(imageFile)) {
                         imageService.submitThumbnailTask(() -> {
                             try {
                                 Image thumb = imageService.loadThumbnail(imageFile);
-                                Platform.runLater(() -> iv.setImage(thumb));
+                                if (thumb != null) Platform.runLater(() -> iv.setImage(thumb));
                             } catch (Exception ex) {
                                 System.err.println("Gallery: thumbnail load failed for " + imageFile.getName());
                             }
@@ -1142,7 +1142,7 @@ public class MainController implements Initializable {
             Image cachedThumb = imageService.getCachedThumbnail(imageFile);
             if (cachedThumb != null) {
                 thumbnail.setImage(cachedThumb);
-            } else {
+            } else if (!imageService.isThumbnailFailed(imageFile)) {
                 // Set initial placeholder if video
                 if (imageFile.isVideoFile()) {
                     try (java.io.InputStream fis = FastVideoThumbnailUtil.class.getResourceAsStream("/video.png")) {
