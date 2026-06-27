@@ -269,13 +269,17 @@ public class ConfigSettings {
         this.actionMode = actionMode;
     }
 
+    private static final java.util.Set<String> VALID_THEMES = new java.util.HashSet<>(java.util.Arrays.asList(
+        "Light", "Dark", "System",
+        "Primer Light", "Primer Dark",
+        "Nord Light", "Nord Dark",
+        "Cupertino Light", "Cupertino Dark",
+        "Dracula"
+    ));
+
     public String getTheme() {
-        if (theme == null || theme.trim().isEmpty()) {
+        if (theme == null || theme.trim().isEmpty() || !VALID_THEMES.contains(theme)) {
             theme = "System";
-        }
-        // Normalize legacy AtlantaFX theme names to new appearance values
-        if (!theme.equals("Light") && !theme.equals("Dark") && !theme.equals("System")) {
-            theme = theme.contains("Dark") || theme.contains("dark") ? "Dark" : "System";
         }
         return theme;
     }

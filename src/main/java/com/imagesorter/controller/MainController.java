@@ -122,6 +122,13 @@ public class MainController implements Initializable {
     @FXML private RadioMenuItem appearanceLightMenuItem;
     @FXML private RadioMenuItem appearanceDarkMenuItem;
     @FXML private RadioMenuItem appearanceSystemMenuItem;
+    @FXML private RadioMenuItem themePrimerLightMenuItem;
+    @FXML private RadioMenuItem themePrimerDarkMenuItem;
+    @FXML private RadioMenuItem themeNordLightMenuItem;
+    @FXML private RadioMenuItem themeNordDarkMenuItem;
+    @FXML private RadioMenuItem themeCupertinoLightMenuItem;
+    @FXML private RadioMenuItem themeCupertinoDarkMenuItem;
+    @FXML private RadioMenuItem themeDraculaMenuItem;
 
     @FXML private MenuItem configureRulesMenuItem;
     @FXML private MenuItem applyRulesMenuItem;
@@ -1584,27 +1591,25 @@ public class MainController implements Initializable {
 
         // 4. Setup Appearance Menu
         ToggleGroup appearanceGroup = new ToggleGroup();
-        appearanceLightMenuItem.setToggleGroup(appearanceGroup);
-        appearanceDarkMenuItem.setToggleGroup(appearanceGroup);
-        appearanceSystemMenuItem.setToggleGroup(appearanceGroup);
+        java.util.List<RadioMenuItem> allAppearanceItems = java.util.Arrays.asList(
+            appearanceLightMenuItem, appearanceDarkMenuItem, appearanceSystemMenuItem,
+            themePrimerLightMenuItem, themePrimerDarkMenuItem,
+            themeNordLightMenuItem, themeNordDarkMenuItem,
+            themeCupertinoLightMenuItem, themeCupertinoDarkMenuItem,
+            themeDraculaMenuItem
+        );
+        allAppearanceItems.forEach(item -> item.setToggleGroup(appearanceGroup));
 
-        switch (config.getTheme()) {
-            case "Light":
-                appearanceLightMenuItem.setSelected(true);
-                break;
-            case "Dark":
-                appearanceDarkMenuItem.setSelected(true);
-                break;
-            default:
-                appearanceSystemMenuItem.setSelected(true);
-                break;
-        }
+        String savedTheme = config.getTheme();
+        RadioMenuItem toSelect = allAppearanceItems.stream()
+            .filter(item -> item.getText().equals(savedTheme))
+            .findFirst()
+            .orElse(appearanceSystemMenuItem);
+        toSelect.setSelected(true);
 
         appearanceGroup.selectedToggleProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null) {
-                String appearance = "System";
-                if (newVal == appearanceLightMenuItem) appearance = "Light";
-                else if (newVal == appearanceDarkMenuItem) appearance = "Dark";
+            if (newVal instanceof RadioMenuItem) {
+                String appearance = ((RadioMenuItem) newVal).getText();
                 config.setTheme(appearance);
                 configService.saveConfig();
                 com.imagesorter.ImageSorterApp.applyAppearance(appearance, mediaContainer.getScene());

@@ -71,6 +71,14 @@
                 <RadioMenuItem fx:id="appearanceLightMenuItem" mnemonicParsing="false" text="Light" />
                 <RadioMenuItem fx:id="appearanceDarkMenuItem" mnemonicParsing="false" text="Dark" />
                 <RadioMenuItem fx:id="appearanceSystemMenuItem" mnemonicParsing="false" text="System" />
+                <SeparatorMenuItem />
+                <RadioMenuItem fx:id="themePrimerLightMenuItem" mnemonicParsing="false" text="Primer Light" />
+                <RadioMenuItem fx:id="themePrimerDarkMenuItem" mnemonicParsing="false" text="Primer Dark" />
+                <RadioMenuItem fx:id="themeNordLightMenuItem" mnemonicParsing="false" text="Nord Light" />
+                <RadioMenuItem fx:id="themeNordDarkMenuItem" mnemonicParsing="false" text="Nord Dark" />
+                <RadioMenuItem fx:id="themeCupertinoLightMenuItem" mnemonicParsing="false" text="Cupertino Light" />
+                <RadioMenuItem fx:id="themeCupertinoDarkMenuItem" mnemonicParsing="false" text="Cupertino Dark" />
+                <RadioMenuItem fx:id="themeDraculaMenuItem" mnemonicParsing="false" text="Dracula" />
             </Menu>
             <Menu mnemonicParsing="false" text="Help">
                 <MenuItem fx:id="helpShortcutsMenuItem" mnemonicParsing="false" text="Keyboard Shortcuts" accelerator="F1" />
