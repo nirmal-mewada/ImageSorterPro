@@ -52,18 +52,14 @@ public class FastVideoThumbnailUtil {
     }
 
     private static String getFfmpegExecutablePath() {
-        // 1. Check custom path if configured (or windows hardcoded if it exists)
-        String windowsPath = "D:\\Downloads\\ffmpeg-8.0-essentials_build\\ffmpeg-8.0-essentials_build\\bin\\ffmpeg.exe";
-        if (new File(windowsPath).exists()) {
-            return windowsPath;
-        }
-
-        // 2. Check common installation directories for macOS/Linux/Unix
+        // Check common installation directories for macOS/Linux/Windows
         String[] commonPaths = {
-            "/opt/homebrew/bin/ffmpeg",  // Apple Silicon Homebrew
-            "/usr/local/bin/ffmpeg",     // Intel Homebrew / Standard mac install
-            "/usr/bin/ffmpeg",           // Debian/Ubuntu/Fedora standard path
-            "/bin/ffmpeg"
+            "/opt/homebrew/bin/ffmpeg",              // Apple Silicon Homebrew
+            "/usr/local/bin/ffmpeg",                 // Intel Homebrew / standard macOS
+            "/usr/bin/ffmpeg",                       // Debian / Ubuntu / Fedora
+            "/bin/ffmpeg",
+            "C:\\ffmpeg\\bin\\ffmpeg.exe",           // Windows typical install
+            "C:\\Program Files\\ffmpeg\\bin\\ffmpeg.exe"
         };
 
         for (String path : commonPaths) {
