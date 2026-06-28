@@ -85,6 +85,27 @@ public class FastVideoThumbnailUtil {
                                 return siblingFfmpeg.getAbsolutePath();
                             }
                         }
+
+                        // Check sibling ext-dist/ directory (e.g. if running maven layout target/)
+                        File siblingExtDist = new File(parentDir, "ext-dist");
+                        if (siblingExtDist.exists() && siblingExtDist.isDirectory()) {
+                            File siblingFfmpeg = new File(siblingExtDist, exeName);
+                            if (siblingFfmpeg.exists()) {
+                                return siblingFfmpeg.getAbsolutePath();
+                            }
+                        }
+
+                        // Check grand-parent sibling ext-dist/ directory (e.g. root folder from target/classes)
+                        File grandParentDir = parentDir.getParentFile();
+                        if (grandParentDir != null && grandParentDir.exists()) {
+                            File grandParentExtDist = new File(grandParentDir, "ext-dist");
+                            if (grandParentExtDist.exists() && grandParentExtDist.isDirectory()) {
+                                File rootFfmpeg = new File(grandParentExtDist, exeName);
+                                if (rootFfmpeg.exists()) {
+                                    return rootFfmpeg.getAbsolutePath();
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -92,10 +113,17 @@ public class FastVideoThumbnailUtil {
             System.err.println("Could not resolve code source path for FFmpeg check: " + e.getMessage());
         }
 
-        // 2. Check current working directory
+        // 2. Check current working directory and ext-dist subdirectory
         try {
             String userDir = System.getProperty("user.dir");
             if (userDir != null) {
+                // Check user.dir/ext-dist/
+                File extDistFfmpeg = new File(new File(userDir, "ext-dist"), exeName);
+                if (extDistFfmpeg.exists()) {
+                    return extDistFfmpeg.getAbsolutePath();
+                }
+
+                // Check user.dir
                 File workingFfmpeg = new File(userDir, exeName);
                 if (workingFfmpeg.exists()) {
                     return workingFfmpeg.getAbsolutePath();
