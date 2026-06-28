@@ -17,7 +17,8 @@ import java.util.List;
  */
 public class ConfigService {
 
-    private static final String CONFIG_DIR = System.getProperty("user.dir");
+    private static final String OLD_CONFIG_DIR = System.getProperty("user.dir");
+    private static final String CONFIG_DIR = System.getProperty("user.home") + File.separator + ".imagesorterpro";
     private static final String DEFAULT_CONFIG_FILE = "image_sort_config.json";
     private static final String POINTER_FILE = "config_pointer.txt";
     private static final String DEFAULT_CONFIG_PATH = CONFIG_DIR + File.separator + DEFAULT_CONFIG_FILE;
@@ -33,11 +34,14 @@ public class ConfigService {
         this.objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
+        // Migrate configuration from old working directory if it exists
+        migrateOldConfig();
+
         resolveConfigPath();
 
         this.config = new ConfigSettings();
 
-        // Ensure config directory exists
+        // Ensure new config directory exists
         createConfigDirectory();
     }
 
@@ -182,6 +186,48 @@ public class ConfigService {
                 System.out.println("Created configuration directory: " + CONFIG_DIR);
             } else {
                 System.err.println("Failed to create configuration directory: " + CONFIG_DIR);
+            }
+        }
+    }
+
+    /**
+     * Migrates configuration file and pointer file from the old user.dir location
+     * to the new user.home/.imagesorterpro location.
+     */
+    private void migrateOldConfig() {
+        File oldConfig = new File(OLD_CONFIG_DIR + File.separator + DEFAULT_CONFIG_FILE);
+        File oldPointer = new File(OLD_CONFIG_DIR + File.separator + POINTER_FILE);
+        File newDir = new File(CONFIG_DIR);
+
+        // Migrate pointer file first if old exists but new doesn't
+        if (oldPointer.exists()) {
+            File newPointer = new File(POINTER_PATH);
+            if (!newPointer.exists()) {
+                if (!newDir.exists()) {
+                    newDir.mkdirs();
+                }
+                try {
+                    java.nio.file.Files.copy(oldPointer.toPath(), newPointer.toPath());
+                    System.out.println("Migrated configuration pointer from " + oldPointer.getAbsolutePath() + " to " + newPointer.getAbsolutePath());
+                } catch (IOException e) {
+                    System.err.println("Failed to migrate configuration pointer: " + e.getMessage());
+                }
+            }
+        }
+
+        // Migrate main configuration file if old exists but new doesn't
+        if (oldConfig.exists()) {
+            File newConfig = new File(DEFAULT_CONFIG_PATH);
+            if (!newConfig.exists()) {
+                if (!newDir.exists()) {
+                    newDir.mkdirs();
+                }
+                try {
+                    java.nio.file.Files.copy(oldConfig.toPath(), newConfig.toPath());
+                    System.out.println("Migrated configuration file from " + oldConfig.getAbsolutePath() + " to " + newConfig.getAbsolutePath());
+                } catch (IOException e) {
+                    System.err.println("Failed to migrate configuration file: " + e.getMessage());
+                }
             }
         }
     }
