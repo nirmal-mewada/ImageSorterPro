@@ -38,7 +38,7 @@ public class ConfigSettings {
     ));
     private java.util.List<String> bookmarkedFolders = new java.util.ArrayList<>();
     private String actionMode = "MOVE";
-    private String theme = "System";
+    private String theme = "Cupertino Dark";
     private String sortField = "Name";
     private String sortOrder = "Ascending";
     private java.util.List<SortingRule> sortingRules = new java.util.ArrayList<>();
@@ -58,7 +58,7 @@ public class ConfigSettings {
         this.metadataCacheSize = 5000;
         this.bookmarkedFolders = new java.util.ArrayList<>();
         this.actionMode = "MOVE";
-        this.theme = "System";
+        this.theme = "Cupertino Dark";
         this.sortField = "Name";
         this.sortOrder = "Ascending";
         this.sortingRules = new java.util.ArrayList<>();
@@ -266,7 +266,6 @@ public class ConfigSettings {
     }
 
     private static final java.util.Set<String> VALID_THEMES = new java.util.HashSet<>(java.util.Arrays.asList(
-        "Light", "Dark", "System",
         "Primer Light", "Primer Dark",
         "Nord Light", "Nord Dark",
         "Cupertino Light", "Cupertino Dark",
@@ -275,7 +274,7 @@ public class ConfigSettings {
 
     public String getTheme() {
         if (theme == null || theme.trim().isEmpty() || !VALID_THEMES.contains(theme)) {
-            theme = "System";
+            theme = "Cupertino Dark";
         }
         return theme;
     }

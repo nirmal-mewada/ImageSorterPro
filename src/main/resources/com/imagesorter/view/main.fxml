@@ -5,34 +5,35 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 
+<?import javafx.scene.shape.SVGPath?>
+
 <BorderPane xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.imagesorter.controller.MainController"
             focusTraversable="true">
 
-    <!-- Menu Bar -->
+    <!-- Menu & Action Bar -->
     <top>
-        <MenuBar>
-            <Menu mnemonicParsing="false" text="File">
-                <MenuItem fx:id="openFolderMenuItem" mnemonicParsing="false" text="Open Folder..." accelerator="Ctrl+O" />
-                <SeparatorMenuItem />
-                <MenuItem fx:id="configureFoldersMenuItem" mnemonicParsing="false" text="Configure Folders..." accelerator="Ctrl+P" />
-                <MenuItem fx:id="configureRulesMenuItem" mnemonicParsing="false" text="Configure Rules..." accelerator="Ctrl+Shift+P" />
-                <MenuItem fx:id="applyRulesMenuItem" mnemonicParsing="false" text="Apply Rules to Folder" accelerator="Ctrl+Shift+R" />
-                <SeparatorMenuItem />
-                <MenuItem fx:id="exitMenuItem" mnemonicParsing="false" text="Exit" accelerator="Alt+F4" />
-            </Menu>
-            <Menu fx:id="bookmarksMenu" mnemonicParsing="false" text="Bookmarks">
-                <MenuItem fx:id="addBookmarkMenuItem" mnemonicParsing="false" text="Add Current Folder to Bookmarks" />
-                <MenuItem fx:id="removeBookmarkMenuItem" mnemonicParsing="false" text="Remove a Bookmark..." />
-                <SeparatorMenuItem fx:id="bookmarksSeparator" />
-                <!-- Dynamic bookmarks will be appended here -->
-            </Menu>
-            <Menu mnemonicParsing="false" text="View">
-                <MenuItem fx:id="toggleLeftViewMenuItem" mnemonicParsing="false" text="Show/Hide Left View"/>
-                <MenuItem fx:id="toggleRightViewMenuItem" mnemonicParsing="false" text="Show/Hide Metadata Panel"/>
-                <MenuItem fx:id="toggleThumbnailBoxMenuItem" mnemonicParsing="false" text="Show/Hide Thumbnail Box"/>
-                <SeparatorMenuItem/>
-                <MenuItem fx:id="toggleFullScreenMenuItem" mnemonicParsing="false" text="Toggle Full Screen" accelerator="F11"/>
+        <HBox fx:id="topBar" alignment="CENTER_LEFT" spacing="10.0" style="-fx-background-color: -color-bg-default; -fx-border-color: -color-border-default; -fx-border-width: 0 0 1 0;">
+            <MenuBar fx:id="mainMenuBar" HBox.hgrow="ALWAYS" style="-fx-background-color: transparent; -fx-border-width: 0;">
+                <Menu mnemonicParsing="false" text="File">
+                    <MenuItem fx:id="openFolderMenuItem" mnemonicParsing="false" text="Open Folder..." accelerator="Ctrl+O" />
+                    <SeparatorMenuItem />
+                    <MenuItem fx:id="configureFoldersMenuItem" mnemonicParsing="false" text="Preferences Settings..." accelerator="Ctrl+P" />
+                    <MenuItem fx:id="applyRulesMenuItem" mnemonicParsing="false" text="Apply Rules to Folder" accelerator="Ctrl+Shift+R" />
+                    <SeparatorMenuItem />
+                    <MenuItem fx:id="exitMenuItem" mnemonicParsing="false" text="Exit" accelerator="Alt+F4" />
+                </Menu>
+                <Menu fx:id="bookmarksMenu" mnemonicParsing="false" text="Bookmarks">
+                    <MenuItem fx:id="addBookmarkMenuItem" mnemonicParsing="false" text="Add Current Folder to Bookmarks" />
+                    <MenuItem fx:id="removeBookmarkMenuItem" mnemonicParsing="false" text="Remove a Bookmark..." />
+                    <SeparatorMenuItem fx:id="bookmarksSeparator" />
+                    <!-- Dynamic bookmarks will be appended here -->
+                </Menu>
+                <Menu mnemonicParsing="false" text="View">
+                    <MenuItem fx:id="toggleTopViewMenuItem" mnemonicParsing="false" text="Show/Hide Top Menu &amp; Action Bar" accelerator="Ctrl+Shift+T" />
+                    <MenuItem fx:id="toggleLeftViewMenuItem" mnemonicParsing="false" text="Show/Hide Left View"/>
+                    <MenuItem fx:id="toggleRightViewMenuItem" mnemonicParsing="false" text="Show/Hide Metadata Panel"/>
+                    <MenuItem fx:id="toggleThumbnailBoxMenuItem" mnemonicParsing="false" text="Show/Hide Thumbnail Box"/>
                 <SeparatorMenuItem/>
                 <Menu mnemonicParsing="false" text="Action Mode">
                     <RadioMenuItem fx:id="actionModeMoveMenuItem" mnemonicParsing="false" text="Move Directly" selected="true" />
@@ -40,25 +41,13 @@
                     <RadioMenuItem fx:id="actionModeStagedMoveMenuItem" mnemonicParsing="false" text="Stage Move (Batch)" />
                     <RadioMenuItem fx:id="actionModeStagedCopyMenuItem" mnemonicParsing="false" text="Stage Copy (Batch)" />
                 </Menu>
-                <Menu mnemonicParsing="false" text="Sort By">
-                    <RadioMenuItem fx:id="sortByNameMenuItem" mnemonicParsing="false" text="Name" selected="true" />
-                    <RadioMenuItem fx:id="sortByCreatedMenuItem" mnemonicParsing="false" text="Date Created" />
-                    <RadioMenuItem fx:id="sortByModifiedMenuItem" mnemonicParsing="false" text="Date Modified" />
-                    <RadioMenuItem fx:id="sortBySizeMenuItem" mnemonicParsing="false" text="File Size" />
-                    <SeparatorMenuItem />
-                    <RadioMenuItem fx:id="sortOrderAscMenuItem" mnemonicParsing="false" text="Ascending" selected="true" />
-                    <RadioMenuItem fx:id="sortOrderDescMenuItem" mnemonicParsing="false" text="Descending" />
-                </Menu>
-                <Menu mnemonicParsing="false" text="Slideshow">
-                    <CheckMenuItem fx:id="slideshowPlayMenuItem" mnemonicParsing="false" text="Play Slideshow" accelerator="F5"/>
-                    <Menu mnemonicParsing="false" text="Interval">
-                        <RadioMenuItem fx:id="interval1sMenuItem" mnemonicParsing="false" text="1 Second" />
-                        <RadioMenuItem fx:id="interval2sMenuItem" mnemonicParsing="false" text="2 Seconds" />
-                        <RadioMenuItem fx:id="interval3sMenuItem" mnemonicParsing="false" text="3 Seconds" selected="true" />
-                        <RadioMenuItem fx:id="interval5sMenuItem" mnemonicParsing="false" text="5 Seconds" />
-                        <RadioMenuItem fx:id="interval10sMenuItem" mnemonicParsing="false" text="10 Seconds" />
-                        <RadioMenuItem fx:id="intervalCustomMenuItem" mnemonicParsing="false" text="Custom..." />
-                    </Menu>
+                <Menu mnemonicParsing="false" text="Slideshow Interval">
+                    <RadioMenuItem fx:id="interval1sMenuItem" mnemonicParsing="false" text="1 Second" />
+                    <RadioMenuItem fx:id="interval2sMenuItem" mnemonicParsing="false" text="2 Seconds" />
+                    <RadioMenuItem fx:id="interval3sMenuItem" mnemonicParsing="false" text="3 Seconds" selected="true" />
+                    <RadioMenuItem fx:id="interval5sMenuItem" mnemonicParsing="false" text="5 Seconds" />
+                    <RadioMenuItem fx:id="interval10sMenuItem" mnemonicParsing="false" text="10 Seconds" />
+                    <RadioMenuItem fx:id="intervalCustomMenuItem" mnemonicParsing="false" text="Custom..." />
                 </Menu>
                 <SeparatorMenuItem/>
                 <CheckMenuItem fx:id="preloadVideosMenuItem" mnemonicParsing="false" text="Preload Video Players"/>
@@ -68,10 +57,6 @@
                 <MenuItem mnemonicParsing="false" text="Actual Size" accelerator="Ctrl+0" disable="true" />
             </Menu>
             <Menu fx:id="appearanceMenu" mnemonicParsing="false" text="Appearance">
-                <RadioMenuItem fx:id="appearanceLightMenuItem" mnemonicParsing="false" text="Light" />
-                <RadioMenuItem fx:id="appearanceDarkMenuItem" mnemonicParsing="false" text="Dark" />
-                <RadioMenuItem fx:id="appearanceSystemMenuItem" mnemonicParsing="false" text="System" />
-                <SeparatorMenuItem />
                 <RadioMenuItem fx:id="themePrimerLightMenuItem" mnemonicParsing="false" text="Primer Light" />
                 <RadioMenuItem fx:id="themePrimerDarkMenuItem" mnemonicParsing="false" text="Primer Dark" />
                 <RadioMenuItem fx:id="themeNordLightMenuItem" mnemonicParsing="false" text="Nord Light" />
@@ -85,6 +70,63 @@
                 <MenuItem mnemonicParsing="false" text="About" disable="true" />
             </Menu>
         </MenuBar>
+            <HBox alignment="CENTER_RIGHT" spacing="6.0" styleClass="top-actions-box" style="-fx-padding: 0 10 0 0;">
+                <!-- Undo button -->
+                <Button fx:id="undoActionButton" styleClass="top-bar-icon-button" focusTraversable="false">
+                    <graphic>
+                        <SVGPath content="M3 7v6h6 M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" strokeWidth="1.8" fill="transparent" styleClass="top-bar-icon" />
+                    </graphic>
+                    <tooltip>
+                        <Tooltip text="Undo Action (Ctrl+Z)" />
+                    </tooltip>
+                </Button>
+                <!-- Slideshow button -->
+                <Button fx:id="slideshowActionButton" styleClass="top-bar-icon-button" focusTraversable="false">
+                    <graphic>
+                        <SVGPath fx:id="slideshowActionIcon" content="M8 5v14l11-7z" fill="transparent" strokeWidth="1.8" styleClass="top-bar-icon" />
+                    </graphic>
+                    <tooltip>
+                        <Tooltip fx:id="slideshowActionTooltip" text="Play Slideshow (F5)" />
+                    </tooltip>
+                </Button>
+                <!-- Full Screen button -->
+                <Button fx:id="fullscreenActionButton" styleClass="top-bar-icon-button" focusTraversable="false">
+                    <graphic>
+                        <SVGPath content="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" strokeWidth="1.8" fill="transparent" styleClass="top-bar-icon" />
+                    </graphic>
+                    <tooltip>
+                        <Tooltip text="Toggle Full Screen (F11 / Enter)" />
+                    </tooltip>
+                </Button>
+                <!-- Sort MenuButton (Dropdown) -->
+                <MenuButton fx:id="sortActionButton" styleClass="top-bar-icon-button" focusTraversable="false">
+                    <graphic>
+                        <SVGPath content="M3 4h18M3 10h12M3 16h6" strokeWidth="1.8" fill="transparent" styleClass="top-bar-icon" />
+                    </graphic>
+                    <tooltip>
+                        <Tooltip text="Sort Settings" />
+                    </tooltip>
+                    <items>
+                        <!-- Items will be initialized/mirrored in controller -->
+                    </items>
+                </MenuButton>
+                <!-- Preferences Settings button -->
+                <Button fx:id="preferencesActionButton" styleClass="top-bar-icon-button" focusTraversable="false">
+                    <graphic>
+                        <SVGPath content="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" strokeWidth="1.8" fill="transparent" styleClass="top-bar-icon" />
+                    </graphic>
+                    <tooltip>
+                        <Tooltip text="Preferences Settings (Ctrl+P)" />
+                    </tooltip>
+                </Button>
+                <!-- Hide Top Panel button -->
+                <Button fx:id="hideTopButton" styleClass="pin-button" text="—" style="-fx-font-weight: bold;" focusTraversable="false">
+                    <tooltip>
+                        <Tooltip text="Hide Menu &amp; Action Bar (Ctrl+Shift+T)" />
+                    </tooltip>
+                </Button>
+            </HBox>
+        </HBox>
     </top>
 
     <!-- Main Content Area -->
@@ -96,7 +138,7 @@
                     <javafx.geometry.Insets top="10.0" right="10.0" bottom="10.0" left="10.0" />
                 </padding>
 
-                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                <HBox alignment="CENTER_LEFT" spacing="5.0">
                     <CheckBox text="Enable click to move" fx:id="clickToMoveCheckBox"
                               selected="true" styleClass="help-text" />
                     <Region HBox.hgrow="ALWAYS" />
@@ -105,6 +147,11 @@
                             <Tooltip text="Pin panel in Full Screen" />
                         </tooltip>
                     </ToggleButton>
+                    <Button fx:id="hideLeftButton" styleClass="pin-button" text="—" style="-fx-font-weight: bold;" focusTraversable="false">
+                        <tooltip>
+                            <Tooltip text="Hide Left Panel (Ctrl+L)" />
+                        </tooltip>
+                    </Button>
                 </HBox>
                 <CheckBox text="Auto-advance on move" fx:id="autoAdvanceCheckBox"
                           selected="true" styleClass="help-text" />
@@ -170,7 +217,7 @@
                 <padding>
                     <javafx.geometry.Insets top="10.0" right="10.0" bottom="10.0" left="10.0" />
                 </padding>
-                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                <HBox alignment="CENTER_LEFT" spacing="5.0">
                     <Label text="Metadata Properties" styleClass="section-title" />
                     <Region HBox.hgrow="ALWAYS" />
                     <ToggleButton fx:id="pinRightButton" styleClass="pin-button" text="📌" selected="false">
@@ -178,6 +225,11 @@
                             <Tooltip text="Pin panel in Full Screen" />
                         </tooltip>
                     </ToggleButton>
+                    <Button fx:id="hideRightButton" styleClass="pin-button" text="—" style="-fx-font-weight: bold;" focusTraversable="false">
+                        <tooltip>
+                            <Tooltip text="Hide Metadata Panel (Ctrl+R)" />
+                        </tooltip>
+                    </Button>
                 </HBox>
                 <Separator />
                 

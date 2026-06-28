@@ -14,7 +14,7 @@
                 <Insets bottom="10.0" left="20.0" right="20.0" top="20.0" />
             </padding>
 
-            <Label text="Configure Destination Folders" styleClass="dialog-title" />
+            <Label text="Preferences Settings" styleClass="dialog-title" />
             <Label text="Set up folders for hotkeys 1-9 and a-z. Press the corresponding key to move images to these folders."
                    styleClass="dialog-description" wrapText="true" />
             <Separator />
@@ -23,7 +23,7 @@
 
     <!-- Main Content -->
     <center>
-        <TabPane tabClosingPolicy="UNAVAILABLE">
+        <TabPane fx:id="tabPane" tabClosingPolicy="UNAVAILABLE">
             <tabs>
                 <Tab text="Destination Folders">
                     <content>
@@ -136,6 +136,66 @@
                                 </GridPane>
                             </VBox>
                         </ScrollPane>
+                    </content>
+                </Tab>
+                <Tab text="Sorting Rules">
+                    <content>
+                        <SplitPane dividerPositions="0.45" HBox.hgrow="ALWAYS">
+                            <!-- Left Panel: List of Rules -->
+                            <VBox spacing="10.0">
+                                <padding>
+                                    <Insets bottom="15.0" left="15.0" right="15.0" top="10.0" />
+                                </padding>
+                                <Label text="Active Rules" style="-fx-font-weight: bold;"/>
+                                <ListView fx:id="rulesListView" VBox.vgrow="ALWAYS" />
+                                <HBox spacing="10.0" alignment="CENTER_RIGHT">
+                                    <Button fx:id="deleteRuleButton" text="Delete Selected" styleClass="danger-button"/>
+                                </HBox>
+                            </VBox>
+
+                            <!-- Right Panel: Rule Editor -->
+                            <VBox spacing="15.0">
+                                <padding>
+                                    <Insets bottom="15.0" left="15.0" right="15.0" top="10.0" />
+                                </padding>
+                                <Label text="Rule Editor" style="-fx-font-weight: bold;"/>
+                                <Separator />
+                                
+                                <GridPane hgap="10.0" vgap="12.0" VBox.vgrow="ALWAYS">
+                                    <columnConstraints>
+                                        <ColumnConstraints minWidth="80.0" prefWidth="90.0" halignment="RIGHT"/>
+                                        <ColumnConstraints hgrow="ALWAYS" />
+                                    </columnConstraints>
+
+                                    <!-- Condition Field -->
+                                    <Label text="If Field:" GridPane.rowIndex="0" GridPane.columnIndex="0" />
+                                    <ComboBox fx:id="fieldComboBox" promptText="Select field..." HBox.hgrow="ALWAYS" maxWidth="Infinity" GridPane.rowIndex="0" GridPane.columnIndex="1" />
+
+                                    <!-- Operator Field -->
+                                    <Label text="Operator:" GridPane.rowIndex="1" GridPane.columnIndex="0" />
+                                    <ComboBox fx:id="operatorComboBox" promptText="Select operator..." HBox.hgrow="ALWAYS" maxWidth="Infinity" GridPane.rowIndex="1" GridPane.columnIndex="1" />
+
+                                    <!-- Value Field -->
+                                    <Label text="Value:" GridPane.rowIndex="2" GridPane.columnIndex="0" />
+                                    <TextField fx:id="valueTextField" promptText="Condition value..." GridPane.rowIndex="2" GridPane.columnIndex="1" />
+
+                                    <!-- Action Field -->
+                                    <Label text="Then Action:" GridPane.rowIndex="3" GridPane.columnIndex="0" />
+                                    <ComboBox fx:id="actionComboBox" promptText="Select action..." HBox.hgrow="ALWAYS" maxWidth="Infinity" GridPane.rowIndex="3" GridPane.columnIndex="1" />
+
+                                    <!-- Destination Folder Field -->
+                                    <Label text="Destination:" GridPane.rowIndex="4" GridPane.columnIndex="0" />
+                                    <HBox spacing="5.0" GridPane.rowIndex="4" GridPane.columnIndex="1" alignment="CENTER_LEFT">
+                                        <TextField fx:id="destFolderTextField" promptText="Select destination folder..." HBox.hgrow="ALWAYS" editable="false"/>
+                                        <Button fx:id="browseDestFolderButton" text="Browse..." styleClass="browse-button"/>
+                                    </HBox>
+                                </GridPane>
+
+                                <HBox spacing="10.0" alignment="CENTER_RIGHT">
+                                    <Button fx:id="addRuleButton" text="Add / Save Rule" styleClass="primary-button"/>
+                                </HBox>
+                            </VBox>
+                        </SplitPane>
                     </content>
                 </Tab>
             </tabs>

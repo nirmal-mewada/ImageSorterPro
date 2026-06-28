@@ -6,7 +6,7 @@ This workspace contains **ImageSorterPro**, a lightweight, Maven-based JavaFX de
 
 ## 🛠️ Technology Stack & Dependencies
 - **Core**: Java 11/14, JavaFX 21 (Controls, FXML, Swing, Media, graphics).
-- **Theme**: AtlantaFX (`PrimerLight` stylesheet for modern aesthetics).
+- **Theme**: AtlantaFX (`CupertinoDark` stylesheet as default theme).
 - **Serialization**: Jackson Databind (manages `image_sort_config.json`).
 - **Metadata/EXIF**: `metadata-extractor` (reading EXIF/MP4 orientation tags), `commons-imaging` (lossless EXIF rotation/rewrites).
 - **Video Utilities**: `jcodec` (for fast video frame/thumbnail extraction).

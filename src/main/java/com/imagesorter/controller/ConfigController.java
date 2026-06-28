@@ -9,6 +9,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ListView;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 
@@ -52,6 +54,21 @@ public class ConfigController implements Initializable {
     @FXML private TextField supportedExtensionsField;
     @FXML private TextField supportedVideoExtensionsField;
 
+    @FXML private javafx.scene.control.TabPane tabPane;
+
+    // Sorting Rules tab controls
+    @FXML private ListView<com.imagesorter.model.SortingRule> rulesListView;
+    @FXML private Button deleteRuleButton;
+    @FXML private ComboBox<com.imagesorter.model.SortingRule.Field> fieldComboBox;
+    @FXML private ComboBox<com.imagesorter.model.SortingRule.Operator> operatorComboBox;
+    @FXML private TextField valueTextField;
+    @FXML private ComboBox<com.imagesorter.model.SortingRule.Action> actionComboBox;
+    @FXML private TextField destFolderTextField;
+    @FXML private Button browseDestFolderButton;
+    @FXML private Button addRuleButton;
+
+    private final javafx.collections.ObservableList<com.imagesorter.model.SortingRule> rulesList = javafx.collections.FXCollections.observableArrayList();
+
     // Services
     private ConfigService configService;
 
@@ -81,6 +98,9 @@ public class ConfigController implements Initializable {
 
         // Setup text field validation
         setupTextFieldValidation();
+
+        // Setup rules tab configuration
+        setupRulesTab();
     }
 
     private void initializeHotkeys() {
@@ -351,6 +371,10 @@ public class ConfigController implements Initializable {
 
         config.setSupportedExtensions(parseExtensions(supportedExtensionsField.getText()));
         config.setSupportedVideoExtensions(parseExtensions(supportedVideoExtensionsField.getText()));
+
+        // Save rules from observable list
+        config.getSortingRules().clear();
+        config.getSortingRules().addAll(rulesList);
     }
 
     private int parseInteger(String value, int defaultValue) {
@@ -494,6 +518,109 @@ public class ConfigController implements Initializable {
     private void closeDialog() {
         Stage stage = (Stage) saveButton.getScene().getWindow();
         stage.close();
+    }
+
+    public void selectTab(int index) {
+        if (tabPane != null && index >= 0 && index < tabPane.getTabs().size()) {
+            tabPane.getSelectionModel().select(index);
+        }
+    }
+
+    private void setupRulesTab() {
+        // Setup dropdown options
+        fieldComboBox.setItems(javafx.collections.FXCollections.observableArrayList(com.imagesorter.model.SortingRule.Field.values()));
+        actionComboBox.setItems(javafx.collections.FXCollections.observableArrayList(com.imagesorter.model.SortingRule.Action.values()));
+        
+        // Update operator list dynamically based on field choice
+        fieldComboBox.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                operatorComboBox.setItems(javafx.collections.FXCollections.observableArrayList(
+                    com.imagesorter.model.SortingRule.Operator.CONTAINS, 
+                    com.imagesorter.model.SortingRule.Operator.EQUALS, 
+                    com.imagesorter.model.SortingRule.Operator.STARTS_WITH, 
+                    com.imagesorter.model.SortingRule.Operator.ENDS_WITH, 
+                    com.imagesorter.model.SortingRule.Operator.IS_SET
+                ));
+            }
+        });
+
+        // Toggle value field visibility/readability based on Operator type
+        operatorComboBox.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                valueTextField.setDisable(newVal == com.imagesorter.model.SortingRule.Operator.IS_SET);
+                if (newVal == com.imagesorter.model.SortingRule.Operator.IS_SET) {
+                    valueTextField.clear();
+                }
+            }
+        });
+
+        // Load rules
+        rulesList.clear();
+        rulesList.addAll(configService.getConfig().getSortingRules());
+        rulesListView.setItems(rulesList);
+
+        // Bind browse button
+        browseDestFolderButton.setOnAction(e -> {
+            DirectoryChooser directoryChooser = new DirectoryChooser();
+            directoryChooser.setTitle("Choose Rule Destination Folder");
+            
+            String current = destFolderTextField.getText();
+            if (current != null && !current.isEmpty()) {
+                File dir = new File(current);
+                if (dir.exists() && dir.isDirectory()) {
+                    directoryChooser.setInitialDirectory(dir);
+                }
+            } else {
+                String lastOpened = configService.getConfig().getLastOpenedFolder();
+                if (lastOpened != null && new File(lastOpened).exists()) {
+                    directoryChooser.setInitialDirectory(new File(lastOpened));
+                }
+            }
+
+            File selectedDir = directoryChooser.showDialog(browseDestFolderButton.getScene().getWindow());
+            if (selectedDir != null) {
+                destFolderTextField.setText(selectedDir.getAbsolutePath());
+            }
+        });
+
+        // Add Rule
+        addRuleButton.setOnAction(e -> {
+            com.imagesorter.model.SortingRule.Field field = fieldComboBox.getValue();
+            com.imagesorter.model.SortingRule.Operator op = operatorComboBox.getValue();
+            String val = valueTextField.getText();
+            com.imagesorter.model.SortingRule.Action action = actionComboBox.getValue();
+            String dest = destFolderTextField.getText();
+
+            if (field == null || op == null || action == null || dest == null || dest.isEmpty()) {
+                showAlert(Alert.AlertType.WARNING, "Validation Error", "Please fill in all required fields (Field, Operator, Action, Destination).");
+                return;
+            }
+
+            if (op != com.imagesorter.model.SortingRule.Operator.IS_SET && (val == null || val.trim().isEmpty())) {
+                showAlert(Alert.AlertType.WARNING, "Validation Error", "Please fill in a comparison Value.");
+                return;
+            }
+
+            com.imagesorter.model.SortingRule newRule = new com.imagesorter.model.SortingRule(field, op, val, action, dest);
+            rulesList.add(newRule);
+            
+            // Clear form
+            fieldComboBox.setValue(null);
+            operatorComboBox.setValue(null);
+            valueTextField.clear();
+            actionComboBox.setValue(null);
+            destFolderTextField.clear();
+        });
+
+        // Delete Rule
+        deleteRuleButton.setOnAction(e -> {
+            com.imagesorter.model.SortingRule selected = rulesListView.getSelectionModel().getSelectedItem();
+            if (selected != null) {
+                rulesList.remove(selected);
+            } else {
+                showAlert(Alert.AlertType.WARNING, "Selection Error", "Please select a rule from the list to delete.");
+            }
+        });
     }
 
     public void setOnConfigSaved(Runnable callback) {

@@ -88,6 +88,30 @@ public class MainController implements Initializable {
     @FXML private SplitPane horizontalSplitPane;
     @FXML private SplitPane verticalSplitPane;
     @FXML private ScrollPane imageScrollPane;
+
+    @FXML private HBox topBar;
+    @FXML private javafx.scene.control.MenuBar mainMenuBar;
+    @FXML private Button undoActionButton;
+    @FXML private Button slideshowActionButton;
+    @FXML private javafx.scene.shape.SVGPath slideshowActionIcon;
+    @FXML private Tooltip slideshowActionTooltip;
+    @FXML private Button fullscreenActionButton;
+    @FXML private MenuButton sortActionButton;
+    @FXML private Button preferencesActionButton;
+    @FXML private Button hideTopButton;
+    @FXML private MenuItem toggleTopViewMenuItem;
+
+    @FXML private Button hideLeftButton;
+    @FXML private Button hideRightButton;
+
+    private boolean topBarExplicitlyHidden = false;
+
+    private RadioMenuItem btnSortByName;
+    private RadioMenuItem btnSortByCreated;
+    private RadioMenuItem btnSortByModified;
+    private RadioMenuItem btnSortBySize;
+    private RadioMenuItem btnSortAsc;
+    private RadioMenuItem btnSortDesc;
     @FXML private VBox centerVBox;
     @FXML private ToggleButton galleryViewButton;
     @FXML private ListView<Integer> galleryListView;
@@ -112,7 +136,6 @@ public class MainController implements Initializable {
     @FXML private RadioMenuItem actionModeStagedMoveMenuItem;
     @FXML private RadioMenuItem actionModeStagedCopyMenuItem;
 
-    @FXML private CheckMenuItem slideshowPlayMenuItem;
     @FXML private RadioMenuItem interval1sMenuItem;
     @FXML private RadioMenuItem interval2sMenuItem;
     @FXML private RadioMenuItem interval3sMenuItem;
@@ -122,12 +145,8 @@ public class MainController implements Initializable {
 
     @FXML private CheckMenuItem preloadVideosMenuItem;
 
-    @FXML private MenuItem toggleFullScreenMenuItem;
-
     @FXML private Menu appearanceMenu;
-    @FXML private RadioMenuItem appearanceLightMenuItem;
-    @FXML private RadioMenuItem appearanceDarkMenuItem;
-    @FXML private RadioMenuItem appearanceSystemMenuItem;
+
     @FXML private RadioMenuItem themePrimerLightMenuItem;
     @FXML private RadioMenuItem themePrimerDarkMenuItem;
     @FXML private RadioMenuItem themeNordLightMenuItem;
@@ -136,15 +155,7 @@ public class MainController implements Initializable {
     @FXML private RadioMenuItem themeCupertinoDarkMenuItem;
     @FXML private RadioMenuItem themeDraculaMenuItem;
 
-    @FXML private MenuItem configureRulesMenuItem;
     @FXML private MenuItem applyRulesMenuItem;
-
-    @FXML private RadioMenuItem sortByNameMenuItem;
-    @FXML private RadioMenuItem sortByCreatedMenuItem;
-    @FXML private RadioMenuItem sortByModifiedMenuItem;
-    @FXML private RadioMenuItem sortBySizeMenuItem;
-    @FXML private RadioMenuItem sortOrderAscMenuItem;
-    @FXML private RadioMenuItem sortOrderDescMenuItem;
 
     @FXML private HBox batchControlsBox;
     @FXML private Label stagedCountLabel;
@@ -154,6 +165,7 @@ public class MainController implements Initializable {
     // Additional state variables
     private final List<StagedAction> stagedActions = new ArrayList<>();
     private Timeline slideshowTimeline;
+    private boolean isSlideshowPlaying = false;
     private int slideshowInterval = 3;
     private boolean isFullScreenListenerRegistered = false;
     private boolean wasLeftVisibleBeforeFS = true;
@@ -200,6 +212,7 @@ public class MainController implements Initializable {
         setupImageView();
         setupHotkeyList();
         setupMenuItems();
+        setupTopBarAndHideButtons();
         setupNewFeatures();
         applyLayoutVisibilityFromConfig();
 
@@ -370,13 +383,13 @@ public class MainController implements Initializable {
 
     private void setupMenuItems() {
         openFolderMenuItem.setOnAction(e -> openFolder());
-        configureFoldersMenuItem.setOnAction(e -> openConfigDialog());
-        configureRulesMenuItem.setOnAction(e -> openRulesDialog());
+        configureFoldersMenuItem.setOnAction(e -> openConfigDialog(0));
         applyRulesMenuItem.setOnAction(e -> applyRulesToFolder());
         exitMenuItem.setOnAction(e -> Platform.exit());
         toggleLeftViewMenuItem.setOnAction(e -> toggleNodeVisibility(leftVBox));
         toggleRightViewMenuItem.setOnAction(e -> toggleNodeVisibility(rightVBox));
         toggleThumbnailBoxMenuItem.setOnAction(e -> toggleNodeVisibility(thumbnailContainer));
+        toggleTopViewMenuItem.setOnAction(e -> toggleTopBarVisibility());
         helpShortcutsMenuItem.setOnAction(e -> showShortcuts());
 //        resetFocus.setOnAction(e -> setupKeyboardFocus());
 
@@ -508,6 +521,12 @@ public class MainController implements Initializable {
 
         if (code == KeyCode.ENTER) {
             toggleFullScreen();
+        } else if (code == KeyCode.F5) {
+            if (isSlideshowPlaying) {
+                stopSlideshow();
+            } else {
+                startSlideshow();
+            }
         } else if (event.isControlDown() && code == KeyCode.Z) {
             undoLastAction();
         } else if (event.isControlDown() && event.isShiftDown() && keyText.matches("[1-9a-z]")) {
@@ -541,10 +560,15 @@ public class MainController implements Initializable {
                         handled = false;
                     break;
                 case P:
-                    if (event.isControlDown())
-                        openConfigDialog();
-                    else
+                    if (event.isControlDown()) {
+                        if (event.isShiftDown()) {
+                            openConfigDialog(2);
+                        } else {
+                            openConfigDialog(0);
+                        }
+                    } else {
                         handled = false;
+                    }
                     break;
                 case SPACE:
                     if (currentMediaPlayer != null) {
@@ -1518,13 +1542,13 @@ public class MainController implements Initializable {
     }
 
 
-    private void openConfigDialog() {
+    private void openConfigDialog(int tabIndex) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/imagesorter/view/config.fxml"));
             Parent root = loader.load();
 
             Stage configStage = new Stage();
-            configStage.setTitle("Configure Folders");
+            configStage.setTitle("Settings");
             configStage.setScene(new Scene(root, 600, 800)); // Increased height
             configStage.initModality(Modality.APPLICATION_MODAL);
             if (mediaContainer.getScene() != null && mediaContainer.getScene().getWindow() != null) {
@@ -1532,6 +1556,7 @@ public class MainController implements Initializable {
             }
 
             ConfigController configController = loader.getController();
+            configController.selectTab(tabIndex);
             configController.setOnConfigSaved(() -> {
                 updateHotkeyList();
                 imageView.setSmooth(configService.getConfig().isSmooth());
@@ -1695,14 +1720,6 @@ public class MainController implements Initializable {
         clearBatchButton.setOnAction(e -> clearBatch());
 
         // 3. Setup Slideshow Menu Items
-        slideshowPlayMenuItem.setOnAction(e -> {
-            if (slideshowPlayMenuItem.isSelected()) {
-                startSlideshow();
-            } else {
-                stopSlideshow();
-            }
-        });
-
         ToggleGroup intervalGroup = new ToggleGroup();
         interval1sMenuItem.setToggleGroup(intervalGroup);
         interval2sMenuItem.setToggleGroup(intervalGroup);
@@ -1748,18 +1765,15 @@ public class MainController implements Initializable {
                     }
                 }
                 
-                if (slideshowPlayMenuItem.isSelected()) {
+                if (isSlideshowPlaying) {
                     startSlideshow();
                 }
             }
         });
 
-        toggleFullScreenMenuItem.setOnAction(e -> toggleFullScreen());
-
         // 4. Setup Appearance Menu
         ToggleGroup appearanceGroup = new ToggleGroup();
         java.util.List<RadioMenuItem> allAppearanceItems = java.util.Arrays.asList(
-            appearanceLightMenuItem, appearanceDarkMenuItem, appearanceSystemMenuItem,
             themePrimerLightMenuItem, themePrimerDarkMenuItem,
             themeNordLightMenuItem, themeNordDarkMenuItem,
             themeCupertinoLightMenuItem, themeCupertinoDarkMenuItem,
@@ -1771,7 +1785,7 @@ public class MainController implements Initializable {
         RadioMenuItem toSelect = allAppearanceItems.stream()
             .filter(item -> item.getText().equals(savedTheme))
             .findFirst()
-            .orElse(appearanceSystemMenuItem);
+            .orElse(themeCupertinoDarkMenuItem);
         toSelect.setSelected(true);
 
         appearanceGroup.selectedToggleProperty().addListener((obs, oldVal, newVal) -> {
@@ -1788,50 +1802,8 @@ public class MainController implements Initializable {
         galleryViewButton.setOnAction(e -> toggleGalleryView());
         setupGalleryListView();
 
-        // 6. Setup Sorting Menu Items
-        ToggleGroup sortFieldGroup = new ToggleGroup();
-        sortByNameMenuItem.setToggleGroup(sortFieldGroup);
-        sortByCreatedMenuItem.setToggleGroup(sortFieldGroup);
-        sortByModifiedMenuItem.setToggleGroup(sortFieldGroup);
-        sortBySizeMenuItem.setToggleGroup(sortFieldGroup);
-
-        ToggleGroup sortOrderGroup = new ToggleGroup();
-        sortOrderAscMenuItem.setToggleGroup(sortOrderGroup);
-        sortOrderDescMenuItem.setToggleGroup(sortOrderGroup);
-
         // Initialize UI from config
         syncSortingUI();
-
-        // Listeners for Menu Items
-        sortFieldGroup.selectedToggleProperty().addListener((obs, oldVal, newVal) -> {
-            if (isUpdatingSortingUI || newVal == null) return;
-            String field = "Name";
-            if (newVal == sortByCreatedMenuItem) {
-                field = "Date Created";
-            } else if (newVal == sortByModifiedMenuItem) {
-                field = "Date Modified";
-            } else if (newVal == sortBySizeMenuItem) {
-                field = "Size";
-            }
-            config.setSortField(field);
-            configService.saveConfig();
-            syncSortingUI();
-            sortCurrentImages();
-            lastAction.setText("Sorting changed to: " + field);
-        });
-
-        sortOrderGroup.selectedToggleProperty().addListener((obs, oldVal, newVal) -> {
-            if (isUpdatingSortingUI || newVal == null) return;
-            String order = "Ascending";
-            if (newVal == sortOrderDescMenuItem) {
-                order = "Descending";
-            }
-            config.setSortOrder(order);
-            configService.saveConfig();
-            syncSortingUI();
-            sortCurrentImages();
-            lastAction.setText("Sort order changed to: " + order);
-        });
     }
 
     private void syncSortingUI() {
@@ -1841,27 +1813,26 @@ public class MainController implements Initializable {
             String activeField = configService.getConfig().getSortField();
             String activeOrder = configService.getConfig().getSortOrder();
 
-            // Sync menu items
             switch (activeField) {
                 case "Date Created":
-                    sortByCreatedMenuItem.setSelected(true);
+                    if (btnSortByCreated != null) btnSortByCreated.setSelected(true);
                     break;
                 case "Date Modified":
-                    sortByModifiedMenuItem.setSelected(true);
+                    if (btnSortByModified != null) btnSortByModified.setSelected(true);
                     break;
                 case "Size":
-                    sortBySizeMenuItem.setSelected(true);
+                    if (btnSortBySize != null) btnSortBySize.setSelected(true);
                     break;
                 case "Name":
                 default:
-                    sortByNameMenuItem.setSelected(true);
+                    if (btnSortByName != null) btnSortByName.setSelected(true);
                     break;
             }
 
             if ("Descending".equals(activeOrder)) {
-                sortOrderDescMenuItem.setSelected(true);
+                if (btnSortDesc != null) btnSortDesc.setSelected(true);
             } else {
-                sortOrderAscMenuItem.setSelected(true);
+                if (btnSortAsc != null) btnSortAsc.setSelected(true);
             }
         } finally {
             isUpdatingSortingUI = false;
@@ -1906,7 +1877,13 @@ public class MainController implements Initializable {
         }));
         slideshowTimeline.setCycleCount(Timeline.INDEFINITE);
         slideshowTimeline.play();
-        slideshowPlayMenuItem.setSelected(true);
+        isSlideshowPlaying = true;
+        if (slideshowActionIcon != null) {
+            slideshowActionIcon.setContent("M6 19h4V5H6v14zm8-14v14h4V5h-4z"); // Pause icon
+        }
+        if (slideshowActionTooltip != null) {
+            slideshowActionTooltip.setText("Pause Slideshow (F5)");
+        }
         lastAction.setText("Slideshow started with interval: " + slideshowInterval + "s");
     }
 
@@ -1915,7 +1892,13 @@ public class MainController implements Initializable {
             slideshowTimeline.stop();
             slideshowTimeline = null;
         }
-        slideshowPlayMenuItem.setSelected(false);
+        isSlideshowPlaying = false;
+        if (slideshowActionIcon != null) {
+            slideshowActionIcon.setContent("M8 5v14l11-7z"); // Play icon
+        }
+        if (slideshowActionTooltip != null) {
+            slideshowActionTooltip.setText("Play Slideshow (F5)");
+        }
         lastAction.setText("Slideshow paused.");
     }
 
@@ -2092,11 +2075,27 @@ public class MainController implements Initializable {
         });
 
         scene.addEventFilter(MouseEvent.MOUSE_MOVED, event -> {
+            double mouseX = event.getSceneX();
+            double mouseY = event.getSceneY();
+            double width = scene.getWidth();
+
+            // 4. Top bar hover reveal / auto-hide when explicitly hidden (works in both windowed and full screen)
+            if (topBarExplicitlyHidden && topBar != null) {
+                boolean isTopShowing = topBar.isVisible();
+                if (!isTopShowing && mouseY <= 15) {
+                    topBar.setVisible(true);
+                    topBar.setManaged(true);
+                } else if (isTopShowing && mouseY > 60) {
+                    boolean isMenuShowing = mainMenuBar != null && mainMenuBar.getMenus().stream().anyMatch(Menu::isShowing);
+                    boolean isSortShowing = sortActionButton != null && sortActionButton.isShowing();
+                    if (!isMenuShowing && !isSortShowing) {
+                        topBar.setVisible(false);
+                        topBar.setManaged(false);
+                    }
+                }
+            }
+
             if (stage.isFullScreen()) {
-                double mouseX = event.getSceneX();
-                double mouseY = event.getSceneY();
-                double width = scene.getWidth();
-                
                 // Fallback widths / heights to handle layout delay
                 double leftWidth = leftVBox.getWidth() > 0 ? leftVBox.getWidth() : leftVBox.getPrefWidth();
                 double rightWidth = rightVBox.getWidth() > 0 ? rightVBox.getWidth() : rightVBox.getPrefWidth();
@@ -2143,22 +2142,117 @@ public class MainController implements Initializable {
         });
     }
 
-    private void openRulesDialog() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/imagesorter/view/rules.fxml"));
-            Parent root = loader.load();
-            Stage stage = new Stage();
-            stage.setTitle("Configure Rules");
-            stage.initModality(Modality.WINDOW_MODAL);
-            if (mediaContainer.getScene() != null && mediaContainer.getScene().getWindow() != null) {
-                stage.initOwner(mediaContainer.getScene().getWindow());
+    private void setupTopBarAndHideButtons() {
+        // Hide panel buttons
+        if (hideLeftButton != null) {
+            hideLeftButton.setOnAction(e -> toggleNodeVisibility(leftVBox));
+        }
+        if (hideRightButton != null) {
+            hideRightButton.setOnAction(e -> toggleNodeVisibility(rightVBox));
+        }
+        if (hideTopButton != null) {
+            hideTopButton.setOnAction(e -> {
+                topBarExplicitlyHidden = true;
+                toggleTopBarVisibility();
+            });
+        }
+
+        // Top bar action buttons
+        if (undoActionButton != null) {
+            undoActionButton.setOnAction(e -> undoLastAction());
+        }
+        if (slideshowActionButton != null) {
+            slideshowActionButton.setOnAction(e -> {
+                if (isSlideshowPlaying) {
+                    stopSlideshow();
+                } else {
+                    startSlideshow();
+                }
+            });
+        }
+        if (fullscreenActionButton != null) {
+            fullscreenActionButton.setOnAction(e -> toggleFullScreen());
+        }
+        if (preferencesActionButton != null) {
+            preferencesActionButton.setOnAction(e -> openConfigDialog(0));
+        }
+
+        // Initialize sortActionButton items
+        if (sortActionButton != null) {
+            btnSortByName = new RadioMenuItem("Name");
+            btnSortByCreated = new RadioMenuItem("Date Created");
+            btnSortByModified = new RadioMenuItem("Date Modified");
+            btnSortBySize = new RadioMenuItem("File Size");
+            btnSortAsc = new RadioMenuItem("Ascending");
+            btnSortDesc = new RadioMenuItem("Descending");
+
+            ToggleGroup btnSortFieldGroup = new ToggleGroup();
+            btnSortByName.setToggleGroup(btnSortFieldGroup);
+            btnSortByCreated.setToggleGroup(btnSortFieldGroup);
+            btnSortByModified.setToggleGroup(btnSortFieldGroup);
+            btnSortBySize.setToggleGroup(btnSortFieldGroup);
+
+            ToggleGroup btnSortOrderGroup = new ToggleGroup();
+            btnSortAsc.setToggleGroup(btnSortOrderGroup);
+            btnSortDesc.setToggleGroup(btnSortOrderGroup);
+
+            sortActionButton.getItems().addAll(
+                btnSortByName, btnSortByCreated, btnSortByModified, btnSortBySize,
+                new SeparatorMenuItem(),
+                btnSortAsc, btnSortDesc
+            );
+
+            ConfigSettings config = configService.getConfig();
+
+            btnSortFieldGroup.selectedToggleProperty().addListener((obs, oldVal, newVal) -> {
+                if (isUpdatingSortingUI || newVal == null) return;
+                String field = "Name";
+                if (newVal == btnSortByCreated) {
+                    field = "Date Created";
+                } else if (newVal == btnSortByModified) {
+                    field = "Date Modified";
+                } else if (newVal == btnSortBySize) {
+                    field = "Size";
+                }
+                config.setSortField(field);
+                configService.saveConfig();
+                syncSortingUI();
+                sortCurrentImages();
+                lastAction.setText("Sorting changed to: " + field);
+            });
+
+            btnSortOrderGroup.selectedToggleProperty().addListener((obs, oldVal, newVal) -> {
+                if (isUpdatingSortingUI || newVal == null) return;
+                String order = "Ascending";
+                if (newVal == btnSortDesc) {
+                    order = "Descending";
+                }
+                config.setSortOrder(order);
+                configService.saveConfig();
+                syncSortingUI();
+                sortCurrentImages();
+                lastAction.setText("Sort order changed to: " + order);
+            });
+        }
+    }
+
+    private void toggleTopBarVisibility() {
+        if (topBar != null) {
+            if (topBarExplicitlyHidden) {
+                topBar.setVisible(true);
+                topBar.setManaged(true);
+                topBarExplicitlyHidden = false;
+                if (toggleTopViewMenuItem != null) {
+                    toggleTopViewMenuItem.setText("Hide Top Menu & Action Bar");
+                }
+            } else {
+                topBar.setVisible(false);
+                topBar.setManaged(false);
+                topBarExplicitlyHidden = true;
+                if (toggleTopViewMenuItem != null) {
+                    toggleTopViewMenuItem.setText("Show Top Menu & Action Bar");
+                }
             }
-            stage.setScene(new Scene(root));
-            stage.showAndWait();
-            setupKeyboardFocus();
-        } catch (Exception e) {
-            e.printStackTrace();
-            showAlert("Error", "Failed to load Rules dialog: " + e.getMessage());
         }
     }
 

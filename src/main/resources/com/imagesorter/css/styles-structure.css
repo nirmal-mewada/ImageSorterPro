@@ -97,3 +97,22 @@
     -fx-background-color: rgba(59, 130, 246, 0.15);
     -fx-border-color: rgba(59, 130, 246, 0.6);
 }
+
+/* ── Top Bar Action Buttons ── */
+.top-bar-icon-button {
+    -fx-padding: 4px 6px;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-background-radius: 5px;
+    -fx-border-radius: 5px;
+    -fx-cursor: hand;
+}
+.top-bar-icon-button:hover {
+    -fx-background-color: rgba(128, 128, 128, 0.15);
+}
+.top-bar-icon-button .top-bar-icon {
+    -fx-stroke: -color-fg-default;
+}
+.top-bar-icon-button:hover .top-bar-icon {
+    -fx-stroke: -color-accent-fg;
+}
