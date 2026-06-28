@@ -127,44 +127,33 @@ rm -rf "$INPUT_DIR"
 mkdir -p "$INPUT_DIR"
 cp "$SHADE_JAR" "$INPUT_DIR/"
 
-# --- Download and bundle FFmpeg binary for packaging ---
-echo -e "${YELLOW}  Downloading and bundling FFmpeg...${NC}"
-FFMPEG_VERSION="8.1"
-FFMPEG_URL=""
-FFMPEG_EXE=""
-
+# --- Copy and bundle FFmpeg binary from ext-dist ---
+echo -e "${YELLOW}  Bundling FFmpeg from ext-dist...${NC}"
 case "$OS_TYPE" in
     macOS)
-        ARCH_TYPE=$(uname -m)
-        if [ "$ARCH_TYPE" = "arm64" ]; then
-            FFMPEG_URL="https://github.com/Tyrrrz/FFmpegBin/releases/download/${FFMPEG_VERSION}/ffmpeg-osx-arm64.zip"
+        if [ -f "$PROJECT_DIR/ext-dist/ffmpeg" ]; then
+            cp "$PROJECT_DIR/ext-dist/ffmpeg" "$INPUT_DIR/"
+            chmod +x "$INPUT_DIR/ffmpeg"
+            echo -e "${GREEN}    ✓ Bundled macOS FFmpeg successfully${NC}"
         else
-            FFMPEG_URL="https://github.com/Tyrrrz/FFmpegBin/releases/download/${FFMPEG_VERSION}/ffmpeg-osx-x64.zip"
+            echo -e "${RED}    ERROR: macOS FFmpeg binary not found in ext-dist/${NC}"
         fi
-        FFMPEG_EXE="ffmpeg"
         ;;
     Windows)
-        FFMPEG_URL="https://github.com/Tyrrrz/FFmpegBin/releases/download/${FFMPEG_VERSION}/ffmpeg-windows-x64.zip"
-        FFMPEG_EXE="ffmpeg.exe"
+        if [ -f "$PROJECT_DIR/ext-dist/ffmpeg.exe" ]; then
+            cp "$PROJECT_DIR/ext-dist/ffmpeg.exe" "$INPUT_DIR/"
+            echo -e "${GREEN}    ✓ Bundled Windows FFmpeg successfully${NC}"
+        elif [ -f "$PROJECT_DIR/ext-dist/ffmpeg" ]; then
+            cp "$PROJECT_DIR/ext-dist/ffmpeg" "$INPUT_DIR/ffmpeg.exe"
+            echo -e "${GREEN}    ✓ Bundled Windows FFmpeg successfully${NC}"
+        else
+            echo -e "${RED}    ERROR: Windows FFmpeg binary not found in ext-dist/${NC}"
+        fi
+        ;;
+    *)
+        echo -e "${YELLOW}    ⚠ Skipping FFmpeg bundling for this platform${NC}"
         ;;
 esac
-
-if [ -n "$FFMPEG_URL" ]; then
-    echo "    Downloading: $FFMPEG_URL"
-    if curl -L -s -o "$TARGET_DIR/ffmpeg.zip" "$FFMPEG_URL"; then
-        mkdir -p "$TARGET_DIR/ffmpeg-extracted"
-        unzip -q -o "$TARGET_DIR/ffmpeg.zip" -d "$TARGET_DIR/ffmpeg-extracted"
-        cp "$TARGET_DIR/ffmpeg-extracted/$FFMPEG_EXE" "$INPUT_DIR/"
-        if [ "$OS_TYPE" = "macOS" ]; then
-            chmod +x "$INPUT_DIR/$FFMPEG_EXE"
-        fi
-        echo -e "${GREEN}    ✓ Bundled $FFMPEG_EXE successfully${NC}"
-    else
-        echo -e "${RED}    ERROR: Failed to download FFmpeg. Continuing packaging without it.${NC}"
-    fi
-else
-    echo -e "${YELLOW}    ⚠ Skipping FFmpeg download for this platform${NC}"
-fi
 
 echo "  Running jpackage..."
 jpackage \

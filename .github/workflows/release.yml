@@ -31,7 +31,7 @@ jobs:
       - name: Build JAR with Maven
         run: mvn clean package -DskipTests
 
-      - name: Prepare packaging folder and download FFmpeg
+      - name: Prepare packaging folder and copy FFmpeg
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path target\app
@@ -39,13 +39,9 @@ jobs:
           Copy-Item "scripts\windows\context-menu-install.bat" "target\app\"
           Copy-Item "scripts\windows\context-menu-uninstall.bat" "target\app\"
           
-          # Download and extract FFmpeg for Windows
-          Write-Host "Downloading FFmpeg for Windows..."
-          Invoke-WebRequest -Uri "https://github.com/Tyrrrz/FFmpegBin/releases/download/8.1/ffmpeg-windows-x64.zip" -OutFile "target\ffmpeg.zip"
-          Expand-Archive -Path "target\ffmpeg.zip" -DestinationPath "target\ffmpeg-extracted" -Force
-          Copy-Item "target\ffmpeg-extracted\ffmpeg.exe" "target\app\"
-          Remove-Item "target\ffmpeg.zip"
-          Remove-Item -Recurse -Force "target\ffmpeg-extracted"
+          # Copy FFmpeg from ext-dist
+          Write-Host "Copying FFmpeg from ext-dist..."
+          Copy-Item "ext-dist\ffmpeg.exe" "target\app\"
           Write-Host "FFmpeg successfully bundled!"
 
       - name: Build EXE Installer with jpackage
@@ -106,7 +102,7 @@ jobs:
           call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
           mvn package -Pnative -DskipTests
 
-      - name: Prepare native binary and download FFmpeg
+      - name: Prepare native binary and copy FFmpeg
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path dist
@@ -115,13 +111,9 @@ jobs:
             Copy-Item "target\ImageSorterPro" "dist\ImageSorterPro-native-windows-x64.exe" -ErrorAction SilentlyContinue
           }
           
-          # Download and extract FFmpeg for Windows
-          Write-Host "Downloading FFmpeg for Windows..."
-          Invoke-WebRequest -Uri "https://github.com/Tyrrrz/FFmpegBin/releases/download/8.1/ffmpeg-windows-x64.zip" -OutFile "dist\ffmpeg.zip"
-          Expand-Archive -Path "dist\ffmpeg.zip" -DestinationPath "dist\ffmpeg-extracted" -Force
-          Copy-Item "dist\ffmpeg-extracted\ffmpeg.exe" "dist\ffmpeg.exe"
-          Remove-Item "dist\ffmpeg.zip"
-          Remove-Item -Recurse -Force "dist\ffmpeg-extracted"
+          # Copy FFmpeg from ext-dist
+          Write-Host "Copying FFmpeg from ext-dist..."
+          Copy-Item "ext-dist\ffmpeg.exe" "dist\ffmpeg.exe"
           Write-Host "FFmpeg successfully added to dist folder!"
 
       - name: Upload native image artifact
@@ -155,18 +147,15 @@ jobs:
       - name: Build JAR with Maven
         run: mvn clean package -DskipTests
 
-      - name: Prepare packaging folder and download FFmpeg
+      - name: Prepare packaging folder and copy FFmpeg
         run: |
           mkdir -p target/app
           cp target/ImageSorterPro-1.0-SNAPSHOT.jar target/app/
           
-          # Download and extract FFmpeg for macOS ARM64
-          echo "Downloading FFmpeg for macOS (Apple Silicon)..."
-          curl -L -o target/ffmpeg.zip https://github.com/Tyrrrz/FFmpegBin/releases/download/8.1/ffmpeg-osx-arm64.zip
-          unzip -o target/ffmpeg.zip -d target/ffmpeg-extracted
-          cp target/ffmpeg-extracted/ffmpeg target/app/
+          # Copy FFmpeg from ext-dist for macOS ARM64
+          echo "Copying FFmpeg from ext-dist..."
+          cp ext-dist/ffmpeg target/app/
           chmod +x target/app/ffmpeg
-          rm -rf target/ffmpeg.zip target/ffmpeg-extracted
           echo "FFmpeg successfully bundled!"
 
       - name: Build .app bundle with jpackage
