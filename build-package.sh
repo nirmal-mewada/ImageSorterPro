@@ -127,6 +127,45 @@ rm -rf "$INPUT_DIR"
 mkdir -p "$INPUT_DIR"
 cp "$SHADE_JAR" "$INPUT_DIR/"
 
+# --- Download and bundle FFmpeg binary for packaging ---
+echo -e "${YELLOW}  Downloading and bundling FFmpeg...${NC}"
+FFMPEG_VERSION="8.1"
+FFMPEG_URL=""
+FFMPEG_EXE=""
+
+case "$OS_TYPE" in
+    macOS)
+        ARCH_TYPE=$(uname -m)
+        if [ "$ARCH_TYPE" = "arm64" ]; then
+            FFMPEG_URL="https://github.com/Tyrrrz/FFmpegBin/releases/download/${FFMPEG_VERSION}/ffmpeg-osx-arm64.zip"
+        else
+            FFMPEG_URL="https://github.com/Tyrrrz/FFmpegBin/releases/download/${FFMPEG_VERSION}/ffmpeg-osx-x64.zip"
+        fi
+        FFMPEG_EXE="ffmpeg"
+        ;;
+    Windows)
+        FFMPEG_URL="https://github.com/Tyrrrz/FFmpegBin/releases/download/${FFMPEG_VERSION}/ffmpeg-windows-x64.zip"
+        FFMPEG_EXE="ffmpeg.exe"
+        ;;
+esac
+
+if [ -n "$FFMPEG_URL" ]; then
+    echo "    Downloading: $FFMPEG_URL"
+    if curl -L -s -o "$TARGET_DIR/ffmpeg.zip" "$FFMPEG_URL"; then
+        mkdir -p "$TARGET_DIR/ffmpeg-extracted"
+        unzip -q -o "$TARGET_DIR/ffmpeg.zip" -d "$TARGET_DIR/ffmpeg-extracted"
+        cp "$TARGET_DIR/ffmpeg-extracted/$FFMPEG_EXE" "$INPUT_DIR/"
+        if [ "$OS_TYPE" = "macOS" ]; then
+            chmod +x "$INPUT_DIR/$FFMPEG_EXE"
+        fi
+        echo -e "${GREEN}    ✓ Bundled $FFMPEG_EXE successfully${NC}"
+    else
+        echo -e "${RED}    ERROR: Failed to download FFmpeg. Continuing packaging without it.${NC}"
+    fi
+else
+    echo -e "${YELLOW}    ⚠ Skipping FFmpeg download for this platform${NC}"
+fi
+
 echo "  Running jpackage..."
 jpackage \
     --input "$INPUT_DIR" \

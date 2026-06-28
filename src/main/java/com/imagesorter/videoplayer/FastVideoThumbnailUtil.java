@@ -52,7 +52,60 @@ public class FastVideoThumbnailUtil {
     }
 
     private static String getFfmpegExecutablePath() {
-        // Check common installation directories for macOS/Linux/Windows
+        String osName = System.getProperty("os.name").toLowerCase();
+        boolean isWindows = osName.contains("win");
+        String exeName = isWindows ? "ffmpeg.exe" : "ffmpeg";
+
+        // 1. Check directory of the running code/JAR
+        try {
+            java.net.URL codeLocation = FastVideoThumbnailUtil.class.getProtectionDomain().getCodeSource().getLocation();
+            if (codeLocation != null) {
+                File codeFile = new File(codeLocation.toURI());
+                File appDir = codeFile.isDirectory() ? codeFile : codeFile.getParentFile();
+                if (appDir != null && appDir.exists()) {
+                    // Check same directory as code/JAR
+                    File localFfmpeg = new File(appDir, exeName);
+                    if (localFfmpeg.exists()) {
+                        return localFfmpeg.getAbsolutePath();
+                    }
+                    
+                    // Check parent directory (e.g. if code is in target/classes or target/app/...)
+                    File parentDir = appDir.getParentFile();
+                    if (parentDir != null && parentDir.exists()) {
+                        File parentFfmpeg = new File(parentDir, exeName);
+                        if (parentFfmpeg.exists()) {
+                            return parentFfmpeg.getAbsolutePath();
+                        }
+                        
+                        // Check sibling app/ directory
+                        File siblingAppDir = new File(parentDir, "app");
+                        if (siblingAppDir.exists() && siblingAppDir.isDirectory()) {
+                            File siblingFfmpeg = new File(siblingAppDir, exeName);
+                            if (siblingFfmpeg.exists()) {
+                                return siblingFfmpeg.getAbsolutePath();
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Could not resolve code source path for FFmpeg check: " + e.getMessage());
+        }
+
+        // 2. Check current working directory
+        try {
+            String userDir = System.getProperty("user.dir");
+            if (userDir != null) {
+                File workingFfmpeg = new File(userDir, exeName);
+                if (workingFfmpeg.exists()) {
+                    return workingFfmpeg.getAbsolutePath();
+                }
+            }
+        } catch (Exception e) {
+            // Ignore
+        }
+
+        // 3. Check common installation directories
         String[] commonPaths = {
             "/opt/homebrew/bin/ffmpeg",              // Apple Silicon Homebrew
             "/usr/local/bin/ffmpeg",                 // Intel Homebrew / standard macOS
@@ -68,8 +121,8 @@ public class FastVideoThumbnailUtil {
             }
         }
 
-        // 3. Fall back to standard PATH environment lookup
-        return "ffmpeg";
+        // 4. Fall back to standard PATH environment lookup
+        return exeName;
     }
 
     private static Image createVideoThumbnailFromVideo(File videoFile) {
