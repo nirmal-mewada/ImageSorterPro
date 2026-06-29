@@ -16,21 +16,21 @@
         <HBox fx:id="topBar" alignment="CENTER_LEFT" spacing="10.0" style="-fx-background-color: -color-bg-default; -fx-border-color: -color-border-default; -fx-border-width: 0 0 1 0;">
             <MenuBar fx:id="mainMenuBar" HBox.hgrow="ALWAYS" style="-fx-background-color: transparent; -fx-border-width: 0;">
                 <Menu mnemonicParsing="false" text="File">
-                    <MenuItem fx:id="openFolderMenuItem" mnemonicParsing="false" text="Open Folder..." accelerator="Ctrl+O" />
+                    <MenuItem fx:id="openFolderMenuItem" mnemonicParsing="false" text="Open Folder" accelerator="Ctrl+O" />
                     <SeparatorMenuItem />
-                    <MenuItem fx:id="configureFoldersMenuItem" mnemonicParsing="false" text="Preferences Settings..." accelerator="Ctrl+P" />
+                    <MenuItem fx:id="configureFoldersMenuItem" mnemonicParsing="false" text="Settings" accelerator="Ctrl+P" />
                     <MenuItem fx:id="applyRulesMenuItem" mnemonicParsing="false" text="Apply Rules to Folder" accelerator="Ctrl+Shift+R" />
                     <SeparatorMenuItem />
                     <MenuItem fx:id="exitMenuItem" mnemonicParsing="false" text="Exit" accelerator="Alt+F4" />
                 </Menu>
                 <Menu fx:id="bookmarksMenu" mnemonicParsing="false" text="Bookmarks">
-                    <MenuItem fx:id="addBookmarkMenuItem" mnemonicParsing="false" text="Add Current Folder to Bookmarks" />
-                    <MenuItem fx:id="removeBookmarkMenuItem" mnemonicParsing="false" text="Remove a Bookmark..." />
+                    <MenuItem fx:id="addBookmarkMenuItem" mnemonicParsing="false" text="Bookmark Current Folder" />
+                    <MenuItem fx:id="removeBookmarkMenuItem" mnemonicParsing="false" text="Remove a Bookmark" />
                     <SeparatorMenuItem fx:id="bookmarksSeparator" />
                     <!-- Dynamic bookmarks will be appended here -->
                 </Menu>
                 <Menu mnemonicParsing="false" text="View">
-                    <MenuItem fx:id="toggleTopViewMenuItem" mnemonicParsing="false" text="Show/Hide Top Menu &amp; Action Bar" accelerator="Ctrl+Shift+T" />
+                    <MenuItem fx:id="toggleTopViewMenuItem" mnemonicParsing="false" text="Show/Hide Top Menu" accelerator="Ctrl+Shift+T" />
                     <MenuItem fx:id="toggleLeftViewMenuItem" mnemonicParsing="false" text="Show/Hide Left View"/>
                     <MenuItem fx:id="toggleRightViewMenuItem" mnemonicParsing="false" text="Show/Hide Metadata Panel"/>
                     <MenuItem fx:id="toggleThumbnailBoxMenuItem" mnemonicParsing="false" text="Show/Hide Thumbnail Box"/>
@@ -50,7 +50,7 @@
                     <RadioMenuItem fx:id="intervalCustomMenuItem" mnemonicParsing="false" text="Custom..." />
                 </Menu>
                 <SeparatorMenuItem/>
-                <CheckMenuItem fx:id="preloadVideosMenuItem" mnemonicParsing="false" text="Preload Video Players"/>
+                <CheckMenuItem fx:id="preloadVideosMenuItem" mnemonicParsing="false" text="Preload Videos"/>
                 <SeparatorMenuItem/>
                 <MenuItem mnemonicParsing="false" text="Zoom In" accelerator="Ctrl+Plus" disable="true" />
                 <MenuItem mnemonicParsing="false" text="Zoom Out" accelerator="Ctrl+Minus" disable="true" />
@@ -116,7 +116,7 @@
                         <SVGPath content="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" strokeWidth="1.8" fill="transparent" styleClass="top-bar-icon" />
                     </graphic>
                     <tooltip>
-                        <Tooltip text="Preferences Settings (Ctrl+P)" />
+                        <Tooltip text="Settings (Ctrl+P)" />
                     </tooltip>
                 </Button>
                 <!-- Hide Top Panel button -->
