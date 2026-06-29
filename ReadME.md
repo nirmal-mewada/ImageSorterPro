@@ -146,4 +146,10 @@ Feel free to fork the repository, make improvements, and submit pull requests.
 
 ## License
 
-This project is licensed under the MIT License — see the `LICENSE` file for details.
+ImageSorterPro's own source code is licensed under the MIT License — see the [`LICENSE`](LICENSE) file for details.
+
+### Bundled third-party software
+
+This application bundles prebuilt **FFmpeg** binaries (`ext-dist/`) to extract video thumbnails. The bundled builds are licensed under the **GNU GPL v3**, separately from ImageSorterPro's own MIT-licensed code. ImageSorterPro invokes FFmpeg as a separate process, so the GPL does not extend to its own source ("mere aggregation").
+
+If you redistribute ImageSorterPro together with these binaries, you must comply with the GPLv3 — including providing FFmpeg's corresponding source. See [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md) and [`LICENSES-GPL-3.0.txt`](LICENSES-GPL-3.0.txt) for full details and the written offer for source.
