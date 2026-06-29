@@ -101,10 +101,12 @@ public class VlcjPlayer extends AbstractVideoPlayer {
         setCenter(videoPane);
         setStyle("-fx-background-color: black;");
 
-        // VLC auto-discovers its plugins directory via its own RPATH from the lib location;
-        // passing --plugin-path with a long path triggers an snprintf overflow assertion
-        // in VLC's dispatch.c when any plugin fails to load.
-        factory = new MediaPlayerFactory("--quiet");
+        // Build VLC factory — may throw if VLC libs can't actually load at runtime
+        String pluginPath = vlcLibPath.replace("/lib", "/plugins");
+        boolean hasPlugins = new File(pluginPath).exists();
+        factory = hasPlugins
+            ? new MediaPlayerFactory("--quiet", "--plugin-path=" + pluginPath)
+            : new MediaPlayerFactory("--quiet");
 
         vlcPlayer = factory.mediaPlayers().newEmbeddedMediaPlayer();
 
