@@ -1,11 +1,11 @@
 package com.imagesorter.videoplayer;
 
 import com.imagesorter.model.ImageFile;
-import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.value.ObservableDoubleValue;
 import javafx.geometry.Pos;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
@@ -13,7 +13,7 @@ import javafx.scene.media.MediaView;
 
 import java.net.MalformedURLException;
 
-public class Player extends AbstractVideoPlayer {
+public class Player extends BorderPane {
     private Media media;
     public MediaPlayer player;
     private MediaView view;
@@ -99,7 +99,6 @@ public class Player extends AbstractVideoPlayer {
         player.setOnEndOfMedia(() -> player.stop());
     }
 
-    @Override
     public void rotate90() {
         Integer exifRotate = currentImageFile.getExifRotate();
         exifRotate = (exifRotate + 90) % 360;
@@ -114,14 +113,12 @@ public class Player extends AbstractVideoPlayer {
      * This avoids the layout cycle: view.fitWidth → mpane.prefWidth (native video
      * resolution) → Player.prefWidth → container resize → view.fitWidth.
      */
-    @Override
     public void bindToContainer(ObservableDoubleValue w, ObservableDoubleValue h) {
         containerWidth = w;
         containerHeight = h;
         setRotation();
     }
 
-    @Override
     public void setRotation() {
         if (view == null) return; // Player already disposed; callback arrived late
         if (bar == null) return;  // bar not yet initialized; called again after setBottom()
@@ -153,7 +150,6 @@ public class Player extends AbstractVideoPlayer {
         }
     }
 
-    @Override
     public void dispose() {
         try {
             if (player != null) {
@@ -189,51 +185,7 @@ public class Player extends AbstractVideoPlayer {
         }
     }
 
-    @Override
-    public void play() {}
-
-    @Override
-    public void pauseOrPlay() {
-        if (player == null) return;
-        MediaPlayer.Status status = player.getStatus();
-        if (status == MediaPlayer.Status.PLAYING) {
-            player.pause();
-        } else {
-            player.play();
-        }
-    }
-
-    @Override
-    public boolean isPlaying() {
-        return player != null && player.getStatus() == MediaPlayer.Status.PLAYING;
-    }
-
-    @Override
-    public int getVideoWidth() {
-        if (player == null || player.getMedia() == null) return 0;
-        return player.getMedia().getWidth();
-    }
-
-    @Override
-    public int getVideoHeight() {
-        if (player == null || player.getMedia() == null) return 0;
-        return player.getMedia().getHeight();
-    }
-
-    @Override
-    public double getDurationSeconds() {
-        if (player == null || player.getMedia() == null) return 0;
-        javafx.util.Duration d = player.getMedia().getDuration();
-        return (d != null && d.greaterThan(javafx.util.Duration.ZERO)) ? d.toSeconds() : 0;
-    }
-
-    @Override
-    public void addReadyListener(Runnable onReady) {
-        if (player == null) return;
-        player.statusProperty().addListener((obs, oldStatus, newStatus) -> {
-            if (newStatus == MediaPlayer.Status.READY) {
-                Platform.runLater(onReady);
-            }
-        });
+    public void play() {
+//        player.play();
     }
 }

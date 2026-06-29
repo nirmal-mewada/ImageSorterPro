@@ -4,10 +4,8 @@ import com.imagesorter.MemUtils;
 import com.imagesorter.model.*;
 import com.imagesorter.service.ConfigService;
 import com.imagesorter.service.ImageService;
-import com.imagesorter.videoplayer.AbstractVideoPlayer;
 import com.imagesorter.videoplayer.FastVideoThumbnailUtil;
 import com.imagesorter.videoplayer.Player;
-import com.imagesorter.videoplayer.VlcjPlayer;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
@@ -187,7 +185,7 @@ public class MainController implements Initializable {
     private File currentSourceFolder;
     private final Deque<LastAction> lastActionInfo = new LinkedList<>();
     @FXML private StackPane mediaContainer;
-    private AbstractVideoPlayer currentMediaPlayer;
+    private  Player currentMediaPlayer;
     private boolean keyFilterRegistered = false;
     private Task<Image> currentImageLoadTask = null;
     private java.util.concurrent.Future<?> currentImageLoadFuture = null;
@@ -571,8 +569,13 @@ public class MainController implements Initializable {
                     }
                     break;
                 case SPACE:
-                    if (currentMediaPlayer != null) {
-                        currentMediaPlayer.pauseOrPlay();
+                    if (currentMediaPlayer != null && currentMediaPlayer.player != null) {
+                        javafx.scene.media.MediaPlayer.Status status = currentMediaPlayer.player.getStatus();
+                        if (status == javafx.scene.media.MediaPlayer.Status.PLAYING) {
+                            currentMediaPlayer.player.pause();
+                        } else {
+                            currentMediaPlayer.player.play();
+                        }
                     } else {
                         handled = false;
                     }
@@ -778,33 +781,33 @@ public class MainController implements Initializable {
         ImageFile currentImageFile = currentImages.get(currentImageIndex);
 
         // Capture old player for deferred disposal — prevents blocking new content setup
-        AbstractVideoPlayer oldPlayer = currentMediaPlayer;
+        Player oldPlayer = currentMediaPlayer;
         currentMediaPlayer = null;
 
         if(currentImageFile.isVideoFile()){
             System.out.println("Video file detected: "+ currentImageFile.getName());
-            AbstractVideoPlayer videoPlayer;
+            Player videoPlayer;
             try {
-                // Try VlcjPlayer first; fall back to JavaFX Player on any error
-                if (VlcjPlayer.isAvailable()) {
-                    try {
-                        videoPlayer = new VlcjPlayer(currentImageFile);
-                        System.out.println("Using VLC player: " + currentImageFile.getName());
-                    } catch (Exception vlcEx) {
-                        System.err.println("VLC player failed, falling back to JavaFX: " + vlcEx.getMessage());
-                        videoPlayer = createJavafxPlayer(currentImageFile);
-                    }
+                // Try to use a pre-cached MediaPlayer for instant video loading
+                javafx.scene.media.MediaPlayer cachedMp = imageService.getCachedVideoPlayer(currentImageFile);
+                if (cachedMp != null) {
+                    System.out.println("Video player cache hit: " + currentImageFile.getName());
+                    videoPlayer = new Player(currentImageFile, cachedMp);
                 } else {
-                    videoPlayer = createJavafxPlayer(currentImageFile);
+                    System.out.println("Video player cache miss: " + currentImageFile.getName());
+                    videoPlayer = new Player(currentImageFile);
                 }
                 videoPlayer.setOnMouseClicked(this::handleVideoClick);
-                // Bind fit dimensions to the scroll pane — layout-cycle-free source
+                // Bind fit dimensions to the scroll pane — same pattern as imageView
+                // (imageScrollPane.widthProperty/.heightProperty). This is the external,
+                // layout-cycle-free source; the Player's own size can't be used because
+                // it creates a feedback loop through the MediaView's native resolution.
                 videoPlayer.bindToContainer(
                         imageScrollPane.widthProperty(),
                         imageScrollPane.heightProperty()
                 );
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                throw  new RuntimeException(e);
             }
 
             mediaContainer.getChildren().clear();
@@ -814,14 +817,15 @@ public class MainController implements Initializable {
             currentMediaPlayer = videoPlayer;
             currentMediaPlayer.play();
 
-            // Resolve EXIF rotation asynchronously (only meaningful for JavaFX Player)
+            // Resolve EXIF rotation asynchronously if not already pre-cached
             if (currentImageFile.getExifRotate() == null) {
-                final AbstractVideoPlayer vp = videoPlayer;
+                final Player vp = videoPlayer;
                 final ImageFile imgFile = currentImageFile;
                 imageService.submitTask(() -> {
                     imageService.ensureExifRotation(imgFile);
                     if (imgFile.getExifRotate() != null && imgFile.getExifRotate() != 0) {
                         Platform.runLater(() -> {
+                            // Only apply if this player is still the active one
                             if (currentMediaPlayer == vp) {
                                 vp.setRotation();
                             }
@@ -830,8 +834,12 @@ public class MainController implements Initializable {
                 });
             }
 
-            // Refresh metadata details once the player reports it is ready/playing
-            currentMediaPlayer.addReadyListener(this::updateMetadataPanel);
+            // Refresh metadata details once the media player loads dimensions/duration
+            currentMediaPlayer.player.statusProperty().addListener((obs, oldStatus, newStatus) -> {
+                if (newStatus == javafx.scene.media.MediaPlayer.Status.READY) {
+                    Platform.runLater(this::updateMetadataPanel);
+                }
+            });
 
         } else {
             if (!mediaContainer.getChildren().contains(imageView)) {
@@ -869,9 +877,8 @@ public class MainController implements Initializable {
         // Dispose old player on next FX pulse so new content renders first
         if (oldPlayer != null) {
             // Mute immediately to prevent audio overlap during deferred disposal
-            if (oldPlayer instanceof Player) {
-                Player p = (Player) oldPlayer;
-                if (p.player != null) p.player.setMute(true);
+            if (oldPlayer.player != null) {
+                oldPlayer.player.setMute(true);
             }
             Platform.runLater(oldPlayer::dispose);
         }
@@ -1211,15 +1218,17 @@ public class MainController implements Initializable {
             if (image != null && !image.isError()) {
                 metadata.put("Dimensions", String.format("%.0f x %.0f", image.getWidth(), image.getHeight()));
             }
-        } else if (currentMediaPlayer != null) {
-            int vw = currentMediaPlayer.getVideoWidth();
-            int vh = currentMediaPlayer.getVideoHeight();
-            if (vw > 0 && vh > 0) {
-                metadata.put("Dimensions", String.format("%d x %d", vw, vh));
-            }
-            double dur = currentMediaPlayer.getDurationSeconds();
-            if (dur > 0) {
-                metadata.put("Duration", String.format("%.1f s", dur));
+        } else if (currentMediaPlayer != null && currentMediaPlayer.player != null) {
+            javafx.scene.media.Media media = currentMediaPlayer.player.getMedia();
+            if (media != null) {
+                // Dimensions might only be non-zero after ready state
+                if (media.getWidth() > 0 && media.getHeight() > 0) {
+                    metadata.put("Dimensions", String.format("%d x %d", media.getWidth(), media.getHeight()));
+                }
+                if (media.getDuration() != null && media.getDuration().greaterThan(javafx.util.Duration.ZERO)) {
+                    double seconds = media.getDuration().toSeconds();
+                    metadata.put("Duration", String.format("%.1f s", seconds));
+                }
             }
         }
 
@@ -1468,16 +1477,6 @@ public class MainController implements Initializable {
             currentMediaPlayer.dispose();
             currentMediaPlayer = null;
         }
-    }
-
-    private Player createJavafxPlayer(ImageFile imageFile) throws Exception {
-        javafx.scene.media.MediaPlayer cachedMp = imageService.getCachedVideoPlayer(imageFile);
-        if (cachedMp != null) {
-            System.out.println("Video player cache hit: " + imageFile.getName());
-            return new Player(imageFile, cachedMp);
-        }
-        System.out.println("Video player cache miss: " + imageFile.getName());
-        return new Player(imageFile);
     }
 
     private void addLastAction(LastAction action) {
